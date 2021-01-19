@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "worldshell",
+  "version": "${version}",
+  "name": "WorldShell",
+  "description": "A library mod to allow moving collections of blocks that can function, collide and interact with the world around them.",
+  "authors": [
+    "Snakefangox"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/worldshell/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "net.snakefangox.worldshell.client.WSClient"
+    ],
+    "main": [
+      "net.snakefangox.worldshell.WSUniversal"
+    ]
+  },
+  "mixins": [
+    "worldshell.mixins.json"
+  ],
+  "accessWidener" : "worldshell.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.11.0",
+    "fabric": "*",
+    "minecraft": "1.17-alpha.20.51.a"
+  }
+}
