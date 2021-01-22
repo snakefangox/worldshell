@@ -1,9 +1,14 @@
 package net.snakefangox.worldshell.storage;
 
+import java.util.Optional;
+
+import net.snakefangox.worldshell.data.RelativeBlockPos;
+import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import org.jetbrains.annotations.NotNull;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.util.math.BlockBox;
-import net.snakefangox.worldshell.data.RelativeBlockPos;
 
 /**
  * A bay in the ship storage sense
@@ -16,6 +21,9 @@ public class ShellBay {
 
     //Defines the box the shell fits within
     private BlockBox bounds;
+
+    //The entity changes to this shell should propagate to
+    private Optional<WorldLinkEntity> linkedEntity = Optional.empty();
 
     public ShellBay(RelativeBlockPos center, BlockBox bounds) {
         this.center = center;
@@ -41,4 +49,8 @@ public class ShellBay {
     public BlockBox getBox() {
         return bounds;
     }
+
+	public void linkEntity(@NotNull WorldLinkEntity worldLinkEntity) {
+        linkedEntity = Optional.of(worldLinkEntity);
+	}
 }

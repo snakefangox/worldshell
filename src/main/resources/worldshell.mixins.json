@@ -4,10 +4,9 @@
   "package": "net.snakefangox.worldshell.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "WorldAccessor"
+    "MinecraftServerMixin"
   ],
   "client": [
-    "ClientWorldAccessor"
   ],
   "server": [
   ],
