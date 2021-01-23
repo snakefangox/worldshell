@@ -12,14 +12,18 @@ import net.minecraft.block.Material;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.BuiltinBiomes;
+import net.minecraft.world.biome.source.FixedBiomeSource;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 
@@ -41,6 +45,11 @@ public class WSUniversal implements ModInitializer {
 		Registry.register(Registry.ENTITY_TYPE, new Identifier(MODID, "worldlink"), WORLD_LINK_ENTITY_TYPE);
 		Registry.register(Registry.BLOCK, new Identifier(MODID, "placeholder"), PLACEHOLDER);
 		CommandRegistrationCallback.EVENT.register(this::registerCommands);
+		ServerLifecycleEvents.SERVER_STARTED.register((MinecraftServer server) -> {
+			((DynamicDimGen) server).createDynamicDim(RegistryKey.of(Registry.DIMENSION, new Identifier(MODID, "memeland")),
+							RegistryKey.of(Registry.DIMENSION_TYPE_KEY, new Identifier(MODID, "empty_type")),
+							new EmptyChunkGenerator(new FixedBiomeSource(BuiltinBiomes.THE_VOID)));
+		});
 	}
 
 	private void registerCommands(CommandDispatcher<ServerCommandSource> serverCommandSourceCommandDispatcher, boolean b) {
