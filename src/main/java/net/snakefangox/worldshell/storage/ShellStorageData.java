@@ -104,7 +104,7 @@ public class ShellStorageData extends PersistentState {
     }
 
     public static ShellStorageData getOrCreate(ServerWorld world) {
-        PersistentStateManager stateManager = world  .getPersistentStateManager();
+        PersistentStateManager stateManager = world.getPersistentStateManager();
         return stateManager.getOrCreate(ShellStorageData::fromTag, ShellStorageData::new, ID);
     }
 }

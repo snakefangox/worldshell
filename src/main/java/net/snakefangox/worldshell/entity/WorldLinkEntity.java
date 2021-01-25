@@ -15,7 +15,7 @@ import net.minecraft.world.World;
  */
 public class WorldLinkEntity extends Entity {
 
-	private int shellId = -1;
+	private int shellId = 0;
 
 	public WorldLinkEntity(EntityType<?> type, World world) {
 		super(type, world);
@@ -51,6 +51,6 @@ public class WorldLinkEntity extends Entity {
 
 	public void setShellId(int shellId) {
 		this.shellId = shellId;
-		if(!world.isClient()) ShellStorageData.getOrCreate(world.getServer()).getBay(shellId).linkEntity(this);
+		if(!world.isClient() && shellId > 0) ShellStorageData.getOrCreate(world.getServer()).getBay(shellId).linkEntity(this);
 	}
 }

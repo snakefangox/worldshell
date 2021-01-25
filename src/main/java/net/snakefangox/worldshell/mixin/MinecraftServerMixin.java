@@ -4,7 +4,8 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.google.common.collect.ImmutableList;
-import net.snakefangox.worldshell.DynamicDimGen;
+import net.snakefangox.worldshell.util.DynamicDimGen;
+import net.snakefangox.worldshell.util.ServerWorldSupplier;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -64,13 +65,18 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	}
 
 	public ServerWorld createDynamicDim(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions) {
+		return createDynamicDim(worldRegistryKey, dimensionOptions, ServerWorld::new);
+	}
+
+	@Override
+	public ServerWorld createDynamicDim(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier) {
 		boolean isDebug = saveProperties.getGeneratorOptions().isDebugWorld();
 		long seed = BiomeAccess.hashSeed(saveProperties.getGeneratorOptions().getSeed());
 		ServerWorldProperties serverWorldProperties = saveProperties.getMainWorldProperties();
 		DimensionType dimensionType = dimensionOptions.getDimensionType();
 		ChunkGenerator chunkGenerator = dimensionOptions.getChunkGenerator();
 		UnmodifiableLevelProperties unmodifiableLevelProperties = new UnmodifiableLevelProperties(saveProperties, serverWorldProperties);
-		ServerWorld serverWorld = new ServerWorld((MinecraftServer) (Object)this, workerExecutor, session, unmodifiableLevelProperties, worldRegistryKey, dimensionType, worldGenerationProgressListenerFactory.create(0), chunkGenerator, isDebug, seed, ImmutableList.of(), false);
+		ServerWorld serverWorld = worldSupplier.create((MinecraftServer) (Object)this, workerExecutor, session, unmodifiableLevelProperties, worldRegistryKey, dimensionType, worldGenerationProgressListenerFactory.create(0), chunkGenerator, isDebug, seed, ImmutableList.of(), false);
 		getWorld(World.OVERWORLD).getWorldBorder().addListener(new WorldBorderListener.WorldBorderSyncer(serverWorld.getWorldBorder()));
 		worlds.put(worldRegistryKey, serverWorld);
 		return serverWorld;

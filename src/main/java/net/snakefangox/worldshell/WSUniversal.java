@@ -1,10 +1,15 @@
 package net.snakefangox.worldshell;
 
+import java.util.function.Supplier;
+
 import com.mojang.brigadier.CommandDispatcher;
 import me.sargunvohra.mcmods.autoconfig1u.AutoConfig;
 import me.sargunvohra.mcmods.autoconfig1u.serializer.Toml4jConfigSerializer;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
+import net.snakefangox.worldshell.storage.ShellStorageData;
+import net.snakefangox.worldshell.storage.ShellStorageWorld;
+import net.snakefangox.worldshell.util.DynamicDimGen;
 import net.snakefangox.worldshell.util.ShellCommand;
 
 import net.minecraft.block.Block;
@@ -18,8 +23,11 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BuiltinBiomes;
+import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.FixedBiomeSource;
+import net.minecraft.world.dimension.DimensionOptions;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.gen.chunk.ChunkGenerator;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
@@ -45,11 +53,7 @@ public class WSUniversal implements ModInitializer {
 		Registry.register(Registry.ENTITY_TYPE, new Identifier(MODID, "worldlink"), WORLD_LINK_ENTITY_TYPE);
 		Registry.register(Registry.BLOCK, new Identifier(MODID, "placeholder"), PLACEHOLDER);
 		CommandRegistrationCallback.EVENT.register(this::registerCommands);
-		ServerLifecycleEvents.SERVER_STARTED.register((MinecraftServer server) -> {
-			((DynamicDimGen) server).createDynamicDim(RegistryKey.of(Registry.DIMENSION, new Identifier(MODID, "memeland")),
-							RegistryKey.of(Registry.DIMENSION_TYPE_KEY, new Identifier(MODID, "empty_type")),
-							new EmptyChunkGenerator(new FixedBiomeSource(BuiltinBiomes.THE_VOID)));
-		});
+		ServerLifecycleEvents.SERVER_STARTED.register(this::registerShellStorageDimension);
 	}
 
 	private void registerCommands(CommandDispatcher<ServerCommandSource> serverCommandSourceCommandDispatcher, boolean b) {
@@ -58,5 +62,15 @@ public class WSUniversal implements ModInitializer {
 
 	public void registerStorageDim() {
 		Registry.register(Registry.CHUNK_GENERATOR, new Identifier(MODID, "empty"), EmptyChunkGenerator.CODEC);
+	}
+
+	public void registerShellStorageDimension(MinecraftServer server) {
+		Supplier<DimensionType> typeSupplier = () -> server.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY)
+						.get(RegistryKey.of(Registry.DIMENSION_TYPE_KEY, new Identifier(MODID, "empty_type")));
+		ChunkGenerator chunkGenerator = new EmptyChunkGenerator(new FixedBiomeSource(server.getRegistryManager()
+						.get(Registry.BIOME_KEY).get(BiomeKeys.THE_VOID)));
+		DimensionOptions options = new DimensionOptions(typeSupplier, chunkGenerator);
+		ShellStorageWorld world = (ShellStorageWorld)((DynamicDimGen) server).createDynamicDim(STORAGE_DIM, options, ShellStorageWorld::new);
+		world.setCachedShellStorageData(ShellStorageData.getOrCreate(server));
 	}
 }
