@@ -13,12 +13,16 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -53,10 +57,8 @@ public class WorldLinkEntity extends Entity {
 		ServerPlayNetworking.send(player, WSNetworking.SHELL_DATA, buf);
 	}
 
-	//TODO Sync bounding box and cut the pose stuff
 	@Override
-	protected void initDataTracker() {
-	}
+	protected void initDataTracker() {}
 
 	@Override
 	protected void readCustomDataFromTag(CompoundTag tag) {

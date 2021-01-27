@@ -21,6 +21,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
 /**
@@ -29,84 +30,93 @@ import net.minecraft.world.World;
  */
 public class ShellBay {
 
-    //The center of the shell
-    private RelativeBlockPos center;
+	//The center of the shell
+	private RelativeBlockPos center;
 
-    //Defines the box the shell fits within
-    private BlockBox bounds;
+	//Defines the box the shell fits within
+	private BlockBox bounds;
 
-    //The entity changes to this shell should propagate to
-    private Optional<WorldLinkEntity> linkedEntity = Optional.empty();
+	//The entity changes to this shell should propagate to
+	private Optional<WorldLinkEntity> linkedEntity = Optional.empty();
 
-    public ShellBay(RelativeBlockPos center, BlockBox bounds) {
-        this.center = center;
-        this.bounds = bounds;
-    }
+	public ShellBay(RelativeBlockPos center, BlockBox bounds) {
+		this.center = center;
+		this.bounds = bounds;
+	}
 
-    public ShellBay(CompoundTag tag) {
-        fromTag(tag);
-    }
+	public ShellBay(CompoundTag tag) {
+		fromTag(tag);
+	}
 
-    public PacketByteBuf createClientPacket(MinecraftServer server, PacketByteBuf buf) {
-        World world = server.getWorld(WSUniversal.STORAGE_DIM);
-        Map<BlockState, List<BlockPos>> stateListMap = new HashMap<>();
-        List<BlockEntity> blockEntities = new ArrayList<>();
-        ShellTransferHandler.forEachInBox(bounds, (bp) -> {
-            BlockState state = world.getBlockState(bp);
-            if (!state.isAir()) {
-            	if (stateListMap.containsKey(state)){
-            		stateListMap.get(state).add(bp.toImmutable());
-				}else{
-            		List<BlockPos> list = new ArrayList<BlockPos>();
-            		list.add(bp.toImmutable());
-            		stateListMap.put(state, list);
+	public PacketByteBuf createClientPacket(MinecraftServer server, PacketByteBuf buf) {
+		World world = server.getWorld(WSUniversal.STORAGE_DIM);
+		Map<BlockState, List<BlockPos>> stateListMap = new HashMap<>();
+		List<BlockEntity> blockEntities = new ArrayList<>();
+		ShellTransferHandler.forEachInBox(bounds, (bp) -> {
+			BlockState state = world.getBlockState(bp);
+			if (!state.isAir()) {
+				if (stateListMap.containsKey(state)) {
+					stateListMap.get(state).add(bp.toImmutable());
+				} else {
+					List<BlockPos> list = new ArrayList<BlockPos>();
+					list.add(bp.toImmutable());
+					stateListMap.put(state, list);
 				}
-				if (state.hasBlockEntity()){
+				if (state.hasBlockEntity()) {
 					BlockEntity be = world.getBlockEntity(bp);
 					if (be != null && be.toUpdatePacket() != null) blockEntities.add(be);
 				}
-            }
-        });
-        return WorldShellPacketHelper.writeBlocks(buf, stateListMap, blockEntities, center);
-    }
+			}
+		});
+		return WorldShellPacketHelper.writeBlocks(buf, stateListMap, blockEntities, center);
+	}
 
-    public CompoundTag toTag() {
-        CompoundTag tag = new CompoundTag();
-        tag.putLong("center", center.asLong());
-        tag.put("bounds", bounds.toNbt());
-        return tag;
-    }
+	public CompoundTag toTag() {
+		CompoundTag tag = new CompoundTag();
+		tag.putLong("center", center.asLong());
+		tag.put("bounds", bounds.toNbt());
+		return tag;
+	}
 
-    public void fromTag(CompoundTag tag) {
-        center = RelativeBlockPos.fromLong(tag.getLong("center"));
-        bounds = new BlockBox(((IntArrayTag) tag.get("bounds")).getIntArray());
-    }
+	public void fromTag(CompoundTag tag) {
+		center = RelativeBlockPos.fromLong(tag.getLong("center"));
+		bounds = new BlockBox(((IntArrayTag) tag.get("bounds")).getIntArray());
+	}
 
-    public BlockBox getBox() {
-        return bounds;
-    }
+	public BlockBox getBox() {
+		return bounds;
+	}
 
-    public void linkEntity(@NotNull WorldLinkEntity worldLinkEntity) {
-        linkedEntity = Optional.of(worldLinkEntity);
-    }
+	public void linkEntity(@NotNull WorldLinkEntity worldLinkEntity) {
+		linkedEntity = Optional.of(worldLinkEntity);
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ShellBay)) return false;
+	//TODO Setup a system where this works
+	public void setLinkedBounds() {
+		linkedEntity.ifPresent(entity -> {
+			BlockBox box = new BlockBox(bounds.maxX, bounds.maxY, bounds.maxZ, bounds.minX, bounds.minY, bounds.minZ);
+			center.transformBoxCoordSpace(RelativeBlockPos.toRelative(entity.getBlockPos()), box);
+			entity.setBoundingBox(Box.from(box));
+		});
+	}
 
-        ShellBay shellBay = (ShellBay) o;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof ShellBay)) return false;
 
-        if (center != null ? !center.equals(shellBay.center) : shellBay.center != null) return false;
-        if (bounds != null ? !bounds.equals(shellBay.bounds) : shellBay.bounds != null) return false;
-        return linkedEntity.equals(shellBay.linkedEntity);
-    }
+		ShellBay shellBay = (ShellBay) o;
 
-    @Override
-    public int hashCode() {
-        int result = center != null ? center.hashCode() : 0;
-        result = 31 * result + (bounds != null ? bounds.hashCode() : 0);
-        result = 31 * result + linkedEntity.hashCode();
-        return result;
-    }
+		if (center != null ? !center.equals(shellBay.center) : shellBay.center != null) return false;
+		if (bounds != null ? !bounds.equals(shellBay.bounds) : shellBay.bounds != null) return false;
+		return linkedEntity.equals(shellBay.linkedEntity);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = center != null ? center.hashCode() : 0;
+		result = 31 * result + (bounds != null ? bounds.hashCode() : 0);
+		result = 31 * result + linkedEntity.hashCode();
+		return result;
+	}
 }
