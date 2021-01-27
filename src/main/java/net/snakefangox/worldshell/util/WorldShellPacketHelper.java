@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.networking;
+package net.snakefangox.worldshell.util;
 
 import java.util.List;
 import java.util.Map;
@@ -9,6 +9,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.util.math.BlockPos;
@@ -20,7 +21,7 @@ public class WorldShellPacketHelper {
 		for (Map.Entry<BlockState, List<BlockPos>> entry : blockStateListMap.entrySet()) {
 			buf.writeInt(Block.getRawIdFromState(entry.getKey()));
 			buf.writeVarInt(entry.getValue().size());
-			for (BlockPos bp : entry.getValue()) buf.writeBlockPos(bp);
+			for (BlockPos bp : entry.getValue()) buf.writeBlockPos(center.toLocal(bp));
 		}
 		buf.writeInt(blockEntities.size());
 		for (BlockEntity be : blockEntities) {
@@ -40,11 +41,15 @@ public class WorldShellPacketHelper {
 			for (int j = 0; j < posCount; ++j) {
 				BlockPos pos = buf.readBlockPos();
 				posBlockStateMap.put(pos, state);
-				if (hasEntity) posBlockEntityMap.put(pos, ((BlockEntityProvider)state).createBlockEntity(pos, state));
+				if (hasEntity) posBlockEntityMap.put(pos, ((BlockEntityProvider)state.getBlock()).createBlockEntity(pos, state));
 			}
 		}
 		int beCount = buf.readInt();
-		for (int i = 0; i < beCount; ++i)
-			posBlockEntityMap.get(buf.readBlockPos()).fromTag(buf.readCompoundTag());
+		for (int i = 0; i < beCount; ++i) {
+			BlockPos bp = buf.readBlockPos();
+			CompoundTag tag = buf.readCompoundTag();
+			if (tag != null && posBlockEntityMap.containsKey(bp))
+				posBlockEntityMap.get(bp).fromTag(tag);
+		}
 	}
 }
