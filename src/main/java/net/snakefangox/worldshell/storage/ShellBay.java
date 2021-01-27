@@ -1,21 +1,27 @@
 package net.snakefangox.worldshell.storage;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.IntArrayTag;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockBox;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import net.snakefangox.worldshell.WSUniversal;
 import net.snakefangox.worldshell.data.RelativeBlockPos;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.util.ShellTransferHandler;
+import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockBox;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 /**
  * A bay in the ship storage sense
@@ -41,7 +47,7 @@ public class ShellBay {
         fromTag(tag);
     }
 
-    public void sendToClient(PlayerEntity target, MinecraftServer server) {
+    public PacketByteBuf createClientPacket(MinecraftServer server, PacketByteBuf buf) {
         World world = server.getWorld(WSUniversal.STORAGE_DIM);
         Map<BlockState, List<BlockPos>> stateListMap = new HashMap<>();
         List<BlockEntity> blockEntities = new ArrayList<>();
@@ -61,7 +67,7 @@ public class ShellBay {
 				}
             }
         });
-        
+        return WorldShellPacketHelper.writeBlocks(buf, stateListMap, blockEntities, center);
     }
 
     public CompoundTag toTag() {

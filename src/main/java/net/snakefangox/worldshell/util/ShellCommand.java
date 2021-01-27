@@ -1,17 +1,19 @@
 package net.snakefangox.worldshell.util;
 
-import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.command.argument.BlockPosArgumentType;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.util.math.BlockBox;
-import net.minecraft.util.math.BlockPos;
-import net.snakefangox.worldshell.data.RelativeBlockPos;
+import static net.minecraft.server.command.CommandManager.argument;
+import static net.minecraft.server.command.CommandManager.literal;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import com.mojang.brigadier.CommandDispatcher;
+import net.snakefangox.worldshell.data.RelativeBlockPos;
+import net.snakefangox.worldshell.entity.WorldLinkEntity;
+
+import net.minecraft.command.argument.BlockPosArgumentType;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.util.math.BlockBox;
+import net.minecraft.util.math.BlockPos;
 
 public class ShellCommand {
 
@@ -27,8 +29,11 @@ public class ShellCommand {
         ShellTransferHandler.forEachInBox(box, (bp) -> {
             if (!source.getWorld().isAir(bp)) blockPosList.add(bp.toImmutable());
         });
-        if (blockPosList.size() > 0)
-            ShellTransferHandler.transferToShell(source.getWorld(), RelativeBlockPos.toRelative(blockPosList.get(0)), blockPosList);
+        if (blockPosList.size() > 0) {
+            WorldLinkEntity entity = ShellTransferHandler.transferToShell(source.getWorld(), RelativeBlockPos.toRelative(blockPosList.get(0)), blockPosList);
+            entity.setPos(box.minX, box.minY, box.minZ);
+            source.getWorld().spawnEntity(entity);
+        }
         return 1;
     }
 }

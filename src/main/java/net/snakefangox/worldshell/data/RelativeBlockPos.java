@@ -1,5 +1,6 @@
 package net.snakefangox.worldshell.data;
 
+import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -21,6 +22,29 @@ public class RelativeBlockPos extends BlockPos {
     public BlockPos transferCoordSpace(RelativeBlockPos target, BlockPos pos) {
         return new BlockPos(target.getX() + (pos.getX() - getX()), target.getY() + (pos.getY() - getY()),
                 target.getZ() + (pos.getZ() - getZ()));
+    }
+
+    public void makeBoxLocal(BlockBox box){
+        box.maxX = box.maxX - getX();
+        box.minX = box.minX - getX();
+        box.maxY = box.maxY - getY();
+        box.minY = box.minY - getY();
+        box.maxZ = box.maxZ - getZ();
+        box.minZ = box.minZ - getZ();
+    }
+
+    public void makeBoxGlobal(BlockBox box){
+        box.maxX = box.maxX + getX();
+        box.minX = box.minX + getX();
+        box.maxY = box.maxY + getY();
+        box.minY = box.minY + getY();
+        box.maxZ = box.maxZ + getZ();
+        box.minZ = box.minZ + getZ();
+    }
+
+    public void transformBoxCoordSpace(RelativeBlockPos target, BlockBox box) {
+        makeBoxLocal(box);
+        target.makeBoxGlobal(box);
     }
 
     public static RelativeBlockPos fromLong(long packedPos) {

@@ -19,6 +19,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
 public class ShellTransferHandler {
@@ -40,8 +41,10 @@ public class ShellTransferHandler {
 			copyBlock(world, shellWorld, bp, dest);
 			updateBoxBounds(bayBounds, bp);
 		}
+		worldLinkEntity.setBoundingBox(Box.from(bayBounds));
 		blocks.forEach((bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
-		System.out.println("execute in worldshell:shell_storage run tp " + bayPos.toShortString().replace(',', ' '));
+		System.out.println("execute in worldshell:shell_storage run tp " + bayPos.toShortString().replace(",", ""));
+		core.transformBoxCoordSpace(bayPos, bayBounds);
 		int id = storageData.addBay(new ShellBay(bayPos, bayBounds));
 		System.out.println("Real id:" + id + " Calced id:" + storageData.getBayIdFromPos(bayPos));
 		worldLinkEntity.setShellId(id);

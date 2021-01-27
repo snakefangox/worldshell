@@ -15,7 +15,7 @@ import net.minecraft.util.math.BlockPos;
 
 public class WorldShellPacketHelper {
 
-	public static void writeBlocks(PacketByteBuf buf, Map<BlockState, List<BlockPos>> blockStateListMap, List<BlockEntity> blockEntities, RelativeBlockPos center) {
+	public static PacketByteBuf writeBlocks(PacketByteBuf buf, Map<BlockState, List<BlockPos>> blockStateListMap, List<BlockEntity> blockEntities, RelativeBlockPos center) {
 		buf.writeInt(blockStateListMap.size());
 		for (Map.Entry<BlockState, List<BlockPos>> entry : blockStateListMap.entrySet()) {
 			buf.writeInt(Block.getRawIdFromState(entry.getKey()));
@@ -28,6 +28,7 @@ public class WorldShellPacketHelper {
 			BlockEntityUpdateS2CPacket packet = be.toUpdatePacket();
 			buf.writeCompoundTag(packet.getCompoundTag());
 		}
+		return buf;
 	}
 
 	public static void readBlocks(PacketByteBuf buf, Map<BlockPos, BlockState> posBlockStateMap, Map<BlockPos, BlockEntity> posBlockEntityMap) {
