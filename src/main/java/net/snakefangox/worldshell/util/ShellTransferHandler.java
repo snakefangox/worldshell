@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 
 import net.snakefangox.worldshell.WSUniversal;
 import net.snakefangox.worldshell.data.RelativeBlockPos;
+import net.snakefangox.worldshell.data.RelativeVec3d;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.ShellBay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
@@ -15,11 +16,12 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.command.argument.BlockStateArgument;
+import net.minecraft.entity.EntityDimensions;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class ShellTransferHandler {
@@ -41,9 +43,15 @@ public class ShellTransferHandler {
 			copyBlock(world, shellWorld, bp, dest);
 			updateBoxBounds(bayBounds, bp);
 		}
+		EntityDimensions dimensions = new EntityDimensions(Math.max(bayBounds.getBlockCountX(), bayBounds.getBlockCountZ()), bayBounds.getBlockCountY(), false);
+		worldLinkEntity.setDimensions(dimensions);
+		Vec3d center = CoordinateHelper.getBoxCenter(bayBounds);
+		worldLinkEntity.setPosition(center.getX() + 0.5, bayBounds.minY, center.getZ() + 0.5);
+		worldLinkEntity.setBlockOffset(RelativeVec3d.toRelative(core.subtract(center.x, bayBounds.minY, center.z).add(-0.5, 0, -0.5)));
 		blocks.forEach((bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
 		core.transformBoxCoordSpace(bayPos, bayBounds);
 		int id = storageData.addBay(new ShellBay(bayPos, bayBounds));
+		storageData.getBay(id).loadAllChunks(world.getServer());
 		worldLinkEntity.setShellId(id);
 		return worldLinkEntity;
 	}

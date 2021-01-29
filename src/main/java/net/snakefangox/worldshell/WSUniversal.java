@@ -9,7 +9,7 @@ import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.storage.ShellStorageWorld;
-import net.snakefangox.worldshell.util.DynamicDimGen;
+import net.snakefangox.worldshell.mixininterface.DynamicDimGen;
 import net.snakefangox.worldshell.util.ShellCommand;
 
 import net.minecraft.block.Block;
@@ -71,6 +71,6 @@ public class WSUniversal implements ModInitializer {
 						.get(Registry.BIOME_KEY).get(BiomeKeys.THE_VOID)));
 		DimensionOptions options = new DimensionOptions(typeSupplier, chunkGenerator);
 		ShellStorageWorld world = (ShellStorageWorld)((DynamicDimGen) server).createDynamicDim(STORAGE_DIM, options, ShellStorageWorld::new);
-		world.setCachedShellStorageData(ShellStorageData.getOrCreate(server));
+		world.setCachedBayData(ShellStorageData.getOrCreate(server));
 	}
 }

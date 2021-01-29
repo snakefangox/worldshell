@@ -4,17 +4,37 @@ import java.util.List;
 import java.util.Map;
 
 import net.snakefangox.worldshell.data.RelativeBlockPos;
+import net.snakefangox.worldshell.entity.WorldLinkEntity;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 public class WorldShellPacketHelper {
+
+	public static PacketByteBuf writeBlock(PacketByteBuf buf, World world, BlockPos pos, WorldLinkEntity entity, RelativeBlockPos center) {
+		buf.writeInt(entity.getId());
+		buf.writeLong(center.toLocal(pos).asLong());
+		buf.writeInt(Block.getRawIdFromState(world.getBlockState(pos)));
+		BlockEntity blockEntity = world.getBlockEntity(pos);
+		if (blockEntity != null) {
+			BlockEntityUpdateS2CPacket packet = blockEntity.toUpdatePacket();
+			if (packet != null && packet.getCompoundTag() != null) {
+				buf.writeCompoundTag(packet.getCompoundTag());
+				return buf;
+			}
+		}
+		buf.writeByte(0);
+		return buf;
+	}
 
 	public static PacketByteBuf writeBlocks(PacketByteBuf buf, Map<BlockState, List<BlockPos>> blockStateListMap, List<BlockEntity> blockEntities, RelativeBlockPos center) {
 		buf.writeInt(blockStateListMap.size());
@@ -41,15 +61,18 @@ public class WorldShellPacketHelper {
 			for (int j = 0; j < posCount; ++j) {
 				BlockPos pos = buf.readBlockPos();
 				posBlockStateMap.put(pos, state);
-				if (hasEntity) posBlockEntityMap.put(pos, ((BlockEntityProvider)state.getBlock()).createBlockEntity(pos, state));
+				if (hasEntity) {
+					posBlockEntityMap.put(pos, ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state));
+				}
 			}
 		}
 		int beCount = buf.readInt();
 		for (int i = 0; i < beCount; ++i) {
 			BlockPos bp = buf.readBlockPos();
 			CompoundTag tag = buf.readCompoundTag();
-			if (tag != null && posBlockEntityMap.containsKey(bp))
+			if (tag != null && posBlockEntityMap.containsKey(bp)) {
 				posBlockEntityMap.get(bp).fromTag(tag);
+			}
 		}
 	}
 }

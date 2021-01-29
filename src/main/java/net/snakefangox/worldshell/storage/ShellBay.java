@@ -5,10 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import net.snakefangox.worldshell.WSUniversal;
 import net.snakefangox.worldshell.data.RelativeBlockPos;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.util.ServerWorldSupplier;
 import net.snakefangox.worldshell.util.ShellTransferHandler;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import org.jetbrains.annotations.NotNull;
@@ -19,9 +21,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.ChunkSectionPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**
@@ -71,6 +77,25 @@ public class ShellBay {
 		return WorldShellPacketHelper.writeBlocks(buf, stateListMap, blockEntities, center);
 	}
 
+	public void loadAllChunks(MinecraftServer server) {
+		ServerWorld world = server.getWorld(WSUniversal.STORAGE_DIM);
+		ChunkPos.stream(new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.minX), ChunkSectionPos.getSectionCoord(bounds.minZ)),
+						new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.maxX), ChunkSectionPos.getSectionCoord(bounds.maxZ)))
+						.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, true));
+	}
+
+	public Vec3d toEntityCoordSpace(Vec3d vec){
+		return center.transferCoordSpace(linkedEntity.get().getLocalCoord(), vec);
+	}
+
+	public Vec3d toEntityCoordSpace(double x, double y, double z){
+		return this.toEntityCoordSpace(new Vec3d(x, y, z));
+	}
+
+	public BlockPos toEntityCoordSpace(BlockPos pos) {
+		return center.transferCoordSpace(linkedEntity.get().getLocalCoord(), pos);
+	}
+
 	public CompoundTag toTag() {
 		CompoundTag tag = new CompoundTag();
 		tag.putLong("center", center.asLong());
@@ -91,13 +116,12 @@ public class ShellBay {
 		linkedEntity = Optional.of(worldLinkEntity);
 	}
 
-	//TODO Setup a system where this works
-	public void setLinkedBounds() {
-		linkedEntity.ifPresent(entity -> {
-			BlockBox box = new BlockBox(bounds.maxX, bounds.maxY, bounds.maxZ, bounds.minX, bounds.minY, bounds.minZ);
-			center.transformBoxCoordSpace(RelativeBlockPos.toRelative(entity.getBlockPos()), box);
-			entity.setBoundingBox(Box.from(box));
-		});
+	public Optional<WorldLinkEntity> getLinkedEntity() {
+		return linkedEntity;
+	}
+
+	public RelativeBlockPos getCenter() {
+		return center;
 	}
 
 	@Override

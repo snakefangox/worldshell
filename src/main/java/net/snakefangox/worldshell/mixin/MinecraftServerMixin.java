@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.google.common.collect.ImmutableList;
-import net.snakefangox.worldshell.util.DynamicDimGen;
+import net.snakefangox.worldshell.mixininterface.DynamicDimGen;
 import net.snakefangox.worldshell.util.ServerWorldSupplier;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;

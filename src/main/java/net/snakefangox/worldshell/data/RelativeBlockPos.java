@@ -2,6 +2,7 @@ package net.snakefangox.worldshell.data;
 
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 
 /**
  * Defines extra methods to transform between a local coord space
@@ -19,9 +20,19 @@ public class RelativeBlockPos extends BlockPos {
 
     public BlockPos toGlobal(BlockPos pos){ return pos.add(this); }
 
-    public BlockPos transferCoordSpace(RelativeBlockPos target, BlockPos pos) {
+    public BlockPos transferCoordSpace(BlockPos target, BlockPos pos) {
         return new BlockPos(target.getX() + (pos.getX() - getX()), target.getY() + (pos.getY() - getY()),
                 target.getZ() + (pos.getZ() - getZ()));
+    }
+
+    public Vec3d transferCoordSpace(Vec3d target, Vec3d pos) {
+        return new Vec3d(target.getX() + (pos.getX() - getX()), target.getY() + (pos.getY() - getY()),
+                        target.getZ() + (pos.getZ() - getZ()));
+    }
+
+    public BlockPos transferCoordSpace(Vec3d target, BlockPos pos) {
+        return new BlockPos(target.getX() + (pos.getX() - getX()), target.getY() + (pos.getY() - getY()),
+                        target.getZ() + (pos.getZ() - getZ()));
     }
 
     public void makeBoxLocal(BlockBox box){
@@ -54,4 +65,8 @@ public class RelativeBlockPos extends BlockPos {
     public static RelativeBlockPos toRelative(BlockPos pos) {
         return new RelativeBlockPos(pos.getX(), pos.getY(), pos.getZ());
     }
+
+	public Vec3d subtract(double x, double y, double z) {
+        return new Vec3d(getX() - x, getY() - y, getZ() - z);
+	}
 }

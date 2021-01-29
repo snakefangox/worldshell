@@ -7,14 +7,19 @@ import java.util.Set;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import org.jetbrains.annotations.Nullable;
 
+import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockRenderView;
+import net.minecraft.world.LightType;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.level.ColorResolver;
 
@@ -23,6 +28,9 @@ public class WorldShell implements BlockRenderView {
 	private final WorldLinkEntity parent;
 	private Map<BlockPos, BlockState> blockStateMap = new HashMap<>();
 	private Map<BlockPos, BlockEntity> blockEntityMap = new HashMap<>();
+	private final BlockPos.Mutable reusablePos = new BlockPos.Mutable();
+	private VertexBuffer cache = new VertexBuffer();
+	private boolean isCacheValid = false;
 
 	public WorldShell(WorldLinkEntity parent) {
 		this.parent = parent;
@@ -40,6 +48,19 @@ public class WorldShell implements BlockRenderView {
 
 	public Set<Map.Entry<BlockPos, BlockState>> getBlocks() {
 		return blockStateMap.entrySet();
+	}
+
+	public void setBlock(BlockPos pos, BlockState state, CompoundTag tag) {
+		blockStateMap.put(pos, state);
+		if (state.hasBlockEntity()) {
+			blockEntityMap.put(pos, ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state));
+			if (tag != null) blockEntityMap.get(pos).fromTag(tag);
+		}
+	}
+
+	private BlockPos toWorldPos(BlockPos pos) {
+		Vec3d offset = parent.getBlockOffset();
+		return reusablePos.set(pos).add(offset.x, offset.y, offset.z).add(parent.getBlockPos());
 	}
 
 	@Override
@@ -63,8 +84,23 @@ public class WorldShell implements BlockRenderView {
 	}
 
 	@Override
+	public int getLightLevel(LightType type, BlockPos pos) {
+		return getLightingProvider().get(type).getLightLevel(toWorldPos(pos));
+	}
+
+	@Override
+	public int getBaseLightLevel(BlockPos pos, int ambientDarkness) {
+		return getLightingProvider().getLight(toWorldPos(pos), ambientDarkness);
+	}
+
+	@Override
+	public boolean isSkyVisible(BlockPos pos) {
+		return getLightLevel(LightType.SKY, toWorldPos(pos)) >= this.getMaxLightLevel();
+	}
+
+	@Override
 	public int getColor(BlockPos pos, ColorResolver colorResolver) {
-		return parent.getEntityWorld().getColor(pos, colorResolver);
+		return parent.getEntityWorld().getColor(toWorldPos(pos), colorResolver);
 	}
 
 	@Override
@@ -75,5 +111,22 @@ public class WorldShell implements BlockRenderView {
 	@Override
 	public int getSectionCount() {
 		return parent.getEntityWorld().getBottomSectionLimit();
+	}
+
+	public boolean isCacheValid() {
+		return isCacheValid;
+	}
+
+	public void markCacheInvalid() {
+		isCacheValid = true;
+	}
+
+	public VertexBuffer getCache() {
+		return cache;
+	}
+
+	public VertexBuffer refreshCache() {
+		cache = new VertexBuffer();
+		return cache;
 	}
 }

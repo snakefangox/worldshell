@@ -1,15 +1,4 @@
 accessWidener	v1	named
 
-# Open up some world fields for worldshell
-
-accessible field net/minecraft/world/World profiler Ljava/util/function/Supplier;
-mutable field net/minecraft/world/World profiler Ljava/util/function/Supplier;
-
-accessible field net/minecraft/world/World properties Lnet/minecraft/world/MutableWorldProperties;
-mutable field net/minecraft/world/World properties Lnet/minecraft/world/MutableWorldProperties;
-
-accessible field net/minecraft/world/World dimension Lnet/minecraft/world/dimension/DimensionType;
-mutable field net/minecraft/world/World dimension Lnet/minecraft/world/dimension/DimensionType;
-
-accessible field net/minecraft/world/World registryKey Lnet/minecraft/util/registry/RegistryKey;
-mutable field net/minecraft/world/World registryKey Lnet/minecraft/util/registry/RegistryKey;
+accessible field net/minecraft/entity/Entity dimensions Lnet/minecraft/entity/EntityDimensions;
+mutable field net/minecraft/entity/Entity dimensions Lnet/minecraft/entity/EntityDimensions;
