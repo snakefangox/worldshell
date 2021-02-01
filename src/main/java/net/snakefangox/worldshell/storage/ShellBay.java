@@ -5,12 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import net.snakefangox.worldshell.WSUniversal;
 import net.snakefangox.worldshell.data.RelativeBlockPos;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.util.ServerWorldSupplier;
 import net.snakefangox.worldshell.util.ShellTransferHandler;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +22,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Vec3d;
@@ -84,11 +81,11 @@ public class ShellBay {
 						.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, true));
 	}
 
-	public Vec3d toEntityCoordSpace(Vec3d vec){
+	public Vec3d toEntityCoordSpace(Vec3d vec) {
 		return center.transferCoordSpace(linkedEntity.get().getLocalCoord(), vec);
 	}
 
-	public Vec3d toEntityCoordSpace(double x, double y, double z){
+	public Vec3d toEntityCoordSpace(double x, double y, double z) {
 		return this.toEntityCoordSpace(new Vec3d(x, y, z));
 	}
 
@@ -108,7 +105,11 @@ public class ShellBay {
 		bounds = new BlockBox(((IntArrayTag) tag.get("bounds")).getIntArray());
 	}
 
-	public BlockBox getBox() {
+	public void markDirty(ServerWorld world) {
+		ShellStorageData.getOrCreate(world).markDirty();
+	}
+
+	public BlockBox getBounds() {
 		return bounds;
 	}
 

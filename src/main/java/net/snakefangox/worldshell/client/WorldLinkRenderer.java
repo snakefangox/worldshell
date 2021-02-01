@@ -31,24 +31,35 @@ public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 		WorldShell worldShell = entity.getWorldShell().get();
 		BlockRenderManager renderManager = MinecraftClient.getInstance().getBlockRenderManager();
 		matrices.push();
+		if (worldShell.isCacheValid()) {
+			worldShell.getCache().draw(matrices);
+		} else {
+			renderToCache(worldShell, renderManager, entity, yaw, tickDelta, matrices);
+		}
+		matrices.pop();
+	}
+
+	private void renderToCache(WorldShell worldShell, BlockRenderManager renderManager, WorldLinkEntity entity, float yaw, float tickDelta, MatrixStack matrices) {
+		WorldShellRenderCache renderCache = worldShell.getCache();
 		for (Map.Entry<BlockPos, BlockState> entry : worldShell.getBlocks()) {
 			BlockState bs = entry.getValue();
 			FluidState fs = bs.getFluidState();
 			BlockPos bp = entry.getKey();
 			matrices.push();
-            matrices.translate(bp.getX(), bp.getY(), bp.getZ());
-            if (!fs.isEmpty()) {
-                matrices.push();
-                matrices.translate(-(bp.getX() & 15), -(bp.getY() & 15), -(bp.getZ() & 15));
-                renderManager.renderFluid(bp, worldShell, vertexConsumers.getBuffer(RenderLayers.getFluidLayer(fs)), fs);
-                matrices.pop();
-            }
-            if (bs.getRenderType() != BlockRenderType.INVISIBLE) {
-                renderManager.renderBlock(bs, bp, worldShell, matrices, vertexConsumers.getBuffer(RenderLayers.getBlockLayer(bs)), true, entity.world.random);
-            }
+			matrices.translate(bp.getX(), bp.getY(), bp.getZ());
+			if (!fs.isEmpty()) {
+				matrices.push();
+				matrices.translate(-(bp.getX() & 15), -(bp.getY() & 15), -(bp.getZ() & 15));
+				renderManager.renderFluid(bp, worldShell, renderCache.get(RenderLayers.getFluidLayer(fs)), fs);
+				matrices.pop();
+			}
+			if (bs.getRenderType() != BlockRenderType.INVISIBLE) {
+				renderManager.renderBlock(bs, bp, worldShell, matrices, renderCache.get(RenderLayers.getBlockLayer(bs)), true, entity.world.random);
+			}
 			matrices.pop();
 		}
-		matrices.pop();
+		renderCache.upload();
+		worldShell.markCacheValid();
 	}
 
 	@Override

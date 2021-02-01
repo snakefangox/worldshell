@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import net.snakefangox.worldshell.client.WorldShellRenderCache;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,7 +12,6 @@ import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.nbt.CompoundTag;
@@ -29,7 +29,7 @@ public class WorldShell implements BlockRenderView {
 	private Map<BlockPos, BlockState> blockStateMap = new HashMap<>();
 	private Map<BlockPos, BlockEntity> blockEntityMap = new HashMap<>();
 	private final BlockPos.Mutable reusablePos = new BlockPos.Mutable();
-	private VertexBuffer cache = new VertexBuffer();
+	private final WorldShellRenderCache cache = new WorldShellRenderCache();
 	private boolean isCacheValid = false;
 
 	public WorldShell(WorldLinkEntity parent) {
@@ -118,15 +118,14 @@ public class WorldShell implements BlockRenderView {
 	}
 
 	public void markCacheInvalid() {
+		isCacheValid = false;
+	}
+
+	public void markCacheValid() {
 		isCacheValid = true;
 	}
 
-	public VertexBuffer getCache() {
-		return cache;
-	}
-
-	public VertexBuffer refreshCache() {
-		cache = new VertexBuffer();
+	public WorldShellRenderCache getCache() {
 		return cache;
 	}
 }

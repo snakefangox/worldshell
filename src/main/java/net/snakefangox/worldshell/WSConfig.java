@@ -6,5 +6,5 @@ import me.sargunvohra.mcmods.autoconfig1u.annotation.Config;
 @Config(name = "worldshell")
 public class WSConfig implements ConfigData {
 
-    public int bufferSpace = 5000;
+	public int bufferSpace = 5000;
 }

@@ -4,15 +4,20 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.google.common.collect.ImmutableList;
+import net.snakefangox.worldshell.CreateWorldsEvent;
 import net.snakefangox.worldshell.mixininterface.DynamicDimGen;
 import net.snakefangox.worldshell.util.ServerWorldSupplier;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTask;
+import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.WorldGenerationProgressListenerFactory;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.world.ServerWorld;
@@ -54,7 +59,9 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	@Shadow
 	private Map<RegistryKey<World>, ServerWorld> worlds;
 
-	@Shadow public @Nullable abstract ServerWorld getWorld(RegistryKey<World> key);
+	@Shadow
+	public @Nullable
+	abstract ServerWorld getWorld(RegistryKey<World> key);
 
 	public MinecraftServerMixin(String string) {
 		super(string);
@@ -76,9 +83,14 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		DimensionType dimensionType = dimensionOptions.getDimensionType();
 		ChunkGenerator chunkGenerator = dimensionOptions.getChunkGenerator();
 		UnmodifiableLevelProperties unmodifiableLevelProperties = new UnmodifiableLevelProperties(saveProperties, serverWorldProperties);
-		ServerWorld serverWorld = worldSupplier.create((MinecraftServer) (Object)this, workerExecutor, session, unmodifiableLevelProperties, worldRegistryKey, dimensionType, worldGenerationProgressListenerFactory.create(0), chunkGenerator, isDebug, seed, ImmutableList.of(), false);
+		ServerWorld serverWorld = worldSupplier.create((MinecraftServer) (Object) this, workerExecutor, session, unmodifiableLevelProperties, worldRegistryKey, dimensionType, worldGenerationProgressListenerFactory.create(0), chunkGenerator, isDebug, seed, ImmutableList.of(), false);
 		getWorld(World.OVERWORLD).getWorldBorder().addListener(new WorldBorderListener.WorldBorderSyncer(serverWorld.getWorldBorder()));
 		worlds.put(worldRegistryKey, serverWorld);
 		return serverWorld;
+	}
+
+	@Inject(method = "Lnet/minecraft/server/MinecraftServer;createWorlds(Lnet/minecraft/server/WorldGenerationProgressListener;)V", at = @At("TAIL"))
+	protected void createWorlds(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
+		CreateWorldsEvent.EVENT.invoker().event((MinecraftServer) (Object) this);
 	}
 }

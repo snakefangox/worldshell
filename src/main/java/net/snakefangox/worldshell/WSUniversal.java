@@ -6,10 +6,10 @@ import com.mojang.brigadier.CommandDispatcher;
 import me.sargunvohra.mcmods.autoconfig1u.AutoConfig;
 import me.sargunvohra.mcmods.autoconfig1u.serializer.Toml4jConfigSerializer;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.mixininterface.DynamicDimGen;
 import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.storage.ShellStorageWorld;
-import net.snakefangox.worldshell.mixininterface.DynamicDimGen;
 import net.snakefangox.worldshell.util.ShellCommand;
 
 import net.minecraft.block.Block;
@@ -31,7 +31,6 @@ import net.minecraft.world.gen.chunk.ChunkGenerator;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 
@@ -53,7 +52,7 @@ public class WSUniversal implements ModInitializer {
 		Registry.register(Registry.ENTITY_TYPE, new Identifier(MODID, "worldlink"), WORLD_LINK_ENTITY_TYPE);
 		Registry.register(Registry.BLOCK, new Identifier(MODID, "placeholder"), PLACEHOLDER);
 		CommandRegistrationCallback.EVENT.register(this::registerCommands);
-		ServerLifecycleEvents.SERVER_STARTED.register(this::registerShellStorageDimension);
+		CreateWorldsEvent.EVENT.register(this::registerShellStorageDimension);
 	}
 
 	private void registerCommands(CommandDispatcher<ServerCommandSource> serverCommandSourceCommandDispatcher, boolean b) {
@@ -70,7 +69,7 @@ public class WSUniversal implements ModInitializer {
 		ChunkGenerator chunkGenerator = new EmptyChunkGenerator(new FixedBiomeSource(server.getRegistryManager()
 						.get(Registry.BIOME_KEY).get(BiomeKeys.THE_VOID)));
 		DimensionOptions options = new DimensionOptions(typeSupplier, chunkGenerator);
-		ShellStorageWorld world = (ShellStorageWorld)((DynamicDimGen) server).createDynamicDim(STORAGE_DIM, options, ShellStorageWorld::new);
+		ShellStorageWorld world = (ShellStorageWorld) ((DynamicDimGen) server).createDynamicDim(STORAGE_DIM, options, ShellStorageWorld::new);
 		world.setCachedBayData(ShellStorageData.getOrCreate(server));
 	}
 }

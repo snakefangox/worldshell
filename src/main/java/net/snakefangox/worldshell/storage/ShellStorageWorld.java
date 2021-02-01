@@ -1,16 +1,15 @@
 package net.snakefangox.worldshell.storage;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.function.Predicate;
 
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.util.ShellTransferHandler;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.system.CallbackI;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.class_5575;
@@ -55,6 +54,10 @@ public class ShellStorageWorld extends ServerWorld {
 				PacketByteBuf buf = PacketByteBufs.create();
 				WorldShellPacketHelper.writeBlock(buf, this, pos, entity, bay.getCenter());
 				ServerPlayNetworking.send(player, WSNetworking.SHELL_UPDATE, buf);
+				if (!bay.getBounds().contains(pos)) {
+					ShellTransferHandler.updateBoxBounds(bay.getBounds(), pos);
+					bay.markDirty(this);
+				}
 			}));
 		}
 		return changed;
@@ -73,7 +76,7 @@ public class ShellStorageWorld extends ServerWorld {
 	public <T extends ParticleEffect> int spawnParticles(T particle, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
 		return passCallToEntity(new BlockPos(x, y, z), 0, (entity, bay) -> {
 			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
-			return ((ServerWorld)entity.getEntityWorld()).spawnParticles(particle, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
+			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(particle, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
 		});
 	}
 
@@ -81,7 +84,7 @@ public class ShellStorageWorld extends ServerWorld {
 	public <T extends ParticleEffect> boolean spawnParticles(ServerPlayerEntity viewer, T particle, boolean force, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
 		return passCallToEntity(new BlockPos(x, y, z), false, (entity, bay) -> {
 			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
-			return ((ServerWorld)entity.getEntityWorld()).spawnParticles(viewer, particle, force, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
+			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(viewer, particle, force, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
 		});
 	}
 

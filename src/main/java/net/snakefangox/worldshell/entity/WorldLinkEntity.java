@@ -42,7 +42,7 @@ public class WorldLinkEntity extends Entity {
 	private static final TrackedData<RelativeVec3d> BLOCK_OFFSET = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.REL_VEC3D);
 
 	private int shellId = 0;
-	private Optional<WorldShell> worldShell;
+	private final Optional<WorldShell> worldShell;
 
 	public WorldLinkEntity(World world) {
 		this(WSUniversal.WORLD_LINK_ENTITY_TYPE, world);
@@ -124,13 +124,19 @@ public class WorldLinkEntity extends Entity {
 
 	@Override
 	protected void readCustomDataFromTag(CompoundTag tag) {
-		//TODO fix this
 		setShellId(tag.getInt("shellId"));
+		setBlockOffset(RelativeVec3d.fromTag(tag, "blockOffset"));
+		float width = tag.getFloat("width");
+		float height = tag.getFloat("height");
+		setDimensions(new EntityDimensions(width, height, false));
 	}
 
 	@Override
 	protected void writeCustomDataToTag(CompoundTag tag) {
 		tag.putInt("shellId", shellId);
+		getBlockOffset().toTag(tag, "blockOffset");
+		tag.putFloat("width", getDimensions(null).width);
+		tag.putFloat("height", getDimensions(null).height);
 	}
 
 	@Override
