@@ -12,6 +12,8 @@ group = project.maven_group
 
 repositories {
     jcenter()
+    mavenLocal()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -23,11 +25,8 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    //Dependencies
-    modApi("me.sargunvohra.mcmods:autoconfig1u:${project.config_version}") {
-        exclude(group: "net.fabricmc.fabric-api")
-    }
-    include "me.sargunvohra.mcmods:autoconfig1u:${project.config_version}"
+    modImplementation "io.github.stuff_stuffs.multipart_entities:MultipartEntities:${project.multi_version}"
+    include "io.github.stuff_stuffs.multipart_entities:MultipartEntities:${project.multi_version}"
 }
 
 minecraft {

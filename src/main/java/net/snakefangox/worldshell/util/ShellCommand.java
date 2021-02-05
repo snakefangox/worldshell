@@ -4,10 +4,10 @@ import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.mojang.brigadier.CommandDispatcher;
-import net.snakefangox.worldshell.data.RelativeBlockPos;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 
 import net.minecraft.command.argument.BlockPosArgumentType;
@@ -31,11 +31,11 @@ public class ShellCommand {
 				if (!source.getWorld().isAir(bp)) blockPosList.add(bp.toImmutable());
 			});
 			if (blockPosList.size() > 0) {
-				WorldLinkEntity entity = ShellTransferHandler.transferToShell(source.getWorld(), RelativeBlockPos.toRelative(blockPosList.get(0)), blockPosList);
+				WorldLinkEntity entity = ShellTransferHandler.transferToShell(source.getWorld(), blockPosList.get(0), blockPosList);
 				source.getWorld().spawnEntity(entity);
 			}
-		} catch (Throwable t) {
-			throw new RuntimeException(t);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return 1;
 	}

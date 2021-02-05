@@ -3,8 +3,6 @@ package net.snakefangox.worldshell;
 import java.util.function.Supplier;
 
 import com.mojang.brigadier.CommandDispatcher;
-import me.sargunvohra.mcmods.autoconfig1u.AutoConfig;
-import me.sargunvohra.mcmods.autoconfig1u.serializer.Toml4jConfigSerializer;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.mixininterface.DynamicDimGen;
 import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
@@ -37,7 +35,6 @@ import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 public class WSUniversal implements ModInitializer {
 
 	public static final String MODID = "worldshell";
-	public static WSConfig CONFIG;
 
 	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.DIMENSION, new Identifier(MODID, "shell_storage"));
 	public static final EntityType<WorldLinkEntity> WORLD_LINK_ENTITY_TYPE = FabricEntityTypeBuilder.<WorldLinkEntity>create(SpawnGroup.MISC, WorldLinkEntity::new)
@@ -46,8 +43,6 @@ public class WSUniversal implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		AutoConfig.register(WSConfig.class, Toml4jConfigSerializer::new);
-		CONFIG = AutoConfig.getConfigHolder(WSConfig.class).getConfig();
 		registerStorageDim();
 		Registry.register(Registry.ENTITY_TYPE, new Identifier(MODID, "worldlink"), WORLD_LINK_ENTITY_TYPE);
 		Registry.register(Registry.BLOCK, new Identifier(MODID, "placeholder"), PLACEHOLDER);

@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import net.snakefangox.worldshell.WSUniversal;
-import net.snakefangox.worldshell.data.RelativeBlockPos;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.ShellTransferHandler;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +34,7 @@ import net.minecraft.world.World;
 public class ShellBay {
 
 	//The center of the shell
-	private RelativeBlockPos center;
+	private BlockPos center;
 
 	//Defines the box the shell fits within
 	private BlockBox bounds;
@@ -42,7 +42,7 @@ public class ShellBay {
 	//The entity changes to this shell should propagate to
 	private Optional<WorldLinkEntity> linkedEntity = Optional.empty();
 
-	public ShellBay(RelativeBlockPos center, BlockBox bounds) {
+	public ShellBay(BlockPos center, BlockBox bounds) {
 		this.center = center;
 		this.bounds = bounds;
 	}
@@ -82,15 +82,15 @@ public class ShellBay {
 	}
 
 	public Vec3d toEntityCoordSpace(Vec3d vec) {
-		return center.transferCoordSpace(linkedEntity.get().getLocalCoord(), vec);
+		return CoordUtil.worldToLinkEntity(center, linkedEntity.get(), vec);
 	}
 
 	public Vec3d toEntityCoordSpace(double x, double y, double z) {
-		return this.toEntityCoordSpace(new Vec3d(x, y, z));
+		return CoordUtil.worldToLinkEntity(center, linkedEntity.get(), x, y, z);
 	}
 
 	public BlockPos toEntityCoordSpace(BlockPos pos) {
-		return center.transferCoordSpace(linkedEntity.get().getLocalCoord(), pos);
+		return CoordUtil.worldToLinkEntity(center, linkedEntity.get(), pos);
 	}
 
 	public CompoundTag toTag() {
@@ -101,7 +101,7 @@ public class ShellBay {
 	}
 
 	public void fromTag(CompoundTag tag) {
-		center = RelativeBlockPos.fromLong(tag.getLong("center"));
+		center = BlockPos.fromLong(tag.getLong("center"));
 		bounds = new BlockBox(((IntArrayTag) tag.get("bounds")).getIntArray());
 	}
 
@@ -121,7 +121,7 @@ public class ShellBay {
 		return linkedEntity;
 	}
 
-	public RelativeBlockPos getCenter() {
+	public BlockPos getCenter() {
 		return center;
 	}
 

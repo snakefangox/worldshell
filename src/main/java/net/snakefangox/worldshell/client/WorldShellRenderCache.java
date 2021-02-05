@@ -2,6 +2,7 @@ package net.snakefangox.worldshell.client;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,6 +14,8 @@ import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 
 public class WorldShellRenderCache {
+
+	private static final List<RenderLayer> renderLayers = RenderLayer.getBlockLayers();
 
 	private final Map<RenderLayer, VertexBuffer> bufferStorage = new HashMap<>();
 	private final Map<RenderLayer, BufferBuilder> buffers = new HashMap<>();
@@ -41,8 +44,9 @@ public class WorldShellRenderCache {
 	}
 
 	public void draw(MatrixStack matrices) {
-		bufferStorage.forEach((key, entry) -> {
+		renderLayers.forEach((key) -> {
 			if (bufferFilled.contains(key)) {
+				VertexBuffer entry = bufferStorage.get(key);
 				key.startDrawing();
 				entry.bind();
 				vertexFormat.startDrawing(0L);
@@ -63,7 +67,7 @@ public class WorldShellRenderCache {
 	}
 
 	private void fillBuffers() {
-		RenderLayer.getBlockLayers().forEach(renderLayer -> {
+		renderLayers.forEach(renderLayer -> {
 			BufferBuilder bufferBuilder = new BufferBuilder(renderLayer.getExpectedBufferSize());
 			bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL);
 			buffers.put(renderLayer, bufferBuilder);

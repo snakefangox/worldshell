@@ -25,12 +25,14 @@ import net.minecraft.world.level.ColorResolver;
 
 public class WorldShell implements BlockRenderView {
 
+	private static final int CACHE_VALID_TIME = 1200;
+
 	private final WorldLinkEntity parent;
 	private Map<BlockPos, BlockState> blockStateMap = new HashMap<>();
 	private Map<BlockPos, BlockEntity> blockEntityMap = new HashMap<>();
 	private final BlockPos.Mutable reusablePos = new BlockPos.Mutable();
 	private final WorldShellRenderCache cache = new WorldShellRenderCache();
-	private boolean isCacheValid = false;
+	private int cacheResetTimer = 0;
 
 	public WorldShell(WorldLinkEntity parent) {
 		this.parent = parent;
@@ -113,16 +115,20 @@ public class WorldShell implements BlockRenderView {
 		return parent.getEntityWorld().getBottomSectionLimit();
 	}
 
+	public void tickCache() {
+		--cacheResetTimer;
+	}
+
 	public boolean isCacheValid() {
-		return isCacheValid;
+		return cacheResetTimer > 0;
 	}
 
 	public void markCacheInvalid() {
-		isCacheValid = false;
+		cacheResetTimer = 0;
 	}
 
 	public void markCacheValid() {
-		isCacheValid = true;
+		cacheResetTimer = CACHE_VALID_TIME;
 	}
 
 	public WorldShellRenderCache getCache() {

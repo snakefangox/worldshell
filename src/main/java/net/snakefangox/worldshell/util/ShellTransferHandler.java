@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import net.snakefangox.worldshell.WSUniversal;
-import net.snakefangox.worldshell.data.RelativeBlockPos;
-import net.snakefangox.worldshell.data.RelativeVec3d;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.ShellBay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
@@ -28,28 +26,28 @@ public class ShellTransferHandler {
 
 	private static final int FLAGS = 2 | 16 | 32 | 64;
 
-	public static WorldLinkEntity transferToShell(ServerWorld world, RelativeBlockPos core, List<BlockPos> blocks) {
+	public static WorldLinkEntity transferToShell(ServerWorld world, BlockPos core, List<BlockPos> blocks) {
 		return transferToShell(world, core, blocks, new WorldLinkEntity(WSUniversal.WORLD_LINK_ENTITY_TYPE, world));
 	}
 
 	//TODO Set this up the same way the clone command works
-	public static <T extends WorldLinkEntity> T transferToShell(ServerWorld world, RelativeBlockPos core, List<BlockPos> blocks, T worldLinkEntity) {
+	public static <T extends WorldLinkEntity> T transferToShell(ServerWorld world, BlockPos core, List<BlockPos> blocks, T worldLinkEntity) {
 		World shellWorld = world.getServer().getWorld(WSUniversal.STORAGE_DIM);
 		ShellStorageData storageData = ShellStorageData.getOrCreate(world.getServer());
-		RelativeBlockPos bayPos = storageData.getFreeBay();
+		BlockPos bayPos = storageData.getFreeBay();
 		BlockBox bayBounds = BlockBox.empty();
 		for (BlockPos bp : blocks) {
-			BlockPos dest = core.transferCoordSpace(bayPos, bp);
+			BlockPos dest = CoordUtil.transferCoordSpace(core, bayPos, bp);
 			copyBlock(world, shellWorld, bp, dest);
 			updateBoxBounds(bayBounds, bp);
 		}
 		EntityDimensions dimensions = new EntityDimensions(Math.max(bayBounds.getBlockCountX(), bayBounds.getBlockCountZ()), bayBounds.getBlockCountY(), false);
 		worldLinkEntity.setDimensions(dimensions);
-		Vec3d center = CoordinateHelper.getBoxCenter(bayBounds);
+		Vec3d center = CoordUtil.getBoxCenter(bayBounds);
 		worldLinkEntity.setPosition(center.getX() + 0.5, bayBounds.minY, center.getZ() + 0.5);
-		worldLinkEntity.setBlockOffset(RelativeVec3d.toRelative(core.subtract(center.x, bayBounds.minY, center.z).add(-0.5, 0, -0.5)));
+		worldLinkEntity.setBlockOffset(new Vec3d(core.getX() - center.x, core.getY() - bayBounds.minY, core.getZ() - center.z).add(-0.5, 0, -0.5));
 		blocks.forEach((bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
-		core.transformBoxCoordSpace(bayPos, bayBounds);
+		CoordUtil.transformBoxCoordSpace(core, bayPos, bayBounds);
 		int id = storageData.addBay(new ShellBay(bayPos, bayBounds));
 		storageData.getBay(id).loadAllChunks(world.getServer());
 		worldLinkEntity.setShellId(id);

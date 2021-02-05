@@ -2,3 +2,5 @@ accessWidener	v1	named
 
 accessible field net/minecraft/entity/Entity dimensions Lnet/minecraft/entity/EntityDimensions;
 mutable field net/minecraft/entity/Entity dimensions Lnet/minecraft/entity/EntityDimensions;
+extendable method net/minecraft/entity/Entity getBoundingBox ()Lnet/minecraft/util/math/Box;
+extendable method net/minecraft/entity/Entity setBoundingBox (Lnet/minecraft/util/math/Box;)V

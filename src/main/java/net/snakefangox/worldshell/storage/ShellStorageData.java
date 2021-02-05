@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.snakefangox.worldshell.WSUniversal;
-import net.snakefangox.worldshell.data.RelativeBlockPos;
+import net.snakefangox.worldshell.WorldShellConfig;
 import net.snakefangox.worldshell.util.ShellTransferHandler;
 
 import net.minecraft.block.Blocks;
@@ -23,17 +23,17 @@ public class ShellStorageData extends PersistentState {
 	private static final String ID = WSUniversal.MODID + ":shell_storage";
 	private static final int WORLD_RADIUS = 30000000;
 
-	private int bufferSpace = WSUniversal.CONFIG.bufferSpace;
+	private int bufferSpace = WorldShellConfig.getBufferSpace();
 	private int freeIndex = 1;
 	private final Map<Integer, ShellBay> bays = new HashMap<>();
 	private final List<Integer> emptyBays = new ArrayList<>();
 
-	public RelativeBlockPos getFreeBay() {
+	public BlockPos getFreeBay() {
 		int id = findEmptyIndex(false);
 		int maxBays = (WORLD_RADIUS * 2) / bufferSpace;
 		int x = id % maxBays;
 		int z = (id / maxBays) + 1;
-		return new RelativeBlockPos((x * bufferSpace) - WORLD_RADIUS, 0, (z * bufferSpace) - WORLD_RADIUS);
+		return new BlockPos((x * bufferSpace) - WORLD_RADIUS, 0, (z * bufferSpace) - WORLD_RADIUS);
 	}
 
 	public int getBayIdFromPos(BlockPos pos) {
@@ -72,7 +72,7 @@ public class ShellStorageData extends PersistentState {
 	}
 
 	@Override
-	public CompoundTag toTag(CompoundTag tag) {
+	public CompoundTag toNbt(CompoundTag tag) {
 		tag.putInt("freeIndex", freeIndex);
 		tag.putInt("bufferSpace", bufferSpace);
 		CompoundTag bayList = new CompoundTag();

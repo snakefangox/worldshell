@@ -3,7 +3,6 @@ package net.snakefangox.worldshell.util;
 import java.util.List;
 import java.util.Map;
 
-import net.snakefangox.worldshell.data.RelativeBlockPos;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 
 import net.minecraft.block.Block;
@@ -18,9 +17,9 @@ import net.minecraft.world.World;
 
 public class WorldShellPacketHelper {
 
-	public static PacketByteBuf writeBlock(PacketByteBuf buf, World world, BlockPos pos, WorldLinkEntity entity, RelativeBlockPos center) {
+	public static PacketByteBuf writeBlock(PacketByteBuf buf, World world, BlockPos pos, WorldLinkEntity entity, BlockPos center) {
 		buf.writeInt(entity.getId());
-		buf.writeLong(center.toLocal(pos).asLong());
+		buf.writeLong(CoordUtil.toLocal(center, pos).asLong());
 		buf.writeInt(Block.getRawIdFromState(world.getBlockState(pos)));
 		BlockEntity blockEntity = world.getBlockEntity(pos);
 		if (blockEntity != null) {
@@ -34,16 +33,16 @@ public class WorldShellPacketHelper {
 		return buf;
 	}
 
-	public static PacketByteBuf writeBlocks(PacketByteBuf buf, Map<BlockState, List<BlockPos>> blockStateListMap, List<BlockEntity> blockEntities, RelativeBlockPos center) {
+	public static PacketByteBuf writeBlocks(PacketByteBuf buf, Map<BlockState, List<BlockPos>> blockStateListMap, List<BlockEntity> blockEntities, BlockPos center) {
 		buf.writeInt(blockStateListMap.size());
 		for (Map.Entry<BlockState, List<BlockPos>> entry : blockStateListMap.entrySet()) {
 			buf.writeInt(Block.getRawIdFromState(entry.getKey()));
 			buf.writeVarInt(entry.getValue().size());
-			for (BlockPos bp : entry.getValue()) buf.writeBlockPos(center.toLocal(bp));
+			for (BlockPos bp : entry.getValue()) buf.writeBlockPos(CoordUtil.toLocal(center, bp));
 		}
 		buf.writeInt(blockEntities.size());
 		for (BlockEntity be : blockEntities) {
-			buf.writeBlockPos(center.toLocal(be.getPos()));
+			buf.writeBlockPos(CoordUtil.toLocal(center, be.getPos()));
 			BlockEntityUpdateS2CPacket packet = be.toUpdatePacket();
 			buf.writeCompoundTag(packet.getCompoundTag());
 		}

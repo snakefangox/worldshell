@@ -3,7 +3,6 @@ package net.snakefangox.worldshell;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.snakefangox.worldshell.data.RelativeVec3d;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
@@ -20,6 +19,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
@@ -83,32 +83,32 @@ public class WSNetworking {
 		}
 	};
 
-	public static final TrackedDataHandler<RelativeVec3d> REL_VEC3D = new TrackedDataHandler<RelativeVec3d>() {
+	public static final TrackedDataHandler<Vec3d> VEC3D = new TrackedDataHandler<Vec3d>() {
 
 		@Override
-		public void write(PacketByteBuf data, RelativeVec3d object) {
+		public void write(PacketByteBuf data, Vec3d object) {
 			data.writeDouble(object.x);
 			data.writeDouble(object.y);
 			data.writeDouble(object.z);
 		}
 
 		@Override
-		public RelativeVec3d read(PacketByteBuf buf) {
+		public Vec3d read(PacketByteBuf buf) {
 			double x = buf.readDouble();
 			double y = buf.readDouble();
 			double z = buf.readDouble();
-			return new RelativeVec3d(x, y, z);
+			return new Vec3d(x, y, z);
 		}
 
 		@Override
-		public RelativeVec3d copy(RelativeVec3d object) {
+		public Vec3d copy(Vec3d object) {
 			return object;
 		}
 	};
 
 	static {
 		TrackedDataHandlerRegistry.register(DIMENSIONS);
-		TrackedDataHandlerRegistry.register(REL_VEC3D);
+		TrackedDataHandlerRegistry.register(VEC3D);
 	}
 
 }

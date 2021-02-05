@@ -28,18 +28,20 @@ public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 
 	@Override
 	public void render(WorldLinkEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-		WorldShell worldShell = entity.getWorldShell().get();
+		WorldShell worldShell = entity.getWorldShell();
 		BlockRenderManager renderManager = MinecraftClient.getInstance().getBlockRenderManager();
 		matrices.push();
-		if (worldShell.isCacheValid()) {
-			worldShell.getCache().draw(matrices);
-		} else {
-			renderToCache(worldShell, renderManager, entity, yaw, tickDelta, matrices);
+		worldShell.tickCache();
+		if (!worldShell.isCacheValid()) {
+			worldShell.getCache().reset();
+			renderToCache(worldShell, renderManager, entity, yaw, tickDelta);
 		}
+		worldShell.getCache().draw(matrices);
 		matrices.pop();
 	}
 
-	private void renderToCache(WorldShell worldShell, BlockRenderManager renderManager, WorldLinkEntity entity, float yaw, float tickDelta, MatrixStack matrices) {
+	private void renderToCache(WorldShell worldShell, BlockRenderManager renderManager, WorldLinkEntity entity, float yaw, float tickDelta) {
+		MatrixStack matrices = new MatrixStack();
 		WorldShellRenderCache renderCache = worldShell.getCache();
 		for (Map.Entry<BlockPos, BlockState> entry : worldShell.getBlocks()) {
 			BlockState bs = entry.getValue();
