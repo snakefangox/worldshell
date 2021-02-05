@@ -6,7 +6,7 @@ import net.minecraft.util.math.Vec3d;
 /**
  * A common place for implementations of NBT serialization
  */
-public class NbtHelper {
+public class WSNbtHelper {
 
 	public static void putVec3d(CompoundTag tag, Vec3d vec3d, String name) {
 		tag.putDouble(name + "X", vec3d.x);
