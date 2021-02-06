@@ -82,15 +82,15 @@ public class ShellBay {
 	}
 
 	public Vec3d toEntityCoordSpace(Vec3d vec) {
-		return CoordUtil.worldToLinkEntity(center, linkedEntity.get(), vec);
+		return CoordUtil.linkEntityToWorld(center, linkedEntity.get(), vec);
 	}
 
 	public Vec3d toEntityCoordSpace(double x, double y, double z) {
-		return CoordUtil.worldToLinkEntity(center, linkedEntity.get(), x, y, z);
+		return CoordUtil.linkEntityToWorld(center, linkedEntity.get(), x, y, z);
 	}
 
 	public BlockPos toEntityCoordSpace(BlockPos pos) {
-		return CoordUtil.worldToLinkEntity(center, linkedEntity.get(), pos);
+		return CoordUtil.linkEntityToWorld(center, linkedEntity.get(), pos);
 	}
 
 	public CompoundTag toTag() {

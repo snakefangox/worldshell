@@ -14,7 +14,6 @@ import net.snakefangox.worldshell.storage.ShellBay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
-import net.snakefangox.worldshell.util.RaycastHelper;
 import net.snakefangox.worldshell.util.WSNbtHelper;
 
 import net.minecraft.block.BlockState;
@@ -35,10 +34,12 @@ import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.EulerAngle;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -72,8 +73,9 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 		double yOff = getPos().y + getBlockOffset().y;
 		double zOff = getPos().z + getBlockOffset().z;
 		for (Map.Entry<BlockPos, BlockState> entry : stateMap.entrySet()) {
+			BlockPos bp = entry.getKey();
 			List<Box> lBoxes = CoordUtil.getTransformedBoxesFromVoxelShape(entry.getValue()
-							.getCollisionShape(worldShell, entry.getKey(), ShapeContext.absent()), xOff, yOff, zOff);
+							.getCollisionShape(worldShell, entry.getKey(), ShapeContext.absent()), xOff + bp.getX(), yOff + bp.getY(), zOff + bp.getZ());
 			lBoxes.forEach(b -> boxes.add(new OrientedBox(b)));
 		}
 		collisionBox = new CompoundOrientedBox(super.getBoundingBox().expand(dimensions.width, dimensions.height, dimensions.width), boxes);
@@ -135,17 +137,9 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 		getDataTracker().set(BLOCK_OFFSET, offset);
 	}
 
-	public Vec3d getLocalCoord() {
-		return getPos().add(getBlockOffset());
-	}
-
-	public Vec3d toWorldShellCoords(Vec3d pos) {
-		return pos.subtract(getLocalCoord());
-	}
-
 	@Override
 	public boolean isCollidable() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -156,7 +150,13 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	@Override
 	public ActionResult interact(PlayerEntity player, Hand hand) {
 		if (world.isClient()) {
-			System.out.println(worldShell.raycast(RaycastHelper.raycastFromPlayer(player, this)).getBlockPos());
+			Vec3d cameraPosVec = player.getCameraPosVec(1.0F);
+			Vec3d rotationVec = player.getRotationVec(1.0F);
+			Vec3d extendedVec = CoordUtil.worldToLinkEntity(this,
+							cameraPosVec.add(rotationVec.x * 4.5F, rotationVec.y * 4.5F, rotationVec.z * 4.5F));
+			RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntity(this, cameraPosVec),
+							extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
+			BlockHitResult rayCastResult = worldShell.raycast(rayCtx);
 		}
 		return super.interact(player, hand);
 	}

@@ -18,6 +18,8 @@ import net.minecraft.util.shape.VoxelShape;
  */
 public class CoordUtil {
 
+	public static final BlockPos BP_ZERO = new BlockPos(0, 0, 0);
+
 	public static Vec3d getBoxCenter(BlockBox box) {
 		double x = box.minX + (((double) (box.maxX - box.minX)) / 2.0);
 		double y = box.minY + (((double) (box.maxY - box.minY)) / 2.0);
@@ -56,27 +58,32 @@ public class CoordUtil {
 						target.getZ() + (pos.getZ() - current.getZ()));
 	}
 
-	public static Vec3d worldToLinkEntity(BlockPos current, WorldLinkEntity target, Vec3d pos) {
+	public static Vec3d linkEntityToWorld(BlockPos current, WorldLinkEntity target, Vec3d pos) {
 		return new Vec3d(target.getX() + target.getBlockOffset().x + (pos.getX() - current.getX()),
 						target.getY() + target.getBlockOffset().y + (pos.getY() - current.getY()),
-						target.getZ() + target.getBlockOffset().y + (pos.getZ() - current.getZ()));
+						target.getZ() + target.getBlockOffset().z + (pos.getZ() - current.getZ()));
 	}
 
-	public static BlockPos worldToLinkEntity(BlockPos current, WorldLinkEntity target, BlockPos pos) {
+	public static BlockPos linkEntityToWorld(BlockPos current, WorldLinkEntity target, BlockPos pos) {
 		return new BlockPos(target.getX() + target.getBlockOffset().x + (pos.getX() - current.getX()),
 						target.getY() + target.getBlockOffset().y + (pos.getY() - current.getY()),
-						target.getZ() + target.getBlockOffset().y + (pos.getZ() - current.getZ()));
+						target.getZ() + target.getBlockOffset().z + (pos.getZ() - current.getZ()));
 	}
 
-	public static Vec3d worldToLinkEntity(BlockPos current, WorldLinkEntity target, double posX, double posY, double posZ) {
+	public static Vec3d linkEntityToWorld(BlockPos current, WorldLinkEntity target, double posX, double posY, double posZ) {
 		return new Vec3d(target.getX() + target.getBlockOffset().x + (posX - current.getX()),
 						target.getY() + target.getBlockOffset().y + (posY - current.getY()),
-						target.getZ() + target.getBlockOffset().y + (posZ - current.getZ()));
+						target.getZ() + target.getBlockOffset().z + (posZ - current.getZ()));
+	}
+
+	public static Vec3d worldToLinkEntity(WorldLinkEntity entity, Vec3d pos) {
+		return new Vec3d(pos.x - (entity.getX() + entity.getBlockOffset().x),
+						pos.y - (entity.getY() + entity.getBlockOffset().y),
+						pos.z - (entity.getZ() + entity.getBlockOffset().z));
 	}
 
 	public static List<Box> getTransformedBoxesFromVoxelShape(VoxelShape voxelShape, double xOff, double yOff, double zOff) {
 		List<Box> list = new ArrayList<>();
-
 		voxelShape.forEachBox((x1, y1, z1, x2, y2, z2) ->
 						list.add(new Box(x1 + xOff, y1 + yOff, z1 + zOff, x2 + xOff, y2 + yOff, z2 + zOff)));
 		return list;
