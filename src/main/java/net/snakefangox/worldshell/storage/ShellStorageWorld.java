@@ -92,7 +92,50 @@ public class ShellStorageWorld extends ServerWorld {
 	public void playSound(@Nullable PlayerEntity player, double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch) {
 		passCallToEntity(new BlockPos(x, y, z), (entity, bay) -> {
 			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
-			entity.getEntityWorld().playSound(player, newPos.x, newPos.y, newPos.z, sound, category, volume, pitch);
+			entity.getEntityWorld().playSound(null, newPos.x, newPos.y, newPos.z, sound, category, volume, pitch);
+		});
+	}
+
+	@Override
+	public void playSound(@Nullable PlayerEntity player, BlockPos pos, SoundEvent sound, SoundCategory category, float volume, float pitch) {
+		passCallToEntity(pos, (entity, bay) -> {
+			BlockPos newPos = bay.toEntityCoordSpace(pos);
+			entity.getEntityWorld().playSound(null, newPos, sound, category, volume, pitch);
+		});
+	}
+
+	@Override
+	public void playSound(double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch, boolean bl) {
+		passCallToEntity(new BlockPos(x, y, z), (entity, bay) -> {
+			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
+			entity.getEntityWorld().playSound(newPos.x, newPos.y, newPos.z, sound, category, volume, pitch, bl);
+		});
+	}
+
+	@Override
+	public void syncGlobalEvent(int eventId, BlockPos pos, int data) {
+		super.syncGlobalEvent(eventId, pos, data);
+		passCallToEntity(pos, (entity, bay) -> {
+			BlockPos newPos = bay.toEntityCoordSpace(pos);
+			entity.getEntityWorld().syncGlobalEvent(eventId, newPos, data);
+		});
+	}
+
+	@Override
+	public void syncWorldEvent(int eventId, BlockPos pos, int data) {
+		super.syncWorldEvent(eventId, pos, data);
+		passCallToEntity(pos, (entity, bay) -> {
+			BlockPos newPos = bay.toEntityCoordSpace(pos);
+			entity.getEntityWorld().syncWorldEvent(eventId, newPos, data);
+		});
+	}
+
+	@Override
+	public void syncWorldEvent(@Nullable PlayerEntity player, int eventId, BlockPos pos, int data) {
+		super.syncWorldEvent(player, eventId, pos, data);
+		passCallToEntity(pos, (entity, bay) -> {
+			BlockPos newPos = bay.toEntityCoordSpace(pos);
+			entity.getEntityWorld().syncWorldEvent(null, eventId, newPos, data);
 		});
 	}
 

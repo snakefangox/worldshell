@@ -12,8 +12,12 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 
 public class WorldShellPacketHelper {
 
@@ -25,7 +29,7 @@ public class WorldShellPacketHelper {
 		if (blockEntity != null) {
 			BlockEntityUpdateS2CPacket packet = blockEntity.toUpdatePacket();
 			if (packet != null && packet.getCompoundTag() != null) {
-				buf.writeCompoundTag(packet.getCompoundTag());
+				buf.writeCompoundTag(overwritePos(packet.getCompoundTag(), pos));
 				return buf;
 			}
 		}
@@ -42,10 +46,20 @@ public class WorldShellPacketHelper {
 		}
 		buf.writeInt(blockEntities.size());
 		for (BlockEntity be : blockEntities) {
-			buf.writeBlockPos(CoordUtil.toLocal(center, be.getPos()));
+			BlockPos pos = CoordUtil.toLocal(center, be.getPos());
+			buf.writeBlockPos(pos);
 			BlockEntityUpdateS2CPacket packet = be.toUpdatePacket();
-			buf.writeCompoundTag(packet.getCompoundTag());
+			buf.writeCompoundTag(overwritePos(packet.getCompoundTag(), pos));
 		}
+		return buf;
+	}
+
+	public static PacketByteBuf writeInteract(WorldLinkEntity entity, BlockHitResult hitResult, Hand hand, boolean interactType) {
+		PacketByteBuf buf = PacketByteBufs.create();
+		buf.writeInt(entity.getId());
+		buf.writeBlockHitResult(hitResult);
+		buf.writeEnumConstant(hand);
+		buf.writeBoolean(interactType);
 		return buf;
 	}
 
@@ -71,5 +85,12 @@ public class WorldShellPacketHelper {
 				posBlockEntityMap.get(bp).fromTag(tag);
 			}
 		}
+	}
+
+	private static CompoundTag overwritePos(CompoundTag tag, BlockPos pos) {
+		tag.putInt("x", pos.getX());
+		tag.putInt("y", pos.getY());
+		tag.putInt("z", pos.getZ());
+		return tag;
 	}
 }

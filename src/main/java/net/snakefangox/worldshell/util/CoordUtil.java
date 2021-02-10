@@ -43,6 +43,10 @@ public class CoordUtil {
 		return pos.add(center);
 	}
 
+	public static Vec3d toGlobal(BlockPos center, Vec3d pos) {
+		return pos.add(center.getX(), center.getY(), center.getZ());
+	}
+
 	public static Vec3d transferCoordSpace(BlockPos current, Vec3d target, Vec3d pos) {
 		return new Vec3d(target.getX() + (pos.getX() - current.getX()), target.getY() + (pos.getY() - current.getY()),
 						target.getZ() + (pos.getZ() - current.getZ()));

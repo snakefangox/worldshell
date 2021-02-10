@@ -46,6 +46,7 @@ public class WSUniversal implements ModInitializer {
 		registerStorageDim();
 		Registry.register(Registry.ENTITY_TYPE, new Identifier(MODID, "worldlink"), WORLD_LINK_ENTITY_TYPE);
 		Registry.register(Registry.BLOCK, new Identifier(MODID, "placeholder"), PLACEHOLDER);
+		WSNetworking.registerServerPackets();
 		CommandRegistrationCallback.EVENT.register(this::registerCommands);
 		CreateWorldsEvent.EVENT.register(this::registerShellStorageDimension);
 	}

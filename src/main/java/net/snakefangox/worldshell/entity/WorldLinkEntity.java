@@ -15,6 +15,7 @@ import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.WSNbtHelper;
+import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
@@ -35,6 +36,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.EulerAngle;
@@ -42,6 +44,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
@@ -55,7 +58,7 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	private static final TrackedData<EulerAngle> ROTATION = DataTracker.registerData(WorldLinkEntity.class, TrackedDataHandlerRegistry.ROTATION);
 
 	private int shellId = 0;
-	private final WorldShell worldShell = new WorldShell(this);
+	private final WorldShell worldShell = new WorldShell(this, 120 /*TODO set to builder*/);
 	private CompoundOrientedBox collisionBox = new CompoundOrientedBox(super.getBoundingBox(), Collections.emptyList());
 
 	public WorldLinkEntity(EntityType<?> type, World world) {
@@ -115,11 +118,6 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 		return collisionBox;
 	}
 
-	/*@Override
-	public void setBoundingBox(Box boundingBox) {
-		collisionBox = new CompoundOrientedBox(boundingBox, collisionBox.getBoxes());
-	}*/
-
 	@Override
 	public EntityDimensions getDimensions(EntityPose pose) {
 		return getDataTracker().get(DIMENSIONS);
@@ -157,8 +155,17 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 			RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntity(this, cameraPosVec),
 							extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
 			BlockHitResult rayCastResult = worldShell.raycast(rayCtx);
+			if (rayCastResult.getType() == HitResult.Type.BLOCK) {
+				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT, WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, true));
+				return worldShell.getBlockState(rayCastResult.getBlockPos()).onUse(world, player, hand, rayCastResult);
+			}
 		}
 		return super.interact(player, hand);
+	}
+
+	@Override
+	public ActionResult interactAt(PlayerEntity player, Vec3d hitPos, Hand hand) {
+		return super.interactAt(player, hitPos, hand);
 	}
 
 	@Override

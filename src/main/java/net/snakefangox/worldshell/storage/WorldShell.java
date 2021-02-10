@@ -1,6 +1,6 @@
 package net.snakefangox.worldshell.storage;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,17 +25,17 @@ import net.minecraft.world.level.ColorResolver;
 
 public class WorldShell implements BlockRenderView {
 
-	private static final int CACHE_VALID_TIME = 1200;
-
 	private final WorldLinkEntity parent;
-	private Map<BlockPos, BlockState> blockStateMap = new HashMap<>();
-	private Map<BlockPos, BlockEntity> blockEntityMap = new HashMap<>();
+	private Map<BlockPos, BlockState> blockStateMap = new LinkedHashMap<>();
+	private Map<BlockPos, BlockEntity> blockEntityMap = new LinkedHashMap<>();
 	private final BlockPos.Mutable reusablePos = new BlockPos.Mutable();
 	private final WorldShellRenderCache cache = new WorldShellRenderCache();
+	private final int cacheValidTime;
 	private int cacheResetTimer = 0;
 
-	public WorldShell(WorldLinkEntity parent) {
+	public WorldShell(WorldLinkEntity parent, int cacheValidTime) {
 		this.parent = parent;
+		this.cacheValidTime = cacheValidTime;
 	}
 
 	@Override
@@ -46,11 +46,14 @@ public class WorldShell implements BlockRenderView {
 	public void setWorld(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap) {
 		blockStateMap = stateMap;
 		blockEntityMap = entityMap;
+		markCacheInvalid();
 	}
 
 	public Set<Map.Entry<BlockPos, BlockState>> getBlocks() {
 		return blockStateMap.entrySet();
 	}
+
+	public Set<Map.Entry<BlockPos, BlockEntity>> getBlockEntities() { return blockEntityMap.entrySet(); }
 
 	public void setBlock(BlockPos pos, BlockState state, CompoundTag tag) {
 		blockStateMap.put(pos, state);
@@ -58,6 +61,7 @@ public class WorldShell implements BlockRenderView {
 			blockEntityMap.put(pos, ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state));
 			if (tag != null) blockEntityMap.get(pos).fromTag(tag);
 		}
+		markCacheInvalid();
 	}
 
 	private BlockPos toWorldPos(BlockPos pos) {
@@ -128,7 +132,7 @@ public class WorldShell implements BlockRenderView {
 	}
 
 	public void markCacheValid() {
-		cacheResetTimer = CACHE_VALID_TIME;
+		cacheResetTimer = cacheValidTime;
 	}
 
 	public WorldShellRenderCache getCache() {

@@ -7,10 +7,12 @@ import net.snakefangox.worldshell.storage.WorldShell;
 
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.BlockRenderManager;
+import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
@@ -19,6 +21,8 @@ import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+
+import net.fabricmc.fabric.api.client.rendereregistry.v1.BlockEntityRendererRegistry;
 
 public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 
@@ -30,6 +34,7 @@ public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 	public void render(WorldLinkEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
 		WorldShell worldShell = entity.getWorldShell();
 		BlockRenderManager renderManager = MinecraftClient.getInstance().getBlockRenderManager();
+		BlockEntityRenderDispatcher beRenderDispatcher = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
 		matrices.push();
 		worldShell.tickCache();
 		if (!worldShell.isCacheValid()) {
@@ -37,6 +42,9 @@ public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 			renderToCache(worldShell, renderManager, entity, yaw, tickDelta);
 		}
 		worldShell.getCache().draw(matrices);
+		for (Map.Entry<BlockPos, BlockEntity> entry : worldShell.getBlockEntities()) {
+			beRenderDispatcher.render(entry.getValue(), tickDelta, matrices, vertexConsumers);
+		}
 		matrices.pop();
 	}
 
