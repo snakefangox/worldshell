@@ -56,7 +56,8 @@ public class WSNetworking {
 		boolean interact = buf.readBoolean();
 		server.execute(() -> {
 			Entity entity = player.world.getEntityById(entityID);
-			if (entity instanceof WorldLinkEntity) {
+			if (entity instanceof WorldLinkEntity && entity.world.isChunkLoaded(hit.getBlockPos()) &&
+							player.distanceTo(entity) <  entity.getDimensions(null).width + entity.getDimensions(null).height) {
 				Optional<ShellBay> bay = ((WorldLinkEntity) entity).getBay();
 				if (bay.isPresent()) {
 					World world = server.getWorld(WSUniversal.STORAGE_DIM);

@@ -16,7 +16,6 @@ import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.WSNbtHelper;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
-import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
@@ -34,7 +33,6 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -57,7 +55,7 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 
 	private static final TrackedData<EntityDimensions> DIMENSIONS = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.DIMENSIONS);
 	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.VEC3D);
-	private static final TrackedData<EulerAngle> ROTATION = DataTracker.registerData(WorldLinkEntity.class, TrackedDataHandlerRegistry.ROTATION);
+	private static final TrackedData<EulerAngle> ROTATION_VELOCITY = DataTracker.registerData(WorldLinkEntity.class, TrackedDataHandlerRegistry.ROTATION);
 
 	private int shellId = 0;
 	private final WorldShell worldShell = new WorldShell(this, 120 /*TODO set to builder*/);
@@ -105,7 +103,7 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	protected void initDataTracker() {
 		getDataTracker().startTracking(DIMENSIONS, getType().getDimensions());
 		getDataTracker().startTracking(BLOCK_OFFSET, new Vec3d(0, 0, 0));
-		getDataTracker().startTracking(ROTATION, new EulerAngle(0, 0, 0));
+		getDataTracker().startTracking(ROTATION_VELOCITY, new EulerAngle(0, 0, 0));
 	}
 
 	@Override
@@ -163,11 +161,6 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 			}
 		}
 		return super.interact(player, hand);
-	}
-
-	@Override
-	public ActionResult interactAt(PlayerEntity player, Vec3d hitPos, Hand hand) {
-		return super.interactAt(player, hitPos, hand);
 	}
 
 	@Override
