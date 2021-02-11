@@ -20,6 +20,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockRenderView;
 import net.minecraft.world.LightType;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.level.ColorResolver;
 
@@ -49,17 +50,18 @@ public class WorldShell implements BlockRenderView {
 		markCacheInvalid();
 	}
 
-	public Set<Map.Entry<BlockPos, BlockState>> getBlocks() {
-		return blockStateMap.entrySet();
-	}
+	public Set<Map.Entry<BlockPos, BlockState>> getBlocks() { return blockStateMap.entrySet(); }
 
 	public Set<Map.Entry<BlockPos, BlockEntity>> getBlockEntities() { return blockEntityMap.entrySet(); }
 
-	public void setBlock(BlockPos pos, BlockState state, CompoundTag tag) {
+	public void setBlock(BlockPos pos, BlockState state, CompoundTag tag, World world) {
 		blockStateMap.put(pos, state);
 		if (state.hasBlockEntity()) {
-			blockEntityMap.put(pos, ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state));
-			if (tag != null) blockEntityMap.get(pos).fromTag(tag);
+			BlockEntity be = ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state);
+			blockEntityMap.put(pos, be);
+			be.setWorld(world);
+			be.setCachedState(blockStateMap.get(pos));
+			if (tag != null) be.fromTag(tag);
 		}
 		markCacheInvalid();
 	}

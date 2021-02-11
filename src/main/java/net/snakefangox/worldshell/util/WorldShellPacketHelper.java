@@ -63,7 +63,7 @@ public class WorldShellPacketHelper {
 		return buf;
 	}
 
-	public static void readBlocks(PacketByteBuf buf, Map<BlockPos, BlockState> posBlockStateMap, Map<BlockPos, BlockEntity> posBlockEntityMap) {
+	public static void readBlocks(PacketByteBuf buf, Map<BlockPos, BlockState> posBlockStateMap, Map<BlockPos, BlockEntity> posBlockEntityMap, World world) {
 		int stateCount = buf.readInt();
 		for (int i = 0; i < stateCount; ++i) {
 			BlockState state = Block.getStateFromRawId(buf.readInt());
@@ -73,7 +73,10 @@ public class WorldShellPacketHelper {
 				BlockPos pos = buf.readBlockPos();
 				posBlockStateMap.put(pos, state);
 				if (hasEntity) {
-					posBlockEntityMap.put(pos, ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state));
+					BlockEntity be = ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state);
+					posBlockEntityMap.put(pos, be);
+					be.setWorld(world);
+					be.setCachedState(posBlockStateMap.get(pos));
 				}
 			}
 		}

@@ -16,6 +16,7 @@ import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.WSNbtHelper;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
+import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
@@ -33,6 +34,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -85,7 +87,7 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	}
 
 	public void updateWorldShell(BlockPos pos, BlockState state, CompoundTag tag) {
-		worldShell.setBlock(pos, state, tag);
+		worldShell.setBlock(pos, state, tag, getEntityWorld());
 	}
 
 	@Override

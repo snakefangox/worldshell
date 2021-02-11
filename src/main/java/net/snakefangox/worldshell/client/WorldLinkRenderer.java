@@ -9,10 +9,12 @@ import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.BlockRenderManager;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
+import net.minecraft.client.render.block.entity.ChestBlockEntityRenderer;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
@@ -43,7 +45,11 @@ public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 		}
 		worldShell.getCache().draw(matrices);
 		for (Map.Entry<BlockPos, BlockEntity> entry : worldShell.getBlockEntities()) {
-			beRenderDispatcher.render(entry.getValue(), tickDelta, matrices, vertexConsumers);
+			matrices.push();
+			BlockPos bp = entry.getKey();
+			matrices.translate(bp.getX(), bp.getY(), bp.getZ());
+			beRenderDispatcher.renderEntity(entry.getValue(), matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV);
+			matrices.pop();
 		}
 		matrices.pop();
 	}

@@ -89,7 +89,7 @@ public class WSNetworking {
 		int entityID = buf.readInt();
 		Map<BlockPos, BlockState> stateMap = new HashMap<>();
 		Map<BlockPos, BlockEntity> entityMap = new HashMap<>();
-		WorldShellPacketHelper.readBlocks(buf, stateMap, entityMap);
+		WorldShellPacketHelper.readBlocks(buf, stateMap, entityMap, client.world);
 		client.execute(() -> {
 			Entity entity = client.world.getEntityById(entityID);
 			if (entity instanceof WorldLinkEntity) {

@@ -68,6 +68,7 @@ public class ShellStorageWorld extends ServerWorld {
 		return passCallToEntity(entity.getBlockPos(), false, (worldLinkEntity, bay) -> {
 			Vec3d newPos = bay.toEntityCoordSpace(entity.getPos());
 			entity.setPosition(newPos.x, newPos.y, newPos.z);
+			entity.world = worldLinkEntity.getEntityWorld();
 			return worldLinkEntity.getEntityWorld().spawnEntity(entity);
 		});
 	}
@@ -174,6 +175,10 @@ public class ShellStorageWorld extends ServerWorld {
 
 	public void setCachedBayData(ShellStorageData cachedBayData) {
 		this.cachedBayData = cachedBayData;
+	}
+
+	public ShellStorageData getCachedBayData() {
+		return cachedBayData;
 	}
 
 	public interface EntityPassthroughConsumer {

@@ -4,7 +4,10 @@
   "package": "net.snakefangox.worldshell.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "MinecraftServerMixin"
+    "MinecraftServerMixin",
+    "PlayerEntityMixin",
+    "ServerPlayerEntityMixin",
+    "ScreenHandlerMixin"
   ],
   "client": [
   ],
