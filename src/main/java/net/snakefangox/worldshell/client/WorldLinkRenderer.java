@@ -1,10 +1,5 @@
 package net.snakefangox.worldshell.client;
 
-import java.util.Map;
-
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.storage.WorldShell;
-
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -14,7 +9,6 @@ import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.BlockRenderManager;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
-import net.minecraft.client.render.block.entity.ChestBlockEntityRenderer;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
@@ -23,8 +17,10 @@ import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.storage.WorldShell;
 
-import net.fabricmc.fabric.api.client.rendereregistry.v1.BlockEntityRendererRegistry;
+import java.util.Map;
 
 public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 

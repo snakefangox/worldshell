@@ -1,10 +1,6 @@
 package net.snakefangox.worldshell.util;
 
-import java.util.List;
-import java.util.Map;
-
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
-
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
@@ -16,8 +12,10 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.entity.WorldLinkEntity;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import java.util.List;
+import java.util.Map;
 
 public class WorldShellPacketHelper {
 

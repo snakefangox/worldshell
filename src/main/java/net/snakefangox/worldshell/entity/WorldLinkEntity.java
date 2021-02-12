@@ -1,22 +1,11 @@
 package net.snakefangox.worldshell.entity;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import io.github.stuff_stuffs.multipart_entities.common.entity.MultipartEntity;
 import io.github.stuff_stuffs.multipart_entities.common.util.CompoundOrientedBox;
 import io.github.stuff_stuffs.multipart_entities.common.util.OrientedBox;
-import net.snakefangox.worldshell.WSNetworking;
-import net.snakefangox.worldshell.storage.ShellBay;
-import net.snakefangox.worldshell.storage.ShellStorageData;
-import net.snakefangox.worldshell.storage.WorldShell;
-import net.snakefangox.worldshell.util.CoordUtil;
-import net.snakefangox.worldshell.util.WSNbtHelper;
-import net.snakefangox.worldshell.util.WorldShellPacketHelper;
-
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
@@ -43,10 +32,15 @@ import net.minecraft.util.math.EulerAngle;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.WSNetworking;
+import net.snakefangox.worldshell.storage.ShellBay;
+import net.snakefangox.worldshell.storage.ShellStorageData;
+import net.snakefangox.worldshell.storage.WorldShell;
+import net.snakefangox.worldshell.util.CoordUtil;
+import net.snakefangox.worldshell.util.WSNbtHelper;
+import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import java.util.*;
 
 /**
  * The basic entity that links to a shell, renders it's contents and handles interaction
@@ -78,7 +72,7 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 		for (Map.Entry<BlockPos, BlockState> entry : stateMap.entrySet()) {
 			BlockPos bp = entry.getKey();
 			List<Box> lBoxes = CoordUtil.getTransformedBoxesFromVoxelShape(entry.getValue()
-							.getCollisionShape(worldShell, entry.getKey(), ShapeContext.absent()), xOff + bp.getX(), yOff + bp.getY(), zOff + bp.getZ());
+					.getCollisionShape(worldShell, entry.getKey(), ShapeContext.absent()), xOff + bp.getX(), yOff + bp.getY(), zOff + bp.getZ());
 			lBoxes.forEach(b -> boxes.add(new OrientedBox(b)));
 		}
 		collisionBox = new CompoundOrientedBox(super.getBoundingBox().expand(dimensions.width, dimensions.height, dimensions.width), boxes);
@@ -151,9 +145,9 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 			Vec3d cameraPosVec = player.getCameraPosVec(1.0F);
 			Vec3d rotationVec = player.getRotationVec(1.0F);
 			Vec3d extendedVec = CoordUtil.worldToLinkEntity(this,
-							cameraPosVec.add(rotationVec.x * 4.5F, rotationVec.y * 4.5F, rotationVec.z * 4.5F));
+					cameraPosVec.add(rotationVec.x * 4.5F, rotationVec.y * 4.5F, rotationVec.z * 4.5F));
 			RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntity(this, cameraPosVec),
-							extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
+					extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
 			BlockHitResult rayCastResult = worldShell.raycast(rayCtx);
 			if (rayCastResult.getType() == HitResult.Type.BLOCK) {
 				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT, WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, true));

@@ -1,14 +1,8 @@
 package net.snakefangox.worldshell;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.storage.ShellBay;
-import net.snakefangox.worldshell.util.CoordUtil;
-import net.snakefangox.worldshell.util.WorldShellPacketHelper;
-
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -29,10 +23,14 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.storage.ShellBay;
+import net.snakefangox.worldshell.util.CoordUtil;
+import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public class WSNetworking {
 
@@ -57,12 +55,12 @@ public class WSNetworking {
 		server.execute(() -> {
 			Entity entity = player.world.getEntityById(entityID);
 			if (entity instanceof WorldLinkEntity && entity.world.isChunkLoaded(hit.getBlockPos()) &&
-							player.distanceTo(entity) <  entity.getDimensions(null).width + entity.getDimensions(null).height) {
+					player.distanceTo(entity) < entity.getDimensions(null).width + entity.getDimensions(null).height) {
 				Optional<ShellBay> bay = ((WorldLinkEntity) entity).getBay();
 				if (bay.isPresent()) {
 					World world = server.getWorld(WSUniversal.STORAGE_DIM);
 					BlockHitResult gHit = new BlockHitResult(CoordUtil.toGlobal(bay.get().getCenter(), hit.getPos()),
-									hit.getSide(), CoordUtil.toGlobal(bay.get().getCenter(), hit.getBlockPos()), hit.isInsideBlock());
+							hit.getSide(), CoordUtil.toGlobal(bay.get().getCenter(), hit.getBlockPos()), hit.isInsideBlock());
 					if (interact) {
 						world.getBlockState(gHit.getBlockPos()).onUse(world, player, hand, gHit);
 					} else {

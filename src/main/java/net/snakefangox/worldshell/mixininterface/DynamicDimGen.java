@@ -1,13 +1,12 @@
 package net.snakefangox.worldshell.mixininterface;
 
-import net.snakefangox.worldshell.util.ServerWorldSupplier;
-
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.snakefangox.worldshell.util.ServerWorldSupplier;
 
 public interface DynamicDimGen {
 	/**

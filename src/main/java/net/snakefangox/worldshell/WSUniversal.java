@@ -1,15 +1,10 @@
 package net.snakefangox.worldshell;
 
-import java.util.function.Supplier;
-
 import com.mojang.brigadier.CommandDispatcher;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.mixininterface.DynamicDimGen;
-import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
-import net.snakefangox.worldshell.storage.ShellStorageData;
-import net.snakefangox.worldshell.storage.ShellStorageWorld;
-import net.snakefangox.worldshell.util.ShellCommand;
-
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.block.Block;
 import net.minecraft.block.Material;
 import net.minecraft.entity.EntityDimensions;
@@ -26,11 +21,14 @@ import net.minecraft.world.biome.source.FixedBiomeSource;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.mixininterface.DynamicDimGen;
+import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
+import net.snakefangox.worldshell.storage.ShellStorageData;
+import net.snakefangox.worldshell.storage.ShellStorageWorld;
+import net.snakefangox.worldshell.util.ShellCommand;
 
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
+import java.util.function.Supplier;
 
 public class WSUniversal implements ModInitializer {
 
@@ -38,7 +36,7 @@ public class WSUniversal implements ModInitializer {
 
 	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.DIMENSION, new Identifier(MODID, "shell_storage"));
 	public static final EntityType<WorldLinkEntity> WORLD_LINK_ENTITY_TYPE = FabricEntityTypeBuilder.<WorldLinkEntity>create(SpawnGroup.MISC, WorldLinkEntity::new)
-					.dimensions(EntityDimensions.changing(1, 1)).build();
+			.dimensions(EntityDimensions.changing(1, 1)).build();
 	public static final Block PLACEHOLDER = new Block(FabricBlockSettings.of(Material.BARRIER).strength(0, 0).nonOpaque().breakInstantly().dropsNothing());
 
 	@Override
@@ -61,9 +59,9 @@ public class WSUniversal implements ModInitializer {
 
 	public void registerShellStorageDimension(MinecraftServer server) {
 		Supplier<DimensionType> typeSupplier = () -> server.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY)
-						.get(RegistryKey.of(Registry.DIMENSION_TYPE_KEY, new Identifier(MODID, "empty_type")));
+				.get(RegistryKey.of(Registry.DIMENSION_TYPE_KEY, new Identifier(MODID, "empty_type")));
 		ChunkGenerator chunkGenerator = new EmptyChunkGenerator(new FixedBiomeSource(server.getRegistryManager()
-						.get(Registry.BIOME_KEY).get(BiomeKeys.THE_VOID)));
+				.get(Registry.BIOME_KEY).get(BiomeKeys.THE_VOID)));
 		DimensionOptions options = new DimensionOptions(typeSupplier, chunkGenerator);
 		ShellStorageWorld world = (ShellStorageWorld) ((DynamicDimGen) server).createDynamicDim(STORAGE_DIM, options, ShellStorageWorld::new);
 		world.setCachedBayData(ShellStorageData.getOrCreate(server));

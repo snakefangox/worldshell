@@ -1,18 +1,5 @@
 package net.snakefangox.worldshell.storage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import net.snakefangox.worldshell.WSUniversal;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.util.CoordUtil;
-import net.snakefangox.worldshell.util.ShellTransferHandler;
-import net.snakefangox.worldshell.util.WorldShellPacketHelper;
-import org.jetbrains.annotations.NotNull;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.CompoundTag;
@@ -20,12 +7,16 @@ import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockBox;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.WSUniversal;
+import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.util.CoordUtil;
+import net.snakefangox.worldshell.util.ShellTransferHandler;
+import net.snakefangox.worldshell.util.WorldShellPacketHelper;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
 
 /**
  * A bay in the ship storage sense
@@ -77,8 +68,8 @@ public class ShellBay {
 	public void loadAllChunks(MinecraftServer server) {
 		ServerWorld world = server.getWorld(WSUniversal.STORAGE_DIM);
 		ChunkPos.stream(new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.minX), ChunkSectionPos.getSectionCoord(bounds.minZ)),
-						new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.maxX), ChunkSectionPos.getSectionCoord(bounds.maxZ)))
-						.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, true));
+				new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.maxX), ChunkSectionPos.getSectionCoord(bounds.maxZ)))
+				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, true));
 	}
 
 	public Vec3d toEntityCoordSpace(Vec3d vec) {

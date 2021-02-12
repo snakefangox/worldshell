@@ -1,13 +1,5 @@
 package net.snakefangox.worldshell.storage;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-
-import net.snakefangox.worldshell.client.WorldShellRenderCache;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import org.jetbrains.annotations.Nullable;
-
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -23,6 +15,13 @@ import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.level.ColorResolver;
+import net.snakefangox.worldshell.client.WorldShellRenderCache;
+import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class WorldShell implements BlockRenderView {
 
@@ -45,14 +44,18 @@ public class WorldShell implements BlockRenderView {
 	}
 
 	public void setWorld(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap) {
-		blockStateMap = stateMap;
-		blockEntityMap = entityMap;
+		blockStateMap.putAll(stateMap);
+		blockEntityMap.putAll(entityMap);
 		markCacheInvalid();
 	}
 
-	public Set<Map.Entry<BlockPos, BlockState>> getBlocks() { return blockStateMap.entrySet(); }
+	public Set<Map.Entry<BlockPos, BlockState>> getBlocks() {
+		return blockStateMap.entrySet();
+	}
 
-	public Set<Map.Entry<BlockPos, BlockEntity>> getBlockEntities() { return blockEntityMap.entrySet(); }
+	public Set<Map.Entry<BlockPos, BlockEntity>> getBlockEntities() {
+		return blockEntityMap.entrySet();
+	}
 
 	public void setBlock(BlockPos pos, BlockState state, CompoundTag tag, World world) {
 		blockStateMap.put(pos, state);

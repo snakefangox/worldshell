@@ -14,7 +14,7 @@ public class WSNbtHelper {
 		tag.putDouble(name + "Z", vec3d.z);
 	}
 
-	public static Vec3d getVec3d(CompoundTag tag, String name){
+	public static Vec3d getVec3d(CompoundTag tag, String name) {
 		double x = tag.getDouble(name + "X");
 		double y = tag.getDouble(name + "Y");
 		double z = tag.getDouble(name + "Z");

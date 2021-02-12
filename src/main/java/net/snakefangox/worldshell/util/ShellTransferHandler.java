@@ -1,14 +1,5 @@
 package net.snakefangox.worldshell.util;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Consumer;
-
-import net.snakefangox.worldshell.WSUniversal;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.storage.ShellBay;
-import net.snakefangox.worldshell.storage.ShellStorageData;
-
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -21,6 +12,14 @@ import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.WSUniversal;
+import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.storage.ShellBay;
+import net.snakefangox.worldshell.storage.ShellStorageData;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
 
 public class ShellTransferHandler {
 

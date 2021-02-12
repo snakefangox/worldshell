@@ -1,14 +1,5 @@
 package net.snakefangox.worldshell.storage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import net.snakefangox.worldshell.WSUniversal;
-import net.snakefangox.worldshell.WorldShellConfig;
-import net.snakefangox.worldshell.util.ShellTransferHandler;
-
 import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
@@ -17,6 +8,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.WSUniversal;
+import net.snakefangox.worldshell.WorldShellConfig;
+import net.snakefangox.worldshell.util.ShellTransferHandler;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ShellStorageData extends PersistentState {
 

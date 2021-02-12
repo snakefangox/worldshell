@@ -1,9 +1,8 @@
 package net.snakefangox.worldshell;
 
-import net.minecraft.server.MinecraftServer;
-
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
+import net.minecraft.server.MinecraftServer;
 
 /**
  * Called after all static worlds have been created on the server but before

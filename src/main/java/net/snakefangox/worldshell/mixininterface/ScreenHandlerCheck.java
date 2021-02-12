@@ -1,15 +1,6 @@
 package net.snakefangox.worldshell.mixininterface;
 
-import java.util.Optional;
-import java.util.UUID;
-
 import com.mojang.authlib.GameProfile;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.storage.ShellBay;
-import net.snakefangox.worldshell.storage.ShellStorageData;
-import net.snakefangox.worldshell.storage.ShellStorageWorld;
-import net.snakefangox.worldshell.util.CoordUtil;
-
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
@@ -17,6 +8,14 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.storage.ShellBay;
+import net.snakefangox.worldshell.storage.ShellStorageData;
+import net.snakefangox.worldshell.storage.ShellStorageWorld;
+import net.snakefangox.worldshell.util.CoordUtil;
+
+import java.util.Optional;
+import java.util.UUID;
 
 public class ScreenHandlerCheck {
 
@@ -44,7 +43,7 @@ public class ScreenHandlerCheck {
 			Vec3d vec = CoordUtil.worldToLinkEntity(entity.get(), player.getPos());
 			BlockPos center = bay.getCenter();
 			return screenHandler.canUse(getOrCreateFakePlayer(storageWorld,
-							new BlockPos(vec.x + center.getX(), vec.y + center.getY(), vec.z + center.getZ())));
+					new BlockPos(vec.x + center.getX(), vec.y + center.getY(), vec.z + center.getZ())));
 		}
 		return screenHandler.canUse(player);
 	}

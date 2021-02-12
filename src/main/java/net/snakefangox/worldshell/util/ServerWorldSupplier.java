@@ -1,8 +1,5 @@
 package net.snakefangox.worldshell.util;
 
-import java.util.List;
-import java.util.concurrent.Executor;
-
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerWorld;
@@ -13,6 +10,9 @@ import net.minecraft.world.gen.Spawner;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.level.ServerWorldProperties;
 import net.minecraft.world.level.storage.LevelStorage;
+
+import java.util.List;
+import java.util.concurrent.Executor;
 
 @FunctionalInterface
 public interface ServerWorldSupplier {
