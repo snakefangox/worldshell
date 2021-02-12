@@ -26,8 +26,8 @@ import java.util.Set;
 public class WorldShell implements BlockRenderView {
 
 	private final WorldLinkEntity parent;
-	private Map<BlockPos, BlockState> blockStateMap = new LinkedHashMap<>();
-	private Map<BlockPos, BlockEntity> blockEntityMap = new LinkedHashMap<>();
+	private final Map<BlockPos, BlockState> blockStateMap = new LinkedHashMap<>();
+	private final Map<BlockPos, BlockEntity> blockEntityMap = new LinkedHashMap<>();
 	private final BlockPos.Mutable reusablePos = new BlockPos.Mutable();
 	private final WorldShellRenderCache cache = new WorldShellRenderCache();
 	private final int cacheValidTime;
@@ -61,10 +61,12 @@ public class WorldShell implements BlockRenderView {
 		blockStateMap.put(pos, state);
 		if (state.hasBlockEntity()) {
 			BlockEntity be = ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state);
-			blockEntityMap.put(pos, be);
-			be.setWorld(world);
-			be.setCachedState(blockStateMap.get(pos));
-			if (tag != null) be.fromTag(tag);
+			if (be != null) {
+				blockEntityMap.put(pos, be);
+				be.setWorld(world);
+				be.setCachedState(blockStateMap.get(pos));
+				if (tag != null) be.fromTag(tag);
+			}
 		}
 		markCacheInvalid();
 	}
@@ -72,6 +74,10 @@ public class WorldShell implements BlockRenderView {
 	private BlockPos toWorldPos(BlockPos pos) {
 		Vec3d offset = parent.getBlockOffset();
 		return reusablePos.set(pos).add(offset.x, offset.y, offset.z).add(parent.getBlockPos());
+	}
+
+	public void addBlockEvent(BlockPos pos, int type, int data) {
+		getBlockState(pos).onSyncedBlockEvent(parent.getEntityWorld(), pos, type, data);
 	}
 
 	@Override

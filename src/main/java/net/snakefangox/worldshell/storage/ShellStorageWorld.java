@@ -28,6 +28,7 @@ import net.minecraft.world.level.ServerWorldProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.ShellTransferHandler;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import org.jetbrains.annotations.Nullable;
@@ -49,15 +50,15 @@ public class ShellStorageWorld extends ServerWorld {
 	public boolean setBlockState(BlockPos pos, BlockState state, int flags, int maxUpdateDepth) {
 		boolean changed = super.setBlockState(pos, state, flags, maxUpdateDepth);
 		if (changed) {
-			passCallToEntity(pos, (entity, bay) -> PlayerLookup.tracking(entity).forEach(player -> {
+			passCallToEntity(pos, (entity, bay) -> {
 				PacketByteBuf buf = PacketByteBufs.create();
 				WorldShellPacketHelper.writeBlock(buf, this, pos, entity, bay.getCenter());
-				ServerPlayNetworking.send(player, WSNetworking.SHELL_UPDATE, buf);
 				if (!bay.getBounds().contains(pos)) {
 					ShellTransferHandler.updateBoxBounds(bay.getBounds(), pos);
 					bay.markDirty(this);
 				}
-			}));
+				PlayerLookup.tracking(entity).forEach(player -> ServerPlayNetworking.send(player, WSNetworking.SHELL_UPDATE, buf));
+			});
 		}
 		return changed;
 	}
@@ -145,6 +146,12 @@ public class ShellStorageWorld extends ServerWorld {
 		passCallToEntity(pos, ((entity, bay) -> {
 			BlockPos newPos = bay.toEntityCoordSpace(pos);
 			entity.getEntityWorld().addSyncedBlockEvent(newPos, block, type, data);
+			PacketByteBuf buf = PacketByteBufs.create();
+			buf.writeInt(entity.getId());
+			buf.writeBlockPos(CoordUtil.toLocal(bay.getCenter(), pos));
+			buf.writeInt(type);
+			buf.writeInt(data);
+			PlayerLookup.tracking(entity).forEach(player -> ServerPlayNetworking.send(player, WSNetworking.SHELL_BLOCK_EVENT, buf));
 		}));
 	}
 

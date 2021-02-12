@@ -43,8 +43,9 @@ public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 		for (Map.Entry<BlockPos, BlockEntity> entry : worldShell.getBlockEntities()) {
 			matrices.push();
 			BlockPos bp = entry.getKey();
+			BlockEntity be = entry.getValue();
 			matrices.translate(bp.getX(), bp.getY(), bp.getZ());
-			beRenderDispatcher.renderEntity(entry.getValue(), matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV);
+			beRenderDispatcher.renderEntity(be, matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV);
 			matrices.pop();
 		}
 		matrices.pop();

@@ -37,10 +37,12 @@ public class WSNetworking {
 	public static final Identifier SHELL_DATA = new Identifier(WSUniversal.MODID, "data");
 	public static final Identifier SHELL_UPDATE = new Identifier(WSUniversal.MODID, "update");
 	public static final Identifier SHELL_INTERACT = new Identifier(WSUniversal.MODID, "interact");
+	public static final Identifier SHELL_BLOCK_EVENT = new Identifier(WSUniversal.MODID, "block_event");
 
 	public static void registerClientPackets() {
 		ClientPlayNetworking.registerGlobalReceiver(SHELL_DATA, WSNetworking::handleShellData);
 		ClientPlayNetworking.registerGlobalReceiver(SHELL_UPDATE, WSNetworking::handleShellUpdate);
+		ClientPlayNetworking.registerGlobalReceiver(SHELL_BLOCK_EVENT, WSNetworking::handleShellBlockEvent);
 	}
 
 	public static void registerServerPackets() {
@@ -52,19 +54,24 @@ public class WSNetworking {
 		BlockHitResult hit = buf.readBlockHitResult();
 		Hand hand = buf.readEnumConstant(Hand.class);
 		boolean interact = buf.readBoolean();
+
 		server.execute(() -> {
 			Entity entity = player.world.getEntityById(entityID);
-			if (entity instanceof WorldLinkEntity && entity.world.isChunkLoaded(hit.getBlockPos()) &&
-					player.distanceTo(entity) < entity.getDimensions(null).width + entity.getDimensions(null).height) {
-				Optional<ShellBay> bay = ((WorldLinkEntity) entity).getBay();
-				if (bay.isPresent()) {
-					World world = server.getWorld(WSUniversal.STORAGE_DIM);
-					BlockHitResult gHit = new BlockHitResult(CoordUtil.toGlobal(bay.get().getCenter(), hit.getPos()),
-							hit.getSide(), CoordUtil.toGlobal(bay.get().getCenter(), hit.getBlockPos()), hit.isInsideBlock());
-					if (interact) {
-						world.getBlockState(gHit.getBlockPos()).onUse(world, player, hand, gHit);
-					} else {
-						world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
+			if (entity instanceof WorldLinkEntity) {
+				EntityDimensions dimensions = entity.getDimensions(null);
+				if (player.distanceTo(entity) < dimensions.width + dimensions.height + 5) {
+					Optional<ShellBay> bay = ((WorldLinkEntity) entity).getBay();
+					if (bay.isPresent()) {
+						World world = server.getWorld(WSUniversal.STORAGE_DIM);
+						BlockPos bp = CoordUtil.toGlobal(bay.get().getCenter(), hit.getBlockPos());
+						if (!world.isChunkLoaded(bp)) return;
+						BlockHitResult gHit = new BlockHitResult(CoordUtil.toGlobal(bay.get().getCenter(), hit.getPos()),
+								hit.getSide(), bp, hit.isInsideBlock());
+						if (interact) {
+							world.getBlockState(gHit.getBlockPos()).onUse(world, player, hand, gHit);
+						} else {
+							world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
+						}
 					}
 				}
 			}
@@ -76,6 +83,7 @@ public class WSNetworking {
 		BlockPos pos = BlockPos.fromLong(buf.readLong());
 		BlockState state = Block.getStateFromRawId(buf.readInt());
 		CompoundTag tag = buf.readCompoundTag();
+
 		client.execute(() -> {
 			Entity entity = client.world.getEntityById(entityID);
 			if (entity instanceof WorldLinkEntity) {
@@ -89,10 +97,24 @@ public class WSNetworking {
 		Map<BlockPos, BlockState> stateMap = new HashMap<>();
 		Map<BlockPos, BlockEntity> entityMap = new HashMap<>();
 		WorldShellPacketHelper.readBlocks(buf, stateMap, entityMap, client.world);
+
 		client.execute(() -> {
 			Entity entity = client.world.getEntityById(entityID);
 			if (entity instanceof WorldLinkEntity) {
 				((WorldLinkEntity) entity).initializeWorldShell(stateMap, entityMap);
+			}
+		});
+	}
+
+	private static void handleShellBlockEvent(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
+		int entityID = buf.readInt();
+		BlockPos pos = buf.readBlockPos();
+		int type = buf.readInt();
+		int data = buf.readInt();
+		client.execute(() -> {
+			Entity entity = client.world.getEntityById(entityID);
+			if (entity instanceof WorldLinkEntity) {
+				((WorldLinkEntity) entity).getWorldShell().addBlockEvent(pos, type, data);
 			}
 		});
 	}
