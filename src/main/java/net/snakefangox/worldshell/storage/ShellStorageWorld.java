@@ -3,6 +3,7 @@ package net.snakefangox.worldshell.storage;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.class_5575;
 import net.minecraft.entity.Entity;
@@ -136,6 +137,15 @@ public class ShellStorageWorld extends ServerWorld {
 			BlockPos newPos = bay.toEntityCoordSpace(pos);
 			entity.getEntityWorld().syncWorldEvent(null, eventId, newPos, data);
 		});
+	}
+
+	@Override
+	public void addSyncedBlockEvent(BlockPos pos, Block block, int type, int data) {
+		super.addSyncedBlockEvent(pos, block, type, data);
+		passCallToEntity(pos, ((entity, bay) -> {
+			BlockPos newPos = bay.toEntityCoordSpace(pos);
+			entity.getEntityWorld().addSyncedBlockEvent(newPos, block, type, data);
+		}));
 	}
 
 	@Override
