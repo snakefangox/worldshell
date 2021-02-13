@@ -3,12 +3,13 @@ package net.snakefangox.worldshell.mixininterface;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EnderChestInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.WSUniversal;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.ShellBay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
@@ -20,40 +21,24 @@ import java.util.UUID;
 
 public class ScreenHandlerCheck {
 
-	private static GameProfile fakeGameProfile = new GameProfile(UUID.randomUUID(), "FakePlayer");
+	private static final GameProfile fakeGameProfile = new GameProfile(UUID.randomUUID(), "FakePlayer");
 	private static FakePlayerEntity fakePlayer;
 
 	public static boolean checkScreenHandler(ScreenHandler screenHandler, PlayerEntity player) {
-		if (!player.world.isClient() && screenHandler.slots.size() > 0) {
-			Inventory inventory = screenHandler.slots.get(0).inventory;
-			if (inventory instanceof BlockEntity && ((BlockEntity) inventory).getWorld() instanceof ShellStorageWorld) {
-				BlockEntity be = (BlockEntity) inventory;
-				BlockPos pos = be.getPos();
-				ShellStorageWorld storageWorld = (ShellStorageWorld) be.getWorld();
-				return checkScreenHandler(storageWorld, pos, screenHandler, player);
-			}
+		boolean canUse = screenHandler.canUse(player);
+		if (!player.world.isClient() && !canUse) {
+			MinecraftServer server = player.world.getServer();
+			World world = server.getWorld(WSUniversal.STORAGE_DIM);
+			return screenHandler.canUse(getOrCreateFakePlayer(world, player.getPos()));
 		}
-		return screenHandler.canUse(player);
+		return canUse;
 	}
 
-	public static boolean checkScreenHandler(ShellStorageWorld storageWorld, BlockPos pos, ScreenHandler screenHandler, PlayerEntity player) {
-		ShellStorageData data = storageWorld.getCachedBayData();
-		ShellBay bay = data.getBay(data.getBayIdFromPos(pos));
-		Optional<WorldLinkEntity> entity = bay.getLinkedEntity();
-		if (entity.isPresent()) {
-			Vec3d vec = CoordUtil.worldToLinkEntity(entity.get(), player.getPos());
-			BlockPos center = bay.getCenter();
-			return screenHandler.canUse(getOrCreateFakePlayer(storageWorld,
-					new BlockPos(vec.x + center.getX(), vec.y + center.getY(), vec.z + center.getZ())));
-		}
-		return screenHandler.canUse(player);
-	}
-
-	private static PlayerEntity getOrCreateFakePlayer(World storageWorld, BlockPos pos) {
+	private static PlayerEntity getOrCreateFakePlayer(World storageWorld, Vec3d pos) {
 		if (fakePlayer == null) {
-			fakePlayer = new FakePlayerEntity(storageWorld, pos, 0, fakeGameProfile);
+			fakePlayer = new FakePlayerEntity(storageWorld, CoordUtil.BP_ZERO, 0, fakeGameProfile);
 		}
-		fakePlayer.setPosition(pos.getX(), pos.getY(), pos.getZ());
+		fakePlayer.setPosition(pos.x, pos.y, pos.z);
 		return fakePlayer;
 	}
 
@@ -61,6 +46,27 @@ public class ScreenHandlerCheck {
 
 		public FakePlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile) {
 			super(world, pos, yaw, profile);
+		}
+
+		@Override
+		public double squaredDistanceTo(Vec3d vector) {
+			return getTransformedDistance(vector.x, vector.y, vector.z);
+		}
+
+		@Override
+		public double squaredDistanceTo(double x, double y, double z) {
+			return getTransformedDistance(x, y, z);
+		}
+
+		public double getTransformedDistance(double x, double y, double z) {
+			ShellStorageData data = ((ShellStorageWorld) world).getCachedBayData();
+			ShellBay bay = data.getBay(data.getBayIdFromPos(new BlockPos(x, y, z)));
+			if (bay != null && bay.getLinkedEntity().isPresent()) {
+				Vec3d temp = CoordUtil.worldToLinkEntity(bay.getLinkedEntity().get(), getPos());
+				Vec3d vec = CoordUtil.toGlobal(bay.getCenter(), temp);
+				setPosition(vec.x, vec.y, vec.z);
+			}
+			return super.squaredDistanceTo(x, y, z);
 		}
 
 		@Override

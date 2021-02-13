@@ -6,7 +6,6 @@
   "mixins": [
     "MinecraftServerMixin",
     "PlayerEntityMixin",
-    "ScreenHandlerMixin",
     "ServerPlayerEntityMixin"
   ],
   "client": [
