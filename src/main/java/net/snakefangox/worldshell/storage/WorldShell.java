@@ -4,6 +4,7 @@ import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.nbt.CompoundTag;
@@ -17,17 +18,18 @@ import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.level.ColorResolver;
 import net.snakefangox.worldshell.client.WorldShellRenderCache;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.world.ProxyWorld;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class WorldShell implements BlockRenderView {
 
 	private final WorldLinkEntity parent;
+	private final ProxyWorld proxyWorld;
 	private final Map<BlockPos, BlockState> blockStateMap = new LinkedHashMap<>();
 	private final Map<BlockPos, BlockEntity> blockEntityMap = new LinkedHashMap<>();
+	private final List<ShellTickInvoker<?>> tickInvokers = new ArrayList<>();
 	private final BlockPos.Mutable reusablePos = new BlockPos.Mutable();
 	private final WorldShellRenderCache cache = new WorldShellRenderCache();
 	private final int cacheValidTime;
@@ -36,6 +38,7 @@ public class WorldShell implements BlockRenderView {
 	public WorldShell(WorldLinkEntity parent, int cacheValidTime) {
 		this.parent = parent;
 		this.cacheValidTime = cacheValidTime;
+		proxyWorld = new ProxyWorld(parent.getEntityWorld(), this);
 	}
 
 	@Override
@@ -43,9 +46,15 @@ public class WorldShell implements BlockRenderView {
 		return blockEntityMap.get(pos);
 	}
 
-	public void setWorld(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap) {
+	public void setWorld(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<ShellTickInvoker<?>> tickers) {
 		blockStateMap.putAll(stateMap);
 		blockEntityMap.putAll(entityMap);
+		for (Map.Entry<BlockPos, BlockEntity> entry : blockEntityMap.entrySet()){
+			entry.getValue().setWorld(proxyWorld);
+			BlockEntityTicker<?> ticker = blockStateMap.get(entry.getKey()).getBlockEntityTicker(proxyWorld, entry.getValue().getType());
+			if (ticker != null) tickers.add(new WorldShell.ShellTickInvoker(entry.getValue(), ticker));
+		}
+		tickInvokers.addAll(tickers);
 		markCacheInvalid();
 	}
 
@@ -63,9 +72,11 @@ public class WorldShell implements BlockRenderView {
 			BlockEntity be = ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state);
 			if (be != null) {
 				blockEntityMap.put(pos, be);
-				be.setWorld(world);
+				be.setWorld(proxyWorld);
 				be.setCachedState(blockStateMap.get(pos));
 				if (tag != null) be.fromTag(tag);
+				BlockEntityTicker<?> ticker = state.getBlockEntityTicker(proxyWorld, be.getType());
+				if (ticker != null) tickInvokers.add(new ShellTickInvoker(be, ticker));
 			}
 		}
 		markCacheInvalid();
@@ -77,7 +88,7 @@ public class WorldShell implements BlockRenderView {
 	}
 
 	public void addBlockEvent(BlockPos pos, int type, int data) {
-		getBlockState(pos).onSyncedBlockEvent(parent.getEntityWorld(), pos, type, data);
+		getBlockState(pos).onSyncedBlockEvent(proxyWorld, pos, type, data);
 	}
 
 	@Override
@@ -120,6 +131,10 @@ public class WorldShell implements BlockRenderView {
 		return parent.getEntityWorld().getColor(toWorldPos(pos), colorResolver);
 	}
 
+	public void tick() {
+		tickInvokers.forEach(ShellTickInvoker::tick);
+	}
+
 	@Override
 	public int getBottomSectionLimit() {
 		return parent.getEntityWorld().getBottomSectionLimit();
@@ -148,5 +163,19 @@ public class WorldShell implements BlockRenderView {
 
 	public WorldShellRenderCache getCache() {
 		return cache;
+	}
+
+	public static class ShellTickInvoker<T extends BlockEntity> {
+		private final T be;
+		private final BlockEntityTicker<T> ticker;
+
+		public ShellTickInvoker(T entity, BlockEntityTicker<T> ticker) {
+			this.ticker = ticker;
+			this.be = entity;
+		}
+
+		public void tick() {
+			this.ticker.tick(be.getWorld(), be.getPos(), be.getCachedState(), be);
+		}
 	}
 }

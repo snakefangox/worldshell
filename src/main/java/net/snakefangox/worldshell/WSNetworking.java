@@ -25,12 +25,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.ShellBay;
+import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class WSNetworking {
 
@@ -96,12 +95,13 @@ public class WSNetworking {
 		int entityID = buf.readInt();
 		Map<BlockPos, BlockState> stateMap = new HashMap<>();
 		Map<BlockPos, BlockEntity> entityMap = new HashMap<>();
-		WorldShellPacketHelper.readBlocks(buf, stateMap, entityMap, client.world);
+		List<WorldShell.ShellTickInvoker<?>> tickers = new ArrayList<>();
+		WorldShellPacketHelper.readBlocks(buf, stateMap, entityMap, tickers);
 
 		client.execute(() -> {
 			Entity entity = client.world.getEntityById(entityID);
 			if (entity instanceof WorldLinkEntity) {
-				((WorldLinkEntity) entity).initializeWorldShell(stateMap, entityMap);
+				((WorldLinkEntity) entity).initializeWorldShell(stateMap, entityMap, tickers);
 			}
 		});
 	}

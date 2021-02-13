@@ -5,6 +5,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
@@ -13,6 +14,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.storage.WorldShell;
 
 import java.util.List;
 import java.util.Map;
@@ -61,7 +63,7 @@ public class WorldShellPacketHelper {
 		return buf;
 	}
 
-	public static void readBlocks(PacketByteBuf buf, Map<BlockPos, BlockState> posBlockStateMap, Map<BlockPos, BlockEntity> posBlockEntityMap, World world) {
+	public static void readBlocks(PacketByteBuf buf, Map<BlockPos, BlockState> posBlockStateMap, Map<BlockPos, BlockEntity> posBlockEntityMap, List<WorldShell.ShellTickInvoker<?>> tickers) {
 		int stateCount = buf.readInt();
 		for (int i = 0; i < stateCount; ++i) {
 			BlockState state = Block.getStateFromRawId(buf.readInt());
@@ -72,9 +74,10 @@ public class WorldShellPacketHelper {
 				posBlockStateMap.put(pos, state);
 				if (hasEntity) {
 					BlockEntity be = ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state);
-					posBlockEntityMap.put(pos, be);
-					be.setWorld(world);
-					be.setCachedState(posBlockStateMap.get(pos));
+					if (be != null) {
+						posBlockEntityMap.put(pos, be);
+						be.setCachedState(posBlockStateMap.get(pos));
+					}
 				}
 			}
 		}

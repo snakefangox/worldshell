@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.storage;
+package net.snakefangox.worldshell.world;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -28,6 +28,8 @@ import net.minecraft.world.level.ServerWorldProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.storage.ShellBay;
+import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.ShellTransferHandler;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
@@ -144,11 +146,10 @@ public class ShellStorageWorld extends ServerWorld {
 	public void addSyncedBlockEvent(BlockPos pos, Block block, int type, int data) {
 		super.addSyncedBlockEvent(pos, block, type, data);
 		passCallToEntity(pos, ((entity, bay) -> {
-			BlockPos newPos = bay.toEntityCoordSpace(pos);
-			entity.getEntityWorld().addSyncedBlockEvent(newPos, block, type, data);
+			BlockPos newPos = CoordUtil.toLocal(bay.getCenter(), pos);
 			PacketByteBuf buf = PacketByteBufs.create();
 			buf.writeInt(entity.getId());
-			buf.writeBlockPos(CoordUtil.toLocal(bay.getCenter(), pos));
+			buf.writeBlockPos(newPos);
 			buf.writeInt(type);
 			buf.writeInt(data);
 			PlayerLookup.tracking(entity).forEach(player -> ServerPlayNetworking.send(player, WSNetworking.SHELL_BLOCK_EVENT, buf));

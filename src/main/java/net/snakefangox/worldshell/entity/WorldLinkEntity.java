@@ -59,8 +59,8 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 		super(type, world);
 	}
 
-	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap) {
-		worldShell.setWorld(stateMap, entityMap);
+	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<WorldShell.ShellTickInvoker<?>> tickers) {
+		worldShell.setWorld(stateMap, entityMap, tickers);
 		setCollisionBox(stateMap);
 	}
 
@@ -155,6 +155,14 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 			}
 		}
 		return super.interact(player, hand);
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (world.isClient) {
+			worldShell.tick();
+		}
 	}
 
 	@Override

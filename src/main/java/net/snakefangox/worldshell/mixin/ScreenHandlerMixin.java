@@ -5,7 +5,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.snakefangox.worldshell.mixininterface.ScreenHandlerCheck;
-import net.snakefangox.worldshell.storage.ShellStorageWorld;
+import net.snakefangox.worldshell.world.ShellStorageWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

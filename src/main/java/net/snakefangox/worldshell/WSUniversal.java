@@ -25,7 +25,7 @@ import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.mixininterface.DynamicDimGen;
 import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
 import net.snakefangox.worldshell.storage.ShellStorageData;
-import net.snakefangox.worldshell.storage.ShellStorageWorld;
+import net.snakefangox.worldshell.world.ShellStorageWorld;
 import net.snakefangox.worldshell.util.ShellCommand;
 
 import java.util.function.Supplier;
