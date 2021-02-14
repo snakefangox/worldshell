@@ -67,10 +67,8 @@ public class WSNetworking {
 						BlockHitResult gHit = new BlockHitResult(CoordUtil.toGlobal(bay.get().getCenter(), hit.getPos()),
 								hit.getSide(), bp, hit.isInsideBlock());
 						if (attack) {
-							System.out.println("Hit " + hit.getBlockPos());
 							world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
 						} else {
-							System.out.println("Use " + hit.getBlockPos());
 							world.getBlockState(gHit.getBlockPos()).onUse(world, player, hand, gHit);
 						}
 					}

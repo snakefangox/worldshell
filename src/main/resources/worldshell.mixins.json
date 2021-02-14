@@ -9,6 +9,8 @@
     "ServerPlayerEntityMixin"
   ],
   "client": [
+    "WorldRendererMixin",
+    "GameRendererMixin"
   ],
   "server": [
   ],

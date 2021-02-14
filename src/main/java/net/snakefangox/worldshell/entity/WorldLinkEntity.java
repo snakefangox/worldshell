@@ -39,6 +39,7 @@ import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.WSNbtHelper;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
+import org.spongepowered.asm.mixin.injection.Inject;
 
 import java.util.*;
 
@@ -157,13 +158,7 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	}
 
 	public ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean attack) {
-		Vec3d cameraPosVec = player.getCameraPosVec(1.0F);
-		Vec3d rotationVec = player.getRotationVec(1.0F);
-		Vec3d extendedVec = CoordUtil.worldToLinkEntity(this,
-				cameraPosVec.add(rotationVec.x * 4.5F, rotationVec.y * 4.5F, rotationVec.z * 4.5F));
-		RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntity(this, cameraPosVec),
-				extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
-		BlockHitResult rayCastResult = worldShell.raycast(rayCtx);
+		BlockHitResult rayCastResult = raycastToWorldShell(player);
 		if (rayCastResult.getType() == HitResult.Type.BLOCK) {
 			if (attack) {
 				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT, WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, true));
@@ -175,6 +170,16 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 			}
 		}
 		return ActionResult.PASS;
+	}
+
+	public BlockHitResult raycastToWorldShell(PlayerEntity player) {
+		Vec3d cameraPosVec = player.getCameraPosVec(1.0F);
+		Vec3d rotationVec = player.getRotationVec(1.0F);
+		Vec3d extendedVec = CoordUtil.worldToLinkEntity(this,
+				cameraPosVec.add(rotationVec.x * 4.5F, rotationVec.y * 4.5F, rotationVec.z * 4.5F));
+		RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntity(this, cameraPosVec),
+				extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
+		return worldShell.raycast(rayCtx);
 	}
 
 	@Override

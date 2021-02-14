@@ -30,50 +30,10 @@ public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 
 	@Override
 	public void render(WorldLinkEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-		WorldShell worldShell = entity.getWorldShell();
-		BlockRenderManager renderManager = MinecraftClient.getInstance().getBlockRenderManager();
-		BlockEntityRenderDispatcher beRenderDispatcher = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
-		matrices.push();
-		worldShell.tickCache();
-		if (!worldShell.isCacheValid()) {
-			worldShell.getCache().reset();
-			renderToCache(worldShell, renderManager, entity, yaw, tickDelta);
-		}
-		worldShell.getCache().draw(matrices);
-		for (Map.Entry<BlockPos, BlockEntity> entry : worldShell.getBlockEntities()) {
-			matrices.push();
-			BlockPos bp = entry.getKey();
-			BlockEntity be = entry.getValue();
-			matrices.translate(bp.getX(), bp.getY(), bp.getZ());
-			beRenderDispatcher.renderEntity(be, matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV);
-			matrices.pop();
-		}
-		matrices.pop();
+		WorldShellRender.renderWorldShell(entity.getWorldShell(), matrices, entity.world.random, vertexConsumers, light);
 	}
 
-	private void renderToCache(WorldShell worldShell, BlockRenderManager renderManager, WorldLinkEntity entity, float yaw, float tickDelta) {
-		MatrixStack matrices = new MatrixStack();
-		WorldShellRenderCache renderCache = worldShell.getCache();
-		for (Map.Entry<BlockPos, BlockState> entry : worldShell.getBlocks()) {
-			BlockState bs = entry.getValue();
-			FluidState fs = bs.getFluidState();
-			BlockPos bp = entry.getKey();
-			matrices.push();
-			matrices.translate(bp.getX(), bp.getY(), bp.getZ());
-			if (!fs.isEmpty()) {
-				matrices.push();
-				matrices.translate(-(bp.getX() & 15), -(bp.getY() & 15), -(bp.getZ() & 15));
-				renderManager.renderFluid(bp, worldShell, renderCache.get(RenderLayers.getFluidLayer(fs)), fs);
-				matrices.pop();
-			}
-			if (bs.getRenderType() != BlockRenderType.INVISIBLE) {
-				renderManager.renderBlock(bs, bp, worldShell, matrices, renderCache.get(RenderLayers.getBlockLayer(bs)), true, entity.world.random);
-			}
-			matrices.pop();
-		}
-		renderCache.upload();
-		worldShell.markCacheValid();
-	}
+
 
 	@Override
 	public Vec3d getPositionOffset(WorldLinkEntity entity, float tickDelta) {
