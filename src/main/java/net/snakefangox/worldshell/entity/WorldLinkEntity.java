@@ -142,19 +142,39 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	@Override
 	public ActionResult interact(PlayerEntity player, Hand hand) {
 		if (world.isClient()) {
-			Vec3d cameraPosVec = player.getCameraPosVec(1.0F);
-			Vec3d rotationVec = player.getRotationVec(1.0F);
-			Vec3d extendedVec = CoordUtil.worldToLinkEntity(this,
-					cameraPosVec.add(rotationVec.x * 4.5F, rotationVec.y * 4.5F, rotationVec.z * 4.5F));
-			RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntity(this, cameraPosVec),
-					extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
-			BlockHitResult rayCastResult = worldShell.raycast(rayCtx);
-			if (rayCastResult.getType() == HitResult.Type.BLOCK) {
-				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT, WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, true));
-				return worldShell.getBlockState(rayCastResult.getBlockPos()).onUse(world, player, hand, rayCastResult);
-			}
+			return handleInteraction(player, hand, false);
 		}
 		return super.interact(player, hand);
+	}
+
+	@Override
+	public boolean handleAttack(Entity attacker) {
+		if (world.isClient() && attacker instanceof PlayerEntity) {
+			PlayerEntity player = (PlayerEntity) attacker;
+			handleInteraction(player, Hand.MAIN_HAND, true);
+		}
+		return super.handleAttack(attacker);
+	}
+
+	public ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean attack) {
+		Vec3d cameraPosVec = player.getCameraPosVec(1.0F);
+		Vec3d rotationVec = player.getRotationVec(1.0F);
+		Vec3d extendedVec = CoordUtil.worldToLinkEntity(this,
+				cameraPosVec.add(rotationVec.x * 4.5F, rotationVec.y * 4.5F, rotationVec.z * 4.5F));
+		RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntity(this, cameraPosVec),
+				extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
+		BlockHitResult rayCastResult = worldShell.raycast(rayCtx);
+		if (rayCastResult.getType() == HitResult.Type.BLOCK) {
+			if (attack) {
+				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT, WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, true));
+				return worldShell.getBlockState(rayCastResult.getBlockPos()).onUse(world, player, hand, rayCastResult);
+			} else {
+				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT, WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, false));
+				worldShell.getBlockState(rayCastResult.getBlockPos()).onBlockBreakStart(world, rayCastResult.getBlockPos(), player);
+				return ActionResult.SUCCESS;
+			}
+		}
+		return ActionResult.PASS;
 	}
 
 	@Override

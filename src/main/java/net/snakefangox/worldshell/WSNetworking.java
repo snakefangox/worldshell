@@ -52,7 +52,7 @@ public class WSNetworking {
 		int entityID = buf.readInt();
 		BlockHitResult hit = buf.readBlockHitResult();
 		Hand hand = buf.readEnumConstant(Hand.class);
-		boolean interact = buf.readBoolean();
+		boolean attack = buf.readBoolean();
 
 		server.execute(() -> {
 			Entity entity = player.world.getEntityById(entityID);
@@ -66,10 +66,12 @@ public class WSNetworking {
 						if (!world.isChunkLoaded(bp)) return;
 						BlockHitResult gHit = new BlockHitResult(CoordUtil.toGlobal(bay.get().getCenter(), hit.getPos()),
 								hit.getSide(), bp, hit.isInsideBlock());
-						if (interact) {
-							world.getBlockState(gHit.getBlockPos()).onUse(world, player, hand, gHit);
-						} else {
+						if (attack) {
+							System.out.println("Hit " + hit.getBlockPos());
 							world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
+						} else {
+							System.out.println("Use " + hit.getBlockPos());
+							world.getBlockState(gHit.getBlockPos()).onUse(world, player, hand, gHit);
 						}
 					}
 				}
