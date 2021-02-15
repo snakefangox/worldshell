@@ -28,7 +28,7 @@ public class ScreenHandlerCheck {
 		boolean canUse = screenHandler.canUse(player);
 		if (!player.world.isClient() && !canUse) {
 			MinecraftServer server = player.world.getServer();
-			World world = server.getWorld(WSUniversal.STORAGE_DIM);
+			World world = WSUniversal.getStorageDim(server);
 			return screenHandler.canUse(getOrCreateFakePlayer(world, player.getPos()));
 		}
 		return canUse;

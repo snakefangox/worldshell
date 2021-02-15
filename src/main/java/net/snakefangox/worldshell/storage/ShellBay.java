@@ -43,7 +43,7 @@ public class ShellBay {
 	}
 
 	public PacketByteBuf createClientPacket(MinecraftServer server, PacketByteBuf buf) {
-		World world = server.getWorld(WSUniversal.STORAGE_DIM);
+		World world = WSUniversal.getStorageDim(server);
 		Map<BlockState, List<BlockPos>> stateListMap = new HashMap<>();
 		List<BlockEntity> blockEntities = new ArrayList<>();
 		ShellTransferHandler.forEachInBox(bounds, (bp) -> {
@@ -66,7 +66,7 @@ public class ShellBay {
 	}
 
 	public void loadAllChunks(MinecraftServer server) {
-		ServerWorld world = server.getWorld(WSUniversal.STORAGE_DIM);
+		ServerWorld world = WSUniversal.getStorageDim(server);
 		ChunkPos.stream(new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.minX), ChunkSectionPos.getSectionCoord(bounds.minZ)),
 				new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.maxX), ChunkSectionPos.getSectionCoord(bounds.maxZ)))
 				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, true));

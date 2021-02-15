@@ -12,6 +12,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
@@ -25,8 +26,8 @@ import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.mixininterface.DynamicDimGen;
 import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
 import net.snakefangox.worldshell.storage.ShellStorageData;
-import net.snakefangox.worldshell.world.ShellStorageWorld;
 import net.snakefangox.worldshell.util.ShellCommand;
+import net.snakefangox.worldshell.world.ShellStorageWorld;
 
 import java.util.function.Supplier;
 
@@ -65,5 +66,9 @@ public class WSUniversal implements ModInitializer {
 		DimensionOptions options = new DimensionOptions(typeSupplier, chunkGenerator);
 		ShellStorageWorld world = (ShellStorageWorld) ((DynamicDimGen) server).createDynamicDim(STORAGE_DIM, options, ShellStorageWorld::new);
 		world.setCachedBayData(ShellStorageData.getOrCreate(server));
+	}
+
+	public static ServerWorld getStorageDim(MinecraftServer server) {
+		return server.getWorld(WSUniversal.STORAGE_DIM);
 	}
 }

@@ -55,7 +55,7 @@ public class ShellStorageData extends PersistentState {
 
 	public void freeBay(int id, MinecraftServer server) {
 		if (!bays.containsKey(id)) return;
-		World world = server.getWorld(WSUniversal.STORAGE_DIM);
+		World world = WSUniversal.getStorageDim(server);
 		ShellBay bay = bays.remove(id);
 		emptyBays.add(id);
 		ShellTransferHandler.forEachInBox(bay.getBounds(), (bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
@@ -98,7 +98,7 @@ public class ShellStorageData extends PersistentState {
 	}
 
 	public static ShellStorageData getOrCreate(MinecraftServer server) {
-		PersistentStateManager stateManager = server.getWorld(WSUniversal.STORAGE_DIM).getPersistentStateManager();
+		PersistentStateManager stateManager = WSUniversal.getStorageDim(server).getPersistentStateManager();
 		return stateManager.getOrCreate(ShellStorageData::fromTag, ShellStorageData::new, ID);
 	}
 

@@ -61,7 +61,7 @@ public class WSNetworking {
 				if (player.distanceTo(entity) < dimensions.width + dimensions.height + 5) {
 					Optional<ShellBay> bay = ((WorldLinkEntity) entity).getBay();
 					if (bay.isPresent()) {
-						World world = server.getWorld(WSUniversal.STORAGE_DIM);
+						World world = WSUniversal.getStorageDim(server);
 						BlockPos bp = CoordUtil.toGlobal(bay.get().getCenter(), hit.getBlockPos());
 						if (!world.isChunkLoaded(bp)) return;
 						BlockHitResult gHit = new BlockHitResult(CoordUtil.toGlobal(bay.get().getCenter(), hit.getPos()),

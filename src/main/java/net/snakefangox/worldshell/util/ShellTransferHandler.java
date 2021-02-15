@@ -31,7 +31,7 @@ public class ShellTransferHandler {
 
 	//TODO Set this up the same way the clone command works
 	public static <T extends WorldLinkEntity> T transferToShell(ServerWorld world, BlockPos core, List<BlockPos> blocks, T worldLinkEntity) {
-		World shellWorld = world.getServer().getWorld(WSUniversal.STORAGE_DIM);
+		World shellWorld = WSUniversal.getStorageDim(world.getServer());
 		ShellStorageData storageData = ShellStorageData.getOrCreate(world.getServer());
 		BlockPos bayPos = storageData.getFreeBay();
 		BlockBox bayBounds = BlockBox.empty();

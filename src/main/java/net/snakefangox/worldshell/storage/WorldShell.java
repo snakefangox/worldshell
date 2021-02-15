@@ -49,10 +49,10 @@ public class WorldShell implements BlockRenderView {
 	public void setWorld(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<ShellTickInvoker<?>> tickers) {
 		blockStateMap.putAll(stateMap);
 		blockEntityMap.putAll(entityMap);
-		for (Map.Entry<BlockPos, BlockEntity> entry : blockEntityMap.entrySet()){
+		for (Map.Entry<BlockPos, BlockEntity> entry : blockEntityMap.entrySet()) {
 			entry.getValue().setWorld(proxyWorld);
 			BlockEntityTicker<?> ticker = blockStateMap.get(entry.getKey()).getBlockEntityTicker(proxyWorld, entry.getValue().getType());
-			if (ticker != null) tickers.add(new WorldShell.ShellTickInvoker(entry.getValue(), ticker));
+			if (ticker != null) tickers.add(new ShellTickInvoker(entry.getValue(), ticker));
 		}
 		tickInvokers.addAll(tickers);
 		markCacheInvalid();
@@ -71,7 +71,8 @@ public class WorldShell implements BlockRenderView {
 		if (state.hasBlockEntity()) {
 			BlockEntity be = ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state);
 			if (be != null) {
-				blockEntityMap.put(pos, be);
+				BlockEntity oldBe = blockEntityMap.put(pos, be);
+				if (oldBe != null) tickInvokers.remove(new ShellTickInvoker<>(oldBe, null));
 				be.setWorld(proxyWorld);
 				be.setCachedState(blockStateMap.get(pos));
 				if (tag != null) be.fromTag(tag);
@@ -176,6 +177,21 @@ public class WorldShell implements BlockRenderView {
 
 		public void tick() {
 			this.ticker.tick(be.getWorld(), be.getPos(), be.getCachedState(), be);
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (!(o instanceof ShellTickInvoker)) return false;
+
+			ShellTickInvoker<?> invoker = (ShellTickInvoker<?>) o;
+
+			return be.equals(invoker.be);
+		}
+
+		@Override
+		public int hashCode() {
+			return be.hashCode();
 		}
 	}
 }
