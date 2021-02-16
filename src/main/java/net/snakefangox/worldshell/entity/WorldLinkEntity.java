@@ -35,6 +35,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.WSUniversal;
+import net.snakefangox.worldshell.collision.ShellCollisionHull;
 import net.snakefangox.worldshell.storage.ShellBay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.storage.WorldShell;
@@ -56,6 +57,7 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	private int shellId = 0;
 	private final WorldShell worldShell = new WorldShell(this, 120 /*TODO set to builder*/);
 	private CompoundOrientedBox collisionBox = new CompoundOrientedBox(super.getBoundingBox(), Collections.emptyList());
+	private final ShellCollisionHull hull = new ShellCollisionHull();
 
 	public WorldLinkEntity(EntityType<?> type, World world) {
 		super(type, world);
@@ -176,9 +178,9 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	public BlockHitResult raycastToWorldShell(PlayerEntity player) {
 		Vec3d cameraPosVec = player.getCameraPosVec(1.0F);
 		Vec3d rotationVec = player.getRotationVec(1.0F);
-		Vec3d extendedVec = CoordUtil.worldToLinkEntity(this,
+		Vec3d extendedVec = CoordUtil.worldToLinkEntityRotated(this,
 				cameraPosVec.add(rotationVec.x * 4.5F, rotationVec.y * 4.5F, rotationVec.z * 4.5F));
-		RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntity(this, cameraPosVec),
+		RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntityRotated(this, cameraPosVec),
 				extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
 		return worldShell.raycast(rayCtx);
 	}
@@ -187,7 +189,7 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 		if (world.isClient()) return;
 		Optional<ShellBay> bay = getBay();
 		if (bay.isPresent()) {
-			Vec3d newExp = CoordUtil.toGlobal(bay.get().getCenter(), CoordUtil.worldToLinkEntity(this, new Vec3d(x, y, z)));
+			Vec3d newExp = CoordUtil.toGlobal(bay.get().getCenter(), CoordUtil.worldToLinkEntityRotated(this, new Vec3d(x, y, z)));
 			WSUniversal.getStorageDim(world.getServer()).createExplosion(null, newExp.x, newExp.y, newExp.z, power, fire, type);
 		}
 	}
