@@ -26,10 +26,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.EulerAngle;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
@@ -52,7 +49,7 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 
 	private static final TrackedData<EntityDimensions> DIMENSIONS = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.DIMENSIONS);
 	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.VEC3D);
-	private static final TrackedData<EulerAngle> ROTATION_VELOCITY = DataTracker.registerData(WorldLinkEntity.class, TrackedDataHandlerRegistry.ROTATION);
+	private static final TrackedData<Quaternion> ROTATION = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.QUATERNION);
 
 	private int shellId = 0;
 	private final WorldShell worldShell = new WorldShell(this, 120 /*TODO set to builder*/);
@@ -101,13 +98,15 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	protected void initDataTracker() {
 		getDataTracker().startTracking(DIMENSIONS, getType().getDimensions());
 		getDataTracker().startTracking(BLOCK_OFFSET, new Vec3d(0, 0, 0));
-		getDataTracker().startTracking(ROTATION_VELOCITY, new EulerAngle(0, 0, 0));
+		getDataTracker().startTracking(ROTATION, Quaternion.IDENTITY.copy());
 	}
 
 	@Override
 	public void onTrackedDataSet(TrackedData<?> data) {
 		if (DIMENSIONS.equals(data)) {
 			dimensions = getDataTracker().get(DIMENSIONS);
+		} else if (ROTATION.equals(data)) {
+			hull.setRotation(getDataTracker().get(ROTATION));
 		}
 	}
 
@@ -131,6 +130,14 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 
 	public void setBlockOffset(Vec3d offset) {
 		getDataTracker().set(BLOCK_OFFSET, offset);
+	}
+
+	protected Quaternion getRotation() {
+		return getDataTracker().get(ROTATION);
+	}
+
+	protected void setRotation(Quaternion quaternion) {
+		getDataTracker().set(ROTATION, quaternion);
 	}
 
 	@Override
@@ -209,6 +216,8 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 		float width = tag.getFloat("width");
 		float height = tag.getFloat("height");
 		setDimensions(new EntityDimensions(width, height, false));
+		setRotation(WSNbtHelper.getQuaternion(tag, "rotation"));
+
 	}
 
 	@Override
@@ -217,6 +226,7 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 		WSNbtHelper.putVec3d(tag, getBlockOffset(), "blockOffset");
 		tag.putFloat("width", getDimensions(null).width);
 		tag.putFloat("height", getDimensions(null).height);
+		WSNbtHelper.putQuaternion(tag, "rotation", getRotation());
 	}
 
 	@Override

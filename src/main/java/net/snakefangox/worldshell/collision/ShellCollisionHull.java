@@ -51,13 +51,15 @@ public class ShellCollisionHull extends Box {
 			aabbMax.setAll(maxX, maxY, maxZ);
 			CoordUtil.worldToLinkEntity(entity, aabbMin);
 			CoordUtil.worldToLinkEntity(entity, aabbMax);
-			calcNewAABB(aabbMin.x, aabbMin.y, aabbMin.z, aabbMax.x, aabbMax.y, aabbMax.z);
+			m.rotate(aabbMin);
+			m.rotate(aabbMax);
 			double xPos = (aabbMin.x - aabbMax.x) / 2.0;
 			double yPos = (aabbMin.y - aabbMax.y) / 2.0;
 			double zPos = (aabbMin.z - aabbMax.z) / 2.0;
 			double xSize = (aabbMax.x - aabbMin.x) / 2.0;
 			double ySize = (aabbMax.y - aabbMin.y) / 2.0;
 			double zSize = (aabbMax.z - aabbMin.z) / 2.0;
+			calcNewAABB(aabbMin.x, aabbMin.y, aabbMin.z, aabbMax.x, aabbMax.y, aabbMax.z);
 
 			WorldShell shell = entity.getWorldShell();
 			BlockPos.stream(MathHelper.floor(aabbMin.x), MathHelper.floor(aabbMin.y), MathHelper.floor(aabbMin.z),

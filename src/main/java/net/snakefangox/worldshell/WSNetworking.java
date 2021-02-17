@@ -21,6 +21,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
@@ -165,9 +166,35 @@ public class WSNetworking {
 		}
 	};
 
+	public static final TrackedDataHandler<Quaternion> QUATERNION = new TrackedDataHandler<Quaternion>() {
+
+		@Override
+		public void write(PacketByteBuf data, Quaternion object) {
+			data.writeFloat(object.getX());
+			data.writeFloat(object.getY());
+			data.writeFloat(object.getZ());
+			data.writeFloat(object.getW());
+		}
+
+		@Override
+		public Quaternion read(PacketByteBuf buf) {
+			float x = buf.readFloat();
+			float y = buf.readFloat();
+			float z = buf.readFloat();
+			float w = buf.readFloat();
+			return new Quaternion(x, y, z, w);
+		}
+
+		@Override
+		public Quaternion copy(Quaternion object) {
+			return object.copy();
+		}
+	};
+
 	static {
 		TrackedDataHandlerRegistry.register(DIMENSIONS);
 		TrackedDataHandlerRegistry.register(VEC3D);
+		TrackedDataHandlerRegistry.register(QUATERNION);
 	}
 
 }
