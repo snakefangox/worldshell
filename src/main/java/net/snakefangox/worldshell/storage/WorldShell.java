@@ -166,10 +166,6 @@ public class WorldShell implements BlockRenderView {
 		return cache;
 	}
 
-	public WorldLinkEntity getParent() {
-		return parent;
-	}
-
 	public static class ShellTickInvoker<T extends BlockEntity> {
 		private final T be;
 		private final BlockEntityTicker<T> ticker;

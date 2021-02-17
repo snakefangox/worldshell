@@ -57,7 +57,7 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	private int shellId = 0;
 	private final WorldShell worldShell = new WorldShell(this, 120 /*TODO set to builder*/);
 	private CompoundOrientedBox collisionBox = new CompoundOrientedBox(super.getBoundingBox(), Collections.emptyList());
-	private final ShellCollisionHull hull = new ShellCollisionHull();
+	private final ShellCollisionHull hull = new ShellCollisionHull(this);
 
 	public WorldLinkEntity(EntityType<?> type, World world) {
 		super(type, world);

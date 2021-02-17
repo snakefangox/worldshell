@@ -8,11 +8,18 @@ import net.minecraft.util.math.Vec3d;
  */
 public class Matrix3D {
 
+	public double m00, m10, m20;
+	public double m01, m11, m21;
+	public double m02, m12, m22;
+
+	/*	OldRep
 	public double m00, m01, m02;
 	public double m10, m11, m12;
 	public double m20, m21, m22;
+	*/
 
-	public Matrix3D() {}
+	public Matrix3D() {
+	}
 
 	public Matrix3D(double n00, double n01, double n02, double n10, double n11, double n12, double n20, double n21, double n22) {
 		m00 = n00;
@@ -63,7 +70,12 @@ public class Matrix3D {
 		return new Vec3d(m00 * v.x + m01 * v.y + m02 * v.z, m10 * v.x + m11 * v.y + m12 * v.z, m20 * v.x + m21 * v.y + m22 * v.z);
 	}
 
-	public Vec3d rotate(double x, double y, double z) {
-		return new Vec3d(m00 * x + m01 * y + m02 * z, m10 * x + m11 * y + m12 * z, m20 * x + m21 * y + m22 * z);
+	public void rotate(double x, double y, double z, ShellCollisionHull.Vec3dM vec) {
+		vec.setAll(m00 * x + m01 * y + m02 * z, m10 * x + m11 * y + m12 * z, m20 * x + m21 * y + m22 * z);
 	}
+
+	public void rotate(ShellCollisionHull.Vec3dM vec) {
+		vec.setAll(m00 * vec.x + m01 * vec.y + m02 * vec.z, m10 * vec.x + m11 * vec.y + m12 * vec.z, m20 * vec.x + m21 * vec.y + m22 * vec.z);
+	}
+
 }
