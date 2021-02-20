@@ -58,7 +58,7 @@ public class ScreenHandlerCheck {
 			ShellStorageData data = ((ShellStorageWorld) world).getCachedBayData();
 			ShellBay bay = data.getBay(data.getBayIdFromPos(new BlockPos(x, y, z)));
 			if (bay != null && bay.getLinkedEntity().isPresent()) {
-				Vec3d temp = CoordUtil.worldToLinkEntityRotated(bay.getLinkedEntity().get(), getPos());
+				Vec3d temp = CoordUtil.worldToLinkEntity(bay.getLinkedEntity().get(), getPos());
 				Vec3d vec = CoordUtil.toGlobal(bay.getCenter(), temp);
 				setPosition(vec.x, vec.y, vec.z);
 			}

@@ -44,7 +44,7 @@ public class ShellTransferHandler {
 		worldLinkEntity.setDimensions(dimensions);
 		Vec3d center = CoordUtil.getBoxCenter(bayBounds);
 		worldLinkEntity.setPosition(center.getX() + 0.5, bayBounds.minY, center.getZ() + 0.5);
-		worldLinkEntity.setBlockOffset(new Vec3d(core.getX() - center.x, core.getY() - bayBounds.minY, core.getZ() - center.z).add(-0.5, 0, -0.5));
+		worldLinkEntity.setBlockOffset(new Vec3d((core.getX() - center.x) - 0.5, core.getY() - bayBounds.minY, (core.getZ() - center.z) - 0.5));
 		blocks.forEach((bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
 		CoordUtil.transformBoxCoordSpace(core, bayPos, bayBounds);
 		int id = storageData.addBay(new ShellBay(bayPos, bayBounds));

@@ -1,6 +1,14 @@
 accessWidener	v1	named
 
-#Let me mess with the bounding box and dimensions
+# Let me mess with the bounding box and dimensions
 accessible field net/minecraft/entity/Entity dimensions Lnet/minecraft/entity/EntityDimensions;
 mutable field net/minecraft/entity/Entity dimensions Lnet/minecraft/entity/EntityDimensions;
 extendable method net/minecraft/entity/Entity getBoundingBox ()Lnet/minecraft/util/math/Box;
+
+# Makes Box values mutable
+mutable field net/minecraft/util/math/Box minX D
+mutable field net/minecraft/util/math/Box minY D
+mutable field net/minecraft/util/math/Box minZ D
+mutable field net/minecraft/util/math/Box maxX D
+mutable field net/minecraft/util/math/Box maxY D
+mutable field net/minecraft/util/math/Box maxZ D

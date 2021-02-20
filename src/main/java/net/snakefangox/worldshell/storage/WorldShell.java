@@ -31,7 +31,7 @@ public class WorldShell implements BlockRenderView {
 	private final Map<BlockPos, BlockEntity> blockEntityMap = new LinkedHashMap<>();
 	private final List<ShellTickInvoker<?>> tickInvokers = new ArrayList<>();
 	private final BlockPos.Mutable reusablePos = new BlockPos.Mutable();
-	private final WorldShellRenderCache cache = new WorldShellRenderCache();
+	private final WorldShellRenderCache cache;
 	private final int cacheValidTime;
 	private int cacheResetTimer = 0;
 
@@ -39,6 +39,7 @@ public class WorldShell implements BlockRenderView {
 		this.parent = parent;
 		this.cacheValidTime = cacheValidTime;
 		proxyWorld = new ProxyWorld(parent.getEntityWorld(), this);
+		cache = parent.world.isClient() ? new WorldShellRenderCache() : null;
 	}
 
 	@Override
@@ -48,13 +49,16 @@ public class WorldShell implements BlockRenderView {
 
 	public void setWorld(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<ShellTickInvoker<?>> tickers) {
 		blockStateMap.putAll(stateMap);
-		blockEntityMap.putAll(entityMap);
-		for (Map.Entry<BlockPos, BlockEntity> entry : blockEntityMap.entrySet()) {
-			entry.getValue().setWorld(proxyWorld);
-			BlockEntityTicker<?> ticker = blockStateMap.get(entry.getKey()).getBlockEntityTicker(proxyWorld, entry.getValue().getType());
-			if (ticker != null) tickers.add(new ShellTickInvoker(entry.getValue(), ticker));
+		if (entityMap != null) {
+			blockEntityMap.putAll(entityMap);
+			for (Map.Entry<BlockPos, BlockEntity> entry : blockEntityMap.entrySet()) {
+				entry.getValue().setWorld(proxyWorld);
+				BlockEntityTicker<?> ticker = blockStateMap.get(entry.getKey()).getBlockEntityTicker(proxyWorld, entry.getValue().getType());
+				if (ticker != null) tickers.add(new ShellTickInvoker(entry.getValue(), ticker));
+			}
 		}
-		tickInvokers.addAll(tickers);
+		if (tickers != null)
+			tickInvokers.addAll(tickers);
 		markCacheInvalid();
 	}
 
@@ -164,6 +168,10 @@ public class WorldShell implements BlockRenderView {
 
 	public WorldShellRenderCache getCache() {
 		return cache;
+	}
+
+	public boolean isEmpty() {
+		return blockStateMap.isEmpty();
 	}
 
 	public static class ShellTickInvoker<T extends BlockEntity> {

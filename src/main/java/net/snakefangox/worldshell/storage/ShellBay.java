@@ -65,6 +65,17 @@ public class ShellBay {
 		return WorldShellPacketHelper.writeBlocks(buf, stateListMap, blockEntities, center);
 	}
 
+	private void fillServerWorldShell(WorldLinkEntity entity) {
+		World world = WSUniversal.getStorageDim(entity.world.getServer());
+		Map<BlockPos, BlockState> stateMap = new HashMap<>();
+		ShellTransferHandler.forEachInBox(bounds, (bp) -> {
+			BlockState state = world.getBlockState(bp);
+			if (!state.isAir())
+				stateMap.put(CoordUtil.toLocal(center, bp.toImmutable()), state);
+		});
+		entity.initializeWorldShell(stateMap, null, null);
+	}
+
 	public void loadAllChunks(MinecraftServer server) {
 		ServerWorld world = WSUniversal.getStorageDim(server);
 		ChunkPos.stream(new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.minX), ChunkSectionPos.getSectionCoord(bounds.minZ)),
@@ -106,6 +117,9 @@ public class ShellBay {
 
 	public void linkEntity(@NotNull WorldLinkEntity worldLinkEntity) {
 		linkedEntity = Optional.of(worldLinkEntity);
+		if (worldLinkEntity.getWorldShell().isEmpty()) {
+			fillServerWorldShell(worldLinkEntity);
+		}
 	}
 
 	public Optional<WorldLinkEntity> getLinkedEntity() {

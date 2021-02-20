@@ -1,13 +1,9 @@
 package net.snakefangox.worldshell.entity;
 
-import io.github.stuff_stuffs.multipart_entities.common.entity.MultipartEntity;
-import io.github.stuff_stuffs.multipart_entities.common.util.CompoundOrientedBox;
-import io.github.stuff_stuffs.multipart_entities.common.util.OrientedBox;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityDimensions;
@@ -15,7 +11,6 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Packet;
@@ -26,7 +21,9 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Quaternion;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
@@ -40,12 +37,14 @@ import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.WSNbtHelper;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * The basic entity that links to a shell, renders it's contents and handles interaction
  */
-public class WorldLinkEntity extends Entity implements MultipartEntity {
+public class WorldLinkEntity extends Entity {
 
 	private static final TrackedData<EntityDimensions> DIMENSIONS = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.DIMENSIONS);
 	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.VEC3D);
@@ -53,7 +52,6 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 
 	private int shellId = 0;
 	private final WorldShell worldShell = new WorldShell(this, 120 /*TODO set to builder*/);
-	private CompoundOrientedBox collisionBox = new CompoundOrientedBox(super.getBoundingBox(), Collections.emptyList());
 	private final ShellCollisionHull hull = new ShellCollisionHull(this);
 
 	public WorldLinkEntity(EntityType<?> type, World world) {
@@ -62,21 +60,6 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 
 	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<WorldShell.ShellTickInvoker<?>> tickers) {
 		worldShell.setWorld(stateMap, entityMap, tickers);
-		setCollisionBox(stateMap);
-	}
-
-	public void setCollisionBox(Map<BlockPos, BlockState> stateMap) {
-		List<OrientedBox> boxes = new ArrayList<>();
-		double xOff = getPos().x + getBlockOffset().x;
-		double yOff = getPos().y + getBlockOffset().y;
-		double zOff = getPos().z + getBlockOffset().z;
-		for (Map.Entry<BlockPos, BlockState> entry : stateMap.entrySet()) {
-			BlockPos bp = entry.getKey();
-			List<Box> lBoxes = CoordUtil.getTransformedBoxesFromVoxelShape(entry.getValue()
-					.getCollisionShape(worldShell, entry.getKey(), ShapeContext.absent()), xOff + bp.getX(), yOff + bp.getY(), zOff + bp.getZ());
-			lBoxes.forEach(b -> boxes.add(new OrientedBox(b)));
-		}
-		collisionBox = new CompoundOrientedBox(super.getBoundingBox().expand(dimensions.width, dimensions.height, dimensions.width), boxes);
 	}
 
 	public void updateWorldShell(BlockPos pos, BlockState state, CompoundTag tag) {
@@ -111,8 +94,8 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	}
 
 	@Override
-	public CompoundOrientedBox getBoundingBox() {
-		return collisionBox;
+	public ShellCollisionHull getBoundingBox() {
+		return hull;
 	}
 
 	@Override
@@ -185,9 +168,9 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 	public BlockHitResult raycastToWorldShell(PlayerEntity player) {
 		Vec3d cameraPosVec = player.getCameraPosVec(1.0F);
 		Vec3d rotationVec = player.getRotationVec(1.0F);
-		Vec3d extendedVec = CoordUtil.worldToLinkEntityRotated(this,
+		Vec3d extendedVec = CoordUtil.worldToLinkEntity(this,
 				cameraPosVec.add(rotationVec.x * 4.5F, rotationVec.y * 4.5F, rotationVec.z * 4.5F));
-		RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntityRotated(this, cameraPosVec),
+		RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntity(this, cameraPosVec),
 				extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
 		return worldShell.raycast(rayCtx);
 	}
@@ -196,13 +179,14 @@ public class WorldLinkEntity extends Entity implements MultipartEntity {
 		if (world.isClient()) return;
 		Optional<ShellBay> bay = getBay();
 		if (bay.isPresent()) {
-			Vec3d newExp = CoordUtil.toGlobal(bay.get().getCenter(), CoordUtil.worldToLinkEntityRotated(this, new Vec3d(x, y, z)));
+			Vec3d newExp = CoordUtil.toGlobal(bay.get().getCenter(), CoordUtil.worldToLinkEntity(this, new Vec3d(x, y, z)));
 			WSUniversal.getStorageDim(world.getServer()).createExplosion(null, newExp.x, newExp.y, newExp.z, power, fire, type);
 		}
 	}
 
 	@Override
 	public void tick() {
+		hull.calculateCrudeBounds();
 		super.tick();
 		if (world.isClient) {
 			worldShell.tick();

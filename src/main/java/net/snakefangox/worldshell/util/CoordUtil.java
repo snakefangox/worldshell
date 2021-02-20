@@ -81,7 +81,7 @@ public class CoordUtil {
 				target.getZ() + target.getBlockOffset().z + (posZ - current.getZ()));
 	}
 
-	public static Vec3d worldToLinkEntityRotated(WorldLinkEntity entity, Vec3d pos) {
+	public static Vec3d worldToLinkEntity(WorldLinkEntity entity, Vec3d pos) {
 		return new Vec3d(pos.x - (entity.getX() + entity.getBlockOffset().x),
 				pos.y - (entity.getY() + entity.getBlockOffset().y),
 				pos.z - (entity.getZ() + entity.getBlockOffset().z));

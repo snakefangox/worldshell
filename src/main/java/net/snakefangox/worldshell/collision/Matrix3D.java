@@ -12,12 +12,6 @@ public class Matrix3D {
 	public double m01, m11, m21;
 	public double m02, m12, m22;
 
-	/*	OldRep
-	public double m00, m01, m02;
-	public double m10, m11, m12;
-	public double m20, m21, m22;
-	*/
-
 	public Matrix3D() {
 	}
 
@@ -78,4 +72,18 @@ public class Matrix3D {
 		vec.setAll(m00 * vec.x + m01 * vec.y + m02 * vec.z, m10 * vec.x + m11 * vec.y + m12 * vec.z, m20 * vec.x + m21 * vec.y + m22 * vec.z);
 	}
 
+	@Override
+	public String toString() {
+		return "Matrix3D{" +
+				"m00=" + m00 +
+				", m10=" + m10 +
+				", m20=" + m20 +
+				", m01=" + m01 +
+				", m11=" + m11 +
+				", m21=" + m21 +
+				", m02=" + m02 +
+				", m12=" + m12 +
+				", m22=" + m22 +
+				'}';
+	}
 }
