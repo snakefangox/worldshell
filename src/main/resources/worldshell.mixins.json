@@ -4,15 +4,17 @@
   "package": "net.snakefangox.worldshell.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "BoxMixin",
+    "ExplosionMixin",
     "MinecraftServerMixin",
     "PlayerEntityMixin",
     "ServerPlayerEntityMixin",
-    "ExplosionMixin",
-    "BoxMixin"
+    "VoxelShapeMixin",
+    "VoxelShapesMixin"
   ],
   "client": [
-    "WorldRendererMixin",
-    "GameRendererMixin"
+    "GameRendererMixin",
+    "WorldRendererMixin"
   ],
   "server": [
   ],

@@ -12,3 +12,6 @@ mutable field net/minecraft/util/math/Box minZ D
 mutable field net/minecraft/util/math/Box maxX D
 mutable field net/minecraft/util/math/Box maxY D
 mutable field net/minecraft/util/math/Box maxZ D
+
+# We want a custom simple VoxelShape
+extendable class net/minecraft/util/shape/SimpleVoxelShape

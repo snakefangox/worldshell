@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 @Mixin(Explosion.class)
-public class ExplosionMixin {
+public abstract class ExplosionMixin {
 
 	@Shadow @Final private float power;
 

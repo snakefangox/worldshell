@@ -2,12 +2,19 @@ package net.snakefangox.worldshell.collision;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityDimensions;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Quaternion;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.RaycastContext;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
+
+import java.util.Optional;
 
 /**
  * A custom {@link Box} implementation that takes a worldshell and handles rotated collision.<p>
@@ -95,6 +102,26 @@ public class ShellCollisionHull extends Box {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public boolean contains(double x, double y, double z) {
+		pos.setAll(x, y, z);
+		CoordUtil.worldToLinkEntity(entity, pos);
+		m.rotate(pos);
+		BlockPos bp = new BlockPos(pos.x, pos.y, pos.z);
+		VoxelShape shape = entity.getWorldShell().getBlockState(bp).getCollisionShape(entity.getWorldShell(), bp);
+		if (shape.isEmpty()) return false;
+		return shape.getBoundingBox().contains(pos.x, pos.y, pos.z);
+	}
+
+	@Override
+	public Optional<Vec3d> raycast(Vec3d min, Vec3d max) {
+		Vec3d nMin = m.rotate(CoordUtil.worldToLinkEntity(entity, min));
+		Vec3d nMax = m.rotate(CoordUtil.worldToLinkEntity(entity, max));
+		RaycastContext ctx = new RaycastContext(nMin, nMax, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity);
+		BlockHitResult hit = entity.getWorldShell().raycast(ctx);
+		return hit.getType() == HitResult.Type.MISS ? Optional.empty() : Optional.of(CoordUtil.linkEntityToWorld(CoordUtil.BP_ZERO, entity, hit.getPos()));
 	}
 
 	private boolean checkAllAxisForOverlap(double minX, double minY, double minZ, double maxX, double maxY, double maxZ,
