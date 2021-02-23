@@ -24,6 +24,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.collision.QuaternionD;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.ShellBay;
 import net.snakefangox.worldshell.storage.WorldShell;
@@ -166,28 +167,28 @@ public class WSNetworking {
 		}
 	};
 
-	public static final TrackedDataHandler<Quaternion> QUATERNION = new TrackedDataHandler<Quaternion>() {
+	public static final TrackedDataHandler<QuaternionD> QUATERNION = new TrackedDataHandler<QuaternionD>() {
 
 		@Override
-		public void write(PacketByteBuf data, Quaternion object) {
-			data.writeFloat(object.getX());
-			data.writeFloat(object.getY());
-			data.writeFloat(object.getZ());
-			data.writeFloat(object.getW());
+		public void write(PacketByteBuf data, QuaternionD object) {
+			data.writeDouble(object.getX());
+			data.writeDouble(object.getY());
+			data.writeDouble(object.getZ());
+			data.writeDouble(object.getW());
 		}
 
 		@Override
-		public Quaternion read(PacketByteBuf buf) {
-			float x = buf.readFloat();
-			float y = buf.readFloat();
-			float z = buf.readFloat();
-			float w = buf.readFloat();
-			return new Quaternion(x, y, z, w);
+		public QuaternionD read(PacketByteBuf buf) {
+			double x = buf.readDouble();
+			double y = buf.readDouble();
+			double z = buf.readDouble();
+			double w = buf.readDouble();
+			return new QuaternionD(x, y, z, w);
 		}
 
 		@Override
-		public Quaternion copy(Quaternion object) {
-			return object.copy();
+		public QuaternionD copy(QuaternionD object) {
+			return object;
 		}
 	};
 

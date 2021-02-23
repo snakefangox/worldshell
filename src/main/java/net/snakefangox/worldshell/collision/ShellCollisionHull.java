@@ -6,7 +6,6 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.RaycastContext;
@@ -24,7 +23,8 @@ import java.util.Optional;
 public class ShellCollisionHull extends Box {
 
 	private final WorldLinkEntity entity;
-	private final Matrix3D m;
+	private Matrix3d rotation;
+	private Matrix3d inverseRotation;
 	// Very bad not good probably evil mutable global vars
 	private final Interval rInterval = new Interval();
 	private final Interval interval = new Interval();
@@ -38,19 +38,18 @@ public class ShellCollisionHull extends Box {
 	public ShellCollisionHull(WorldLinkEntity entity) {
 		super(0, 0, 0, 0, 0, 0);
 		this.entity = entity;
-		m = new Matrix3D();
+		rotation = Matrix3d.IDENTITY;
 		for (int i = 0; i < 15; ++i) collisionAxis[i] = new Vec3dM();
 		collisionAxis[0].setAll(1, 0, 0);
 		collisionAxis[1].setAll(0, 1, 0);
 		collisionAxis[2].setAll(0, 0, 1);
-		setRotation(Quaternion.IDENTITY.copy());
+		setRotation(QuaternionD.IDENTITY);
 		calcAllAxis();
 	}
 
-	public void setRotation(Quaternion quaternion) {
-		quaternion.conjugate();
-		m.fromQuaternion(quaternion);
-		quaternion.conjugate();
+	public void setRotation(QuaternionD quaternion) {
+		rotation = new Matrix3d(quaternion);
+		inverseRotation = rotation.invert();
 		calcAllAxis();
 	}
 
@@ -68,8 +67,6 @@ public class ShellCollisionHull extends Box {
 	@Override
 	public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		if (super.intersects(minX, minY, minZ, maxX, maxY, maxZ)) {
-			aabbMin.setAll(minX, minY, minZ);
-			aabbMax.setAll(maxX, maxY, maxZ);
 			CoordUtil.worldToLinkEntity(entity, aabbMin);
 			CoordUtil.worldToLinkEntity(entity, aabbMax);
 			double xSize = (aabbMax.x - aabbMin.x) / 2.0;
@@ -78,28 +75,8 @@ public class ShellCollisionHull extends Box {
 			double xPos = aabbMin.x + xSize;
 			double yPos = aabbMin.y + ySize;
 			double zPos = aabbMin.z + zSize;
-			m.rotate(xPos, yPos, zPos, pos);
-			m.rotate(aabbMin);
-			m.rotate(aabbMax);
-			calcNewAABB(aabbMin.x, aabbMin.y, aabbMin.z, aabbMax.x, aabbMax.y, aabbMax.z);
-
-			WorldShell shell = entity.getWorldShell();
-			/*BlockPos.stream(MathHelper.floor(aabbMin.x), MathHelper.floor(aabbMin.y), MathHelper.floor(aabbMin.z),
-					MathHelper.ceil(aabbMax.x), MathHelper.ceil(aabbMax.y), MathHelper.ceil(aabbMax.z))*/
-			shell.getBlocks().forEach(entry -> {
-				BlockPos bp = entry.getKey();
-				if (!finished.f) {
-					BlockState state = shell.getBlockState(bp);
-					if (!state.isAir())
-						state.getCollisionShape(shell, bp).forEachBox((minX1, minY1, minZ1, maxX1, maxY1, maxZ1) ->
-								finished.f = finished.f || checkAllAxisForOverlap(minX1 + bp.getX(), minY1 + bp.getY(), minZ1 + bp.getZ(),
-										maxX1 + bp.getX(), maxY1 + bp.getY(), maxZ1 + bp.getZ(), pos.x, pos.y, pos.z, xSize, ySize, zSize));
-				}
-			});
-			if (finished.f) {
-				finished.f = false;
-				return true;
-			}
+			CoordUtil.worldToLinkEntity(entity, );
+			OrientedBox collidingBox = new OrientedBox();
 		}
 		return false;
 	}
@@ -108,7 +85,7 @@ public class ShellCollisionHull extends Box {
 	public boolean contains(double x, double y, double z) {
 		pos.setAll(x, y, z);
 		CoordUtil.worldToLinkEntity(entity, pos);
-		m.rotate(pos);
+		rotation.rotate(pos);
 		BlockPos bp = new BlockPos(pos.x, pos.y, pos.z);
 		VoxelShape shape = entity.getWorldShell().getBlockState(bp).getCollisionShape(entity.getWorldShell(), bp);
 		if (shape.isEmpty()) return false;
@@ -117,8 +94,8 @@ public class ShellCollisionHull extends Box {
 
 	@Override
 	public Optional<Vec3d> raycast(Vec3d min, Vec3d max) {
-		Vec3d nMin = m.rotate(CoordUtil.worldToLinkEntity(entity, min));
-		Vec3d nMax = m.rotate(CoordUtil.worldToLinkEntity(entity, max));
+		Vec3d nMin = rotation.rotate(CoordUtil.worldToLinkEntity(entity, min));
+		Vec3d nMax = rotation.rotate(CoordUtil.worldToLinkEntity(entity, max));
 		RaycastContext ctx = new RaycastContext(nMin, nMax, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity);
 		BlockHitResult hit = entity.getWorldShell().raycast(ctx);
 		return hit.getType() == HitResult.Type.MISS ? Optional.empty() : Optional.of(CoordUtil.linkEntityToWorld(CoordUtil.BP_ZERO, entity, hit.getPos()));
@@ -135,9 +112,9 @@ public class ShellCollisionHull extends Box {
 	}
 
 	private void calcAllAxis() {
-		collisionAxis[3].setAll(m.m00, m.m10, m.m20);
-		collisionAxis[4].setAll(m.m01, m.m11, m.m21);
-		collisionAxis[5].setAll(m.m02, m.m12, m.m22);
+		collisionAxis[3].setAll(rotation.m00, rotation.m10, rotation.m20);
+		collisionAxis[4].setAll(rotation.m01, rotation.m11, rotation.m21);
+		collisionAxis[5].setAll(rotation.m02, rotation.m12, rotation.m22);
 		for (int i = 0; i < 3; ++i) {
 			cross(collisionAxis[i], collisionAxis[3], collisionAxis[6 + i * 3]);
 			cross(collisionAxis[i], collisionAxis[4], collisionAxis[7 + i * 3]);
@@ -164,15 +141,15 @@ public class ShellCollisionHull extends Box {
 	}
 
 	private void setRInterval(double xP, double yP, double zP, double xS, double yS, double zS, Vec3dM axis) {
-		double x0 = m.m00 * xS;
-		double y0 = m.m10 * xS;
-		double z0 = m.m20 * xS;
-		double x1 = m.m01 * yS;
-		double y1 = m.m11 * yS;
-		double z1 = m.m21 * yS;
-		double x2 = m.m02 * zS;
-		double y2 = m.m12 * zS;
-		double z2 = m.m22 * zS;
+		double x0 = rotation.m00 * xS;
+		double y0 = rotation.m10 * xS;
+		double z0 = rotation.m20 * xS;
+		double x1 = rotation.m01 * yS;
+		double y1 = rotation.m11 * yS;
+		double z1 = rotation.m21 * yS;
+		double x2 = rotation.m02 * zS;
+		double y2 = rotation.m12 * zS;
+		double z2 = rotation.m22 * zS;
 		rInterval.setBoth(dot(xP + x0 + x1 + x2, yP + y0 + y1 + y2, zP + z0 + z1 + z2, axis));
 		rInterval.addWFit(dot(xP - x0 + x1 + x2, yP - y0 + y1 + y2, zP - z0 + z1 + z2, axis));
 		rInterval.addWFit(dot(xP + x0 - x1 + x2, yP + y0 - y1 + y2, zP + z0 - z1 + z2, axis));

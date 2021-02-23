@@ -22,13 +22,13 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.WSUniversal;
+import net.snakefangox.worldshell.collision.QuaternionD;
 import net.snakefangox.worldshell.collision.ShellCollisionHull;
 import net.snakefangox.worldshell.storage.ShellBay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
@@ -48,7 +48,7 @@ public class WorldLinkEntity extends Entity {
 
 	private static final TrackedData<EntityDimensions> DIMENSIONS = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.DIMENSIONS);
 	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.VEC3D);
-	private static final TrackedData<Quaternion> ROTATION = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.QUATERNION);
+	private static final TrackedData<QuaternionD> ROTATION = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.QUATERNION);
 
 	private int shellId = 0;
 	private final WorldShell worldShell = new WorldShell(this, 120 /*TODO set to builder*/);
@@ -81,7 +81,7 @@ public class WorldLinkEntity extends Entity {
 	protected void initDataTracker() {
 		getDataTracker().startTracking(DIMENSIONS, getType().getDimensions());
 		getDataTracker().startTracking(BLOCK_OFFSET, new Vec3d(0, 0, 0));
-		getDataTracker().startTracking(ROTATION, Quaternion.IDENTITY.copy());
+		getDataTracker().startTracking(ROTATION, QuaternionD.IDENTITY);
 	}
 
 	@Override
@@ -115,11 +115,11 @@ public class WorldLinkEntity extends Entity {
 		getDataTracker().set(BLOCK_OFFSET, offset);
 	}
 
-	protected Quaternion getRotation() {
+	protected QuaternionD getRotation() {
 		return getDataTracker().get(ROTATION);
 	}
 
-	protected void setRotation(Quaternion quaternion) {
+	protected void setRotation(QuaternionD quaternion) {
 		getDataTracker().set(ROTATION, quaternion);
 	}
 

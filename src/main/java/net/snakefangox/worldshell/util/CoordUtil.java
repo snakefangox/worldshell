@@ -6,7 +6,6 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.snakefangox.worldshell.collision.Matrix3D;
-import net.snakefangox.worldshell.collision.ShellCollisionHull;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 
 import java.util.ArrayList;
@@ -87,10 +86,10 @@ public class CoordUtil {
 				pos.z - (entity.getZ() + entity.getBlockOffset().z));
 	}
 
-	public static void worldToLinkEntity(WorldLinkEntity entity, ShellCollisionHull.Vec3dM vec) {
-		vec.setAll(vec.x - (entity.getX() + entity.getBlockOffset().x),
-				vec.y - (entity.getY() + entity.getBlockOffset().y),
-				vec.z - (entity.getZ() + entity.getBlockOffset().z));
+	public static Vec3d worldToLinkEntity(WorldLinkEntity entity, double x, double y, double z) {
+		return new Vec3d(x - (entity.getX() + entity.getBlockOffset().x),
+				y - (entity.getY() + entity.getBlockOffset().y),
+				z - (entity.getZ() + entity.getBlockOffset().z));
 	}
 
 	public static List<Box> getTransformedBoxesFromVoxelShape(VoxelShape voxelShape, double xOff, double yOff, double zOff) {
