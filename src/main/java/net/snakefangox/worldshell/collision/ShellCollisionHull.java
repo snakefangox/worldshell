@@ -1,6 +1,5 @@
 package net.snakefangox.worldshell.collision;
 
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -10,7 +9,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.RaycastContext;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
 
 import java.util.Optional;
@@ -23,8 +21,8 @@ import java.util.Optional;
 public class ShellCollisionHull extends Box {
 
 	private final WorldLinkEntity entity;
-	private Matrix3d rotation;
-	private Matrix3d inverseRotation;
+	private QuaternionD rotation;
+	private Matrix3d matrix;
 	// Very bad not good probably evil mutable global vars
 	private final Interval rInterval = new Interval();
 	private final Interval interval = new Interval();
@@ -47,10 +45,9 @@ public class ShellCollisionHull extends Box {
 		calcAllAxis();
 	}
 
-	public void setRotation(QuaternionD quaternion) {
-		rotation = new Matrix3d(quaternion);
-		inverseRotation = rotation.invert();
-		calcAllAxis();
+	public void setRotation(QuaternionD q) {
+		rotation = new QuaternionD(-q.getX(), -q.getY(), -q.getZ(), q.getW());
+		matrix = new Matrix3d(rotation);
 	}
 
 	public void calculateCrudeBounds() {
@@ -67,6 +64,8 @@ public class ShellCollisionHull extends Box {
 	@Override
 	public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		if (super.intersects(minX, minY, minZ, maxX, maxY, maxZ)) {
+			aabbMin.setAll(minX, minY, minZ);
+			aabbMax.setAll(maxX, maxY, maxZ);
 			CoordUtil.worldToLinkEntity(entity, aabbMin);
 			CoordUtil.worldToLinkEntity(entity, aabbMax);
 			double xSize = (aabbMax.x - aabbMin.x) / 2.0;
@@ -75,8 +74,9 @@ public class ShellCollisionHull extends Box {
 			double xPos = aabbMin.x + xSize;
 			double yPos = aabbMin.y + ySize;
 			double zPos = aabbMin.z + zSize;
-			CoordUtil.worldToLinkEntity(entity, );
-			OrientedBox collidingBox = new OrientedBox();
+			Vec3d min = matrix.transform(aabbMin.x, aabbMin.y, aabbMin.z);
+			Vec3d max = matrix.transform(aabbMax.x, aabbMax.y, aabbMax.z);
+			OrientedBox collidingBox = new OrientedBox(matrix.transform(xPos, yPos, zPos), new Vec3d(xSize, ySize, zSize), rotation);
 		}
 		return false;
 	}
