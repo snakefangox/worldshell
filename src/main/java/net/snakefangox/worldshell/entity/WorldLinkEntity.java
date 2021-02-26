@@ -196,7 +196,6 @@ public class WorldLinkEntity extends Entity {
 
 	@Override
 	public void tick() {
-		hull.calculateCrudeBounds();
 		super.tick();
 		if (world.isClient) {
 			worldShell.tick();

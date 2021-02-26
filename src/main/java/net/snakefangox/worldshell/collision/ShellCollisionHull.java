@@ -24,12 +24,10 @@ import java.util.stream.StreamSupport;
  */
 public class ShellCollisionHull extends Box implements SpecialBox {
 
-	private static final double RESOLUTION = 4;
 	private final WorldLinkEntity entity;
 	private QuaternionD rotation;
 	private Matrix3d matrix;
 	private Matrix3d inverseMatrix;
-	private VoxelShape cachedVoxelShape;
 	// Very bad not good probably evil mutable global vars
 	private final Vec3dM aabbMax = new Vec3dM();
 	private final Vec3dM aabbMin = new Vec3dM();
@@ -49,7 +47,6 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	}
 
 	public void sizeUpdate() {
-		cachedVoxelShape = null;
 		calculateCrudeBounds();
 	}
 
@@ -114,10 +111,11 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	public boolean contains(double x, double y, double z) {
 		pos.setAll(x, y, z);
 		CoordUtil.worldToLinkEntity(entity, pos);
-		BlockPos bp = new BlockPos(inverseMatrix.transform(pos.x, pos.y, pos.z));
+		Vec3d vec = inverseMatrix.transform(pos.x, pos.y, pos.z);
+		BlockPos bp = new BlockPos(vec);
 		VoxelShape shape = entity.getWorldShell().getBlockState(bp).getCollisionShape(entity.getWorldShell(), bp);
 		if (shape.isEmpty()) return false;
-		return shape.getBoundingBox().contains(pos.x, pos.y, pos.z);
+		return shape.getBoundingBox().contains(vec.x, vec.y, vec.z);
 	}
 
 	@Override
@@ -177,8 +175,23 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		Vec3d max = CoordUtil.worldToLinkEntity(entity, box.maxX, box.maxY, box.maxZ);
 		calcNewAABB(min.x, min.y, min.z, max.x, max.y, max.z);
 		Box localBox = new Box(aabbMin.x, aabbMin.y, aabbMin.z, aabbMax.x, aabbMax.y, aabbMax.z);
-		return VoxelShapes.calculateMaxOffset(axis, localBox,
+		maxDist = VoxelShapes.calculateMaxOffset(axis, localBox,
 				StreamSupport.stream(new ShellCollisionSpliterator(entity.getWorldShell().getProxyWorld(), localBox.expand(1)), false), maxDist);
+		Vec3d vec;
+		switch (axis) {
+			case X:
+				vec = inverseMatrix.transform(maxDist, 0, 0);
+				break;
+			case Y:
+				vec = inverseMatrix.transform(0, maxDist, 0);
+				break;
+			case Z:
+				vec = inverseMatrix.transform(0, 0, maxDist);
+				break;
+			default:
+				throw new IllegalStateException("Somebody's fucking with enums. Who was it? Fess up!");
+		}
+		return axis.choose(vec.x, vec.y, vec.z);
 	}
 
 	public static class Vec3dM {
