@@ -9,7 +9,6 @@
     "MinecraftServerMixin",
     "PlayerEntityMixin",
     "ServerPlayerEntityMixin",
-    "VoxelShapeMixin",
     "VoxelShapesMixin"
   ],
   "client": [

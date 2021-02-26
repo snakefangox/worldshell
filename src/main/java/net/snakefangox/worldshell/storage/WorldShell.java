@@ -174,6 +174,10 @@ public class WorldShell implements BlockRenderView {
 		return blockStateMap.isEmpty();
 	}
 
+	public ProxyWorld getProxyWorld() {
+		return proxyWorld;
+	}
+
 	public static class ShellTickInvoker<T extends BlockEntity> {
 		private final T be;
 		private final BlockEntityTicker<T> ticker;

@@ -24,6 +24,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.collision.QuaternionD;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.ShellBay;
@@ -59,8 +60,8 @@ public class WSNetworking {
 		server.execute(() -> {
 			Entity entity = player.world.getEntityById(entityID);
 			if (entity instanceof WorldLinkEntity) {
-				EntityDimensions dimensions = entity.getDimensions(null);
-				if (player.distanceTo(entity) < dimensions.width + dimensions.height + 5) {
+				EntityBounds dimensions = ((WorldLinkEntity)entity).getDimensions();
+				if (player.distanceTo(entity) < dimensions.width + dimensions.height + dimensions.length) {
 					Optional<ShellBay> bay = ((WorldLinkEntity) entity).getBay();
 					if (bay.isPresent()) {
 						World world = WSUniversal.getStorageDim(server);
@@ -121,25 +122,27 @@ public class WSNetworking {
 		});
 	}
 
-	public static final TrackedDataHandler<EntityDimensions> DIMENSIONS = new TrackedDataHandler<EntityDimensions>() {
+	public static final TrackedDataHandler<EntityBounds> BOUNDS = new TrackedDataHandler<EntityBounds>() {
 
 		@Override
-		public void write(PacketByteBuf data, EntityDimensions object) {
+		public void write(PacketByteBuf data, EntityBounds object) {
+			data.writeFloat(object.length);
 			data.writeFloat(object.width);
 			data.writeFloat(object.height);
 			data.writeBoolean(object.fixed);
 		}
 
 		@Override
-		public EntityDimensions read(PacketByteBuf buf) {
+		public EntityBounds read(PacketByteBuf buf) {
+			float l = buf.readFloat();
 			float w = buf.readFloat();
 			float h = buf.readFloat();
 			boolean f = buf.readBoolean();
-			return new EntityDimensions(w, h, f);
+			return new EntityBounds(l, w, h, f);
 		}
 
 		@Override
-		public EntityDimensions copy(EntityDimensions object) {
+		public EntityBounds copy(EntityBounds object) {
 			return object;
 		}
 	};
@@ -193,7 +196,7 @@ public class WSNetworking {
 	};
 
 	static {
-		TrackedDataHandlerRegistry.register(DIMENSIONS);
+		TrackedDataHandlerRegistry.register(BOUNDS);
 		TrackedDataHandlerRegistry.register(VEC3D);
 		TrackedDataHandlerRegistry.register(QUATERNION);
 	}

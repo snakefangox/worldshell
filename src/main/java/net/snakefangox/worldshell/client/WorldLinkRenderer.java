@@ -1,5 +1,7 @@
 package net.snakefangox.worldshell.client;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -22,6 +24,7 @@ import net.snakefangox.worldshell.storage.WorldShell;
 
 import java.util.Map;
 
+@Environment(EnvType.CLIENT)
 public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 
 	protected WorldLinkRenderer(EntityRendererFactory.Context ctx) {
@@ -32,8 +35,6 @@ public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 	public void render(WorldLinkEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
 		WorldShellRender.renderWorldShell(entity.getWorldShell(), matrices, entity.world.random, vertexConsumers, light);
 	}
-
-
 
 	@Override
 	public Vec3d getPositionOffset(WorldLinkEntity entity, float tickDelta) {

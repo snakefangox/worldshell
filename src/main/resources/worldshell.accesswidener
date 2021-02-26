@@ -14,4 +14,10 @@ mutable field net/minecraft/util/math/Box maxY D
 mutable field net/minecraft/util/math/Box maxZ D
 
 # We want a custom simple VoxelShape
-extendable class net/minecraft/util/shape/SimpleVoxelShape
+accessible method net/minecraft/util/shape/VoxelShape <init> (Lnet/minecraft/util/shape/VoxelSet;)V
+
+# Yes I know, AW Bad. This is highly used code and I want to avoid mixin-ing in anything that might slow it down
+# Hence the extension and thus the AW entry
+accessible method net/minecraft/world/BlockCollisionSpliterator getChunk (II)Lnet/minecraft/world/BlockView;
+extendable method net/minecraft/world/BlockCollisionSpliterator getChunk (II)Lnet/minecraft/world/BlockView;
+accessible field net/minecraft/world/BlockCollisionSpliterator world Lnet/minecraft/world/CollisionView;

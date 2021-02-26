@@ -28,6 +28,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.WSUniversal;
+import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.collision.QuaternionD;
 import net.snakefangox.worldshell.collision.ShellCollisionHull;
 import net.snakefangox.worldshell.storage.ShellBay;
@@ -46,7 +47,7 @@ import java.util.Optional;
  */
 public class WorldLinkEntity extends Entity {
 
-	private static final TrackedData<EntityDimensions> DIMENSIONS = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.DIMENSIONS);
+	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.BOUNDS);
 	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.VEC3D);
 	private static final TrackedData<QuaternionD> ROTATION = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.QUATERNION);
 
@@ -79,15 +80,16 @@ public class WorldLinkEntity extends Entity {
 
 	@Override
 	protected void initDataTracker() {
-		getDataTracker().startTracking(DIMENSIONS, getType().getDimensions());
+		getDataTracker().startTracking(ENTITY_BOUNDS, new EntityBounds(1, 1, 1, false));
 		getDataTracker().startTracking(BLOCK_OFFSET, new Vec3d(0, 0, 0));
 		getDataTracker().startTracking(ROTATION, QuaternionD.IDENTITY);
 	}
 
 	@Override
 	public void onTrackedDataSet(TrackedData<?> data) {
-		if (DIMENSIONS.equals(data)) {
-			dimensions = getDataTracker().get(DIMENSIONS);
+		if (ENTITY_BOUNDS.equals(data)) {
+			dimensions = getDataTracker().get(ENTITY_BOUNDS);
+			hull.sizeUpdate();
 		} else if (ROTATION.equals(data)) {
 			hull.setRotation(getDataTracker().get(ROTATION));
 		}
@@ -98,13 +100,21 @@ public class WorldLinkEntity extends Entity {
 		return hull;
 	}
 
-	@Override
-	public EntityDimensions getDimensions(EntityPose pose) {
-		return getDataTracker().get(DIMENSIONS);
+	public EntityBounds getDimensions() {
+		return getDataTracker().get(ENTITY_BOUNDS);
 	}
 
-	public void setDimensions(EntityDimensions entityDimensions) {
-		getDataTracker().set(DIMENSIONS, entityDimensions);
+	@Override
+	public EntityDimensions getDimensions(EntityPose pose) {
+		return getDataTracker().get(ENTITY_BOUNDS);
+	}
+
+	public void setDimensions(EntityBounds entityBounds) {
+		getDataTracker().set(ENTITY_BOUNDS, entityBounds);
+	}
+
+	public void setDimensions(EntityDimensions ed) {
+		getDataTracker().set(ENTITY_BOUNDS, new EntityBounds(ed.width, ed.width, ed.height, ed.fixed));
 	}
 
 	public Vec3d getBlockOffset() {
@@ -197,9 +207,10 @@ public class WorldLinkEntity extends Entity {
 	protected void readCustomDataFromTag(CompoundTag tag) {
 		setShellId(tag.getInt("shellId"));
 		setBlockOffset(WSNbtHelper.getVec3d(tag, "blockOffset"));
+		float length = tag.getFloat("length");
 		float width = tag.getFloat("width");
 		float height = tag.getFloat("height");
-		setDimensions(new EntityDimensions(width, height, false));
+		setDimensions(new EntityBounds(length, height, width, false));
 		setRotation(WSNbtHelper.getQuaternion(tag, "rotation"));
 
 	}
@@ -208,8 +219,9 @@ public class WorldLinkEntity extends Entity {
 	protected void writeCustomDataToTag(CompoundTag tag) {
 		tag.putInt("shellId", shellId);
 		WSNbtHelper.putVec3d(tag, getBlockOffset(), "blockOffset");
-		tag.putFloat("width", getDimensions(null).width);
-		tag.putFloat("height", getDimensions(null).height);
+		tag.putFloat("length", getDimensions().length);
+		tag.putFloat("width", getDimensions().width);
+		tag.putFloat("height", getDimensions().height);
 		WSNbtHelper.putQuaternion(tag, "rotation", getRotation());
 	}
 

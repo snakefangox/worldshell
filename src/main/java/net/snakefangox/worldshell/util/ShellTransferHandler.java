@@ -13,6 +13,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.WSUniversal;
+import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.ShellBay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
@@ -40,7 +41,7 @@ public class ShellTransferHandler {
 			copyBlock(world, shellWorld, bp, dest);
 			updateBoxBounds(bayBounds, bp);
 		}
-		EntityDimensions dimensions = new EntityDimensions(Math.max(bayBounds.getBlockCountX(), bayBounds.getBlockCountZ()), bayBounds.getBlockCountY(), false);
+		EntityBounds dimensions = new EntityBounds(bayBounds.getBlockCountX(), bayBounds.getBlockCountY(), bayBounds.getBlockCountZ(), false);
 		worldLinkEntity.setDimensions(dimensions);
 		Vec3d center = CoordUtil.getBoxCenter(bayBounds);
 		worldLinkEntity.setPosition(center.getX() + 0.5, bayBounds.minY, center.getZ() + 0.5);
