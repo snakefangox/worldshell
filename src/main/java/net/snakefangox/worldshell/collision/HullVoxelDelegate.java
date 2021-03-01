@@ -30,7 +30,7 @@ public class HullVoxelDelegate extends VoxelShape {
 		private final ShellCollisionHull hull;
 
 		protected VoxelSetDelegate(ShellCollisionHull hull) {
-			super(0, 0, 0);
+			super(1, 1, 1);
 			this.hull = hull;
 		}
 
@@ -46,12 +46,12 @@ public class HullVoxelDelegate extends VoxelShape {
 
 		@Override
 		public int getMin(Direction.Axis axis) {
-			return (int) hull.getMin(axis);
+			return 0;
 		}
 
 		@Override
 		public int getMax(Direction.Axis axis) {
-			return (int) hull.getMax(axis);
+			return 1;
 		}
 	}
 }

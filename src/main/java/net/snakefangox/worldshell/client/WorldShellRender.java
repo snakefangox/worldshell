@@ -26,10 +26,11 @@ import java.util.Random;
 @Environment(EnvType.CLIENT)
 public class WorldShellRender {
 
-	public static void renderWorldShell(WorldShell worldShell, MatrixStack matrices, Random random, VertexConsumerProvider vertexConsumers, int light) {
+	public static void renderWorldShell(WorldShell worldShell, MatrixStack matrices, Quaternion quaternion, Random random, VertexConsumerProvider vertexConsumers, int light) {
 		BlockRenderManager renderManager = MinecraftClient.getInstance().getBlockRenderManager();
 		BlockEntityRenderDispatcher beRenderDispatcher = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
 		matrices.push();
+		matrices.multiply(quaternion);
 		worldShell.tickCache();
 		if (!worldShell.isCacheValid()) {
 			worldShell.getCache().reset();

@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -38,9 +39,12 @@ public class WSClient implements ClientModInitializer {
 				Vec3d cam = renderCtx.camera().getPos();
 				BlockPos pos = CoordUtil.linkEntityToWorld(CoordUtil.BP_ZERO, entity, wsResult.getBlockPos());
 				VertexConsumer vertexConsumer = renderCtx.consumers().getBuffer(RenderLayer.getLines());
-				((WorldRendererMixin) renderCtx.worldRenderer()).invokeDrawBlockOutline(renderCtx.matrixStack(), vertexConsumer,
+				MatrixStack matrix = renderCtx.matrixStack();
+				matrix.push();
+				((WorldRendererMixin) renderCtx.worldRenderer()).invokeDrawBlockOutline(matrix, vertexConsumer,
 						renderCtx.camera().getFocusedEntity(), cam.x, cam.y, cam.z, pos,
 						entity.getWorldShell().getBlockState(wsResult.getBlockPos()));
+				matrix.pop();
 			}
 		}
 		return true;

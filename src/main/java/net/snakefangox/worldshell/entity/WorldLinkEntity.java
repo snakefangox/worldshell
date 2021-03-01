@@ -125,7 +125,7 @@ public class WorldLinkEntity extends Entity {
 		getDataTracker().set(BLOCK_OFFSET, offset);
 	}
 
-	protected QuaternionD getRotation() {
+	public QuaternionD getRotation() {
 		return getDataTracker().get(ROTATION);
 	}
 
@@ -146,7 +146,7 @@ public class WorldLinkEntity extends Entity {
 	@Override
 	public ActionResult interact(PlayerEntity player, Hand hand) {
 		if (world.isClient()) {
-			return handleInteraction(player, hand, false);
+			return handleInteraction(player, hand, true);
 		}
 		return super.interact(player, hand);
 	}
@@ -155,15 +155,15 @@ public class WorldLinkEntity extends Entity {
 	public boolean handleAttack(Entity attacker) {
 		if (world.isClient() && attacker instanceof PlayerEntity) {
 			PlayerEntity player = (PlayerEntity) attacker;
-			handleInteraction(player, Hand.MAIN_HAND, true);
+			handleInteraction(player, Hand.MAIN_HAND, false);
 		}
 		return super.handleAttack(attacker);
 	}
 
-	public ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean attack) {
+	protected ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean interact) {
 		BlockHitResult rayCastResult = raycastToWorldShell(player);
 		if (rayCastResult.getType() == HitResult.Type.BLOCK) {
-			if (attack) {
+			if (interact) {
 				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT, WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, true));
 				return worldShell.getBlockState(rayCastResult.getBlockPos()).onUse(world, player, hand, rayCastResult);
 			} else {
@@ -200,6 +200,7 @@ public class WorldLinkEntity extends Entity {
 		if (world.isClient) {
 			worldShell.tick();
 		}
+		hull.calculateCrudeBounds();
 	}
 
 	@Override

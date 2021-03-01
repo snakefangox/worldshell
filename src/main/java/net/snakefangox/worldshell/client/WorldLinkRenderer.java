@@ -33,7 +33,7 @@ public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
 
 	@Override
 	public void render(WorldLinkEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-		WorldShellRender.renderWorldShell(entity.getWorldShell(), matrices, entity.world.random, vertexConsumers, light);
+		WorldShellRender.renderWorldShell(entity.getWorldShell(), matrices, entity.getRotation().toFloatQuat(), entity.world.random, vertexConsumers, light);
 	}
 
 	@Override

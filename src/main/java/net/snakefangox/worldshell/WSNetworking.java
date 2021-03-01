@@ -9,7 +9,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.nbt.CompoundTag;
@@ -21,7 +20,6 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.collision.EntityBounds;
@@ -55,13 +53,13 @@ public class WSNetworking {
 		int entityID = buf.readInt();
 		BlockHitResult hit = buf.readBlockHitResult();
 		Hand hand = buf.readEnumConstant(Hand.class);
-		boolean attack = buf.readBoolean();
+		boolean interact = buf.readBoolean();
 
 		server.execute(() -> {
 			Entity entity = player.world.getEntityById(entityID);
 			if (entity instanceof WorldLinkEntity) {
 				EntityBounds dimensions = ((WorldLinkEntity)entity).getDimensions();
-				if (player.distanceTo(entity) < dimensions.width + dimensions.height + dimensions.length) {
+				if (player.distanceTo(entity) < dimensions.getRoughMaxDist() + 4.5) {
 					Optional<ShellBay> bay = ((WorldLinkEntity) entity).getBay();
 					if (bay.isPresent()) {
 						World world = WSUniversal.getStorageDim(server);
@@ -69,10 +67,10 @@ public class WSNetworking {
 						if (!world.isChunkLoaded(bp)) return;
 						BlockHitResult gHit = new BlockHitResult(CoordUtil.toGlobal(bay.get().getCenter(), hit.getPos()),
 								hit.getSide(), bp, hit.isInsideBlock());
-						if (attack) {
-							world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
-						} else {
+						if (interact) {
 							world.getBlockState(gHit.getBlockPos()).onUse(world, player, hand, gHit);
+						} else {
+							world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
 						}
 					}
 				}

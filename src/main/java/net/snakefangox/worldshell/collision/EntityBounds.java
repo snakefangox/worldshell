@@ -11,6 +11,10 @@ public class EntityBounds extends EntityDimensions {
 		this.length = length;
 	}
 
+	public float getRoughMaxDist() {
+		return length + height + width;
+	}
+
 	@Override
 	public String toString() {
 		return "EntityBounds{" +

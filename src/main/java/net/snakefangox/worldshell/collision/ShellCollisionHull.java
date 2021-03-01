@@ -7,15 +7,13 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.RaycastContext;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
 
+import java.util.Iterator;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.StreamSupport;
 
 /**
  * A custom {@link Box} implementation that takes a worldshell and handles rotated collision.<p>
@@ -24,8 +22,9 @@ import java.util.stream.StreamSupport;
  */
 public class ShellCollisionHull extends Box implements SpecialBox {
 
+	private static final float PADDING = 1F;
 	private final WorldLinkEntity entity;
-	private QuaternionD rotation;
+	private QuaternionD inverseRotation;
 	private Matrix3d matrix;
 	private Matrix3d inverseMatrix;
 	// Very bad not good probably evil mutable global vars
@@ -42,8 +41,8 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 
 	public void setRotation(QuaternionD q) {
 		matrix = new Matrix3d(q);
-		rotation = new QuaternionD(-q.getX(), -q.getY(), -q.getZ(), q.getW());
-		inverseMatrix = new Matrix3d(rotation);
+		inverseRotation = new QuaternionD(-q.getX(), -q.getY(), -q.getZ(), q.getW());
+		inverseMatrix = new Matrix3d(inverseRotation);
 	}
 
 	public void sizeUpdate() {
@@ -52,54 +51,43 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 
 	public void calculateCrudeBounds() {
 		EntityBounds ed = entity.getDimensions();
-		float len = ed.length * 0.5F;
-		float width = ed.width * 0.5F;
-		Vec3d min = matrix.transform(-len, 0, -width);
-		Vec3d max = matrix.transform(len, ed.height, width);
+		float len = ed.length / 2F;
+		float width = ed.width / 2F;
+		Vec3d bo = entity.getBlockOffset();
+		Vec3d min = matrix.transform(-len - bo.x, -bo.y, -width - bo.z);
+		Vec3d max = matrix.transform(len - bo.x, ed.height - bo.y, width - bo.z);
 		calcNewAABB(min.x, min.y, min.z, max.x, max.y, max.z);
-		minX = aabbMin.x + entity.getX();
-		minY = aabbMin.y + entity.getY();
-		minZ = aabbMin.z + entity.getZ();
-		maxX = aabbMax.x + entity.getX();
-		maxY = aabbMax.y + entity.getY();
-		maxZ = aabbMax.z + entity.getZ();
+		minX = aabbMin.x + entity.getX() + bo.x - PADDING;
+		minY = aabbMin.y + entity.getY() + bo.y - PADDING;
+		minZ = aabbMin.z + entity.getZ() + bo.z - PADDING;
+		maxX = aabbMax.x + entity.getX() + bo.x + PADDING;
+		maxY = aabbMax.y + entity.getY() + bo.y + PADDING;
+		maxZ = aabbMax.z + entity.getZ() + bo.z + PADDING;
 	}
-
 
 	@Override
 	public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		if (super.intersects(minX, minY, minZ, maxX, maxY, maxZ)) {
-			aabbMin.setAll(minX, minY, minZ);
-			aabbMax.setAll(maxX, maxY, maxZ);
-			CoordUtil.worldToLinkEntity(entity, aabbMin);
-			CoordUtil.worldToLinkEntity(entity, aabbMax);
-			double xSize = (aabbMax.x - aabbMin.x) / 2.0;
-			double ySize = (aabbMax.y - aabbMin.y) / 2.0;
-			double zSize = (aabbMax.z - aabbMin.z) / 2.0;
-			double xPos = aabbMin.x + xSize;
-			double yPos = aabbMin.y + ySize;
-			double zPos = aabbMin.z + zSize;
-			Vec3d min = inverseMatrix.transform(aabbMin.x, aabbMin.y, aabbMin.z);
-			Vec3d max = inverseMatrix.transform(aabbMax.x, aabbMax.y, aabbMax.z);
-			calcNewAABB(min.x, min.y, min.z, max.x, max.y, max.z);
-			OrientedBox collidingBox = new OrientedBox(inverseMatrix.transform(xPos, yPos, zPos), new Vec3d(xSize, ySize, zSize), rotation);
-			BlockPos.Mutable bp = new BlockPos.Mutable();
-			Box box = new Box(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE, Double.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE);
-			WorldShell shell = entity.getWorldShell();
+			OrientedBox collidingBox = calcRotatedBox(minX, minY, minZ, maxX, maxY, maxZ);
+			Box box = new Box(aabbMin.x, aabbMin.y, aabbMin.z, aabbMax.x, aabbMax.y, aabbMax.z);
+			boolean[] collides = new boolean[]{false};
 			int xLimit = (int) Math.ceil(aabbMax.x);
 			int yLimit = (int) Math.ceil(aabbMax.y);
 			int zLimit = (int) Math.ceil(aabbMax.z);
-			AtomicBoolean collides = new AtomicBoolean(false);
-			for (int x = (int) aabbMin.x; x <= xLimit; ++x) {
-				for (int y = (int) aabbMin.y; y <= yLimit; ++y) {
-					for (int z = (int) aabbMin.z; z <= zLimit; ++z) {
+			WorldShell shell = entity.getWorldShell();
+			BlockPos.Mutable bp = new BlockPos.Mutable();
+			for (int x = (int) aabbMin.x; x < xLimit; ++x) {
+				for (int y = (int) aabbMin.y; y < yLimit; ++y) {
+					for (int z = (int) aabbMin.z; z < zLimit; ++z) {
 						bp.set(x, y, z);
-						shell.getBlockState(bp).getCollisionShape(shell, bp).forEachBox((minX1, minY1, minZ1, maxX1, maxY1, maxZ1) -> {
+						VoxelShape shape = shell.getBlockState(bp).getCollisionShape(shell, bp);
+						if (shape.isEmpty()) continue;
+						shape.forEachBox((minX1, minY1, minZ1, maxX1, maxY1, maxZ1) -> {
 							setBox(box, minX1 + bp.getX(), minY1 + bp.getY(), minZ1 + bp.getZ(),
 									maxX1 + bp.getX(), maxY1 + bp.getY(), maxZ1 + bp.getZ());
-							collides.set(collides.get() || collidingBox.intersects(box));
+							collides[0] = (collides[0] || collidingBox.intersects(box));
 						});
-						if (collides.get()) return true;
+						if (collides[0]) return true;
 					}
 				}
 			}
@@ -125,6 +113,63 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		RaycastContext ctx = new RaycastContext(nMin, nMax, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity);
 		BlockHitResult hit = entity.getWorldShell().raycast(ctx);
 		return hit.getType() == HitResult.Type.MISS ? Optional.empty() : Optional.of(CoordUtil.linkEntityToWorld(CoordUtil.BP_ZERO, entity, hit.getPos()));
+	}
+
+	public VoxelShape toVoxelShape() {
+		return new HullVoxelDelegate(this);
+	}
+
+	public double calculateMaxDistance(Direction.Axis axis, Box box, double maxDist) {
+		OrientedBox orientedBox = calcRotatedBox(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+		Vec3d[] basis = orientedBox.getBasis();
+		Box localBox = new Box(aabbMin.x, aabbMin.y, aabbMin.z, aabbMax.x, aabbMax.y, aabbMax.z);
+		double[] maxDistRef = new double[] {maxDist};
+		int index = axis.choose(0, 1, 2);
+		int forward = axis.choose(1, 2, 0);
+		int back = axis.choose(2, 0, 1);
+		int xLimit = (int) Math.ceil(aabbMax.x) + 1;
+		int yLimit = (int) Math.ceil(aabbMax.y) + 1;
+		int zLimit = (int) Math.ceil(aabbMax.z) + 1;
+		WorldShell shell = entity.getWorldShell();
+		BlockPos.Mutable bp = new BlockPos.Mutable();
+		for (int x = (int) aabbMin.x - 1; x < xLimit; ++x) {
+			for (int y = (int) aabbMin.y - 1; y < yLimit; ++y) {
+				for (int z = (int) aabbMin.z - 1; z < zLimit; ++z) {
+					bp.set(x, y, z);
+					VoxelShape shape = shell.getBlockState(bp).getCollisionShape(shell, bp);
+					if (shape.isEmpty()) continue;
+					shape.forEachBox((minX1, minY1, minZ1, maxX1, maxY1, maxZ1) -> {
+						setBox(localBox, minX1 + bp.getX(), minY1 + bp.getY(), minZ1 + bp.getZ(),
+								maxX1 + bp.getX(), maxY1 + bp.getY(), maxZ1 + bp.getZ());
+						Vec3d[] vertices = OrientedBox.getVertices(localBox);
+						if (orientedBox.sat(basis[forward], vertices) && orientedBox.sat(basis[back], vertices))
+							maxDistRef[0] = orientedBox.maxDistance(basis[index], vertices, maxDistRef[0]);
+					});
+					if (Math.abs(maxDistRef[0]) < 0.0000001)
+						return 0.0D;
+				}
+			}
+		}
+		return maxDistRef[0];
+	}
+
+	/**
+	 * Calculates the oriented box that will collide with this and sets the aabb vars to an AABB that encloses it
+	 */
+	private OrientedBox calcRotatedBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		aabbMin.setAll(minX, minY, minZ);
+		aabbMax.setAll(maxX, maxY, maxZ);
+		double xSize = (aabbMax.x - aabbMin.x) / 2.0;
+		double ySize = (aabbMax.y - aabbMin.y) / 2.0;
+		double zSize = (aabbMax.z - aabbMin.z) / 2.0;
+		CoordUtil.worldToLinkEntity(entity, aabbMin);
+		CoordUtil.worldToLinkEntity(entity, aabbMax);
+		OrientedBox orientedBox = new OrientedBox(inverseMatrix.transform(aabbMin.x + xSize, aabbMin.y + ySize, aabbMin.z + zSize),
+				new Vec3d(xSize, ySize, zSize), inverseRotation);
+		Vec3d min = inverseMatrix.transform(aabbMin.x, aabbMin.y, aabbMin.z);
+		Vec3d max = inverseMatrix.transform(aabbMax.x, aabbMax.y, aabbMax.z);
+		calcNewAABB(min.x, min.y, min.z, max.x, max.y, max.z);
+		return orientedBox;
 	}
 
 	private void setBox(Box box, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
@@ -164,34 +209,6 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		if (vec.x < aabbMin.x) aabbMin.x = vec.x;
 		if (vec.y < aabbMin.y) aabbMin.y = vec.y;
 		if (vec.z < aabbMin.z) aabbMin.z = vec.z;
-	}
-
-	public VoxelShape toVoxelShape() {
-		return new HullVoxelDelegate(this);
-	}
-
-	public double calculateMaxDistance(Direction.Axis axis, Box box, double maxDist) {
-		Vec3d min = CoordUtil.worldToLinkEntity(entity, box.minX, box.minY, box.minZ);
-		Vec3d max = CoordUtil.worldToLinkEntity(entity, box.maxX, box.maxY, box.maxZ);
-		calcNewAABB(min.x, min.y, min.z, max.x, max.y, max.z);
-		Box localBox = new Box(aabbMin.x, aabbMin.y, aabbMin.z, aabbMax.x, aabbMax.y, aabbMax.z);
-		maxDist = VoxelShapes.calculateMaxOffset(axis, localBox,
-				StreamSupport.stream(new ShellCollisionSpliterator(entity.getWorldShell().getProxyWorld(), localBox.expand(1)), false), maxDist);
-		Vec3d vec;
-		switch (axis) {
-			case X:
-				vec = inverseMatrix.transform(maxDist, 0, 0);
-				break;
-			case Y:
-				vec = inverseMatrix.transform(0, maxDist, 0);
-				break;
-			case Z:
-				vec = inverseMatrix.transform(0, 0, maxDist);
-				break;
-			default:
-				throw new IllegalStateException("Somebody's fucking with enums. Who was it? Fess up!");
-		}
-		return axis.choose(vec.x, vec.y, vec.z);
 	}
 
 	public static class Vec3dM {
