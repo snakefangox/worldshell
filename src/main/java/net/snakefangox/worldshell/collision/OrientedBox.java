@@ -10,6 +10,8 @@ import org.jetbrains.annotations.Nullable;
  * https://github.com/Stuff-Stuffs/MultipartEntities
  */
 public final class OrientedBox {
+
+	private static final double SMOL = 0.0000001;
 	private final Vec3d center;
 	private final Vec3d halfExtents;
 	private final QuaternionD rotation;
@@ -209,7 +211,7 @@ public final class OrientedBox {
 
 	// Modified sat test. Lets check distances VoxelShape style!
 	public double maxDistance(final Vec3d normal, final Vec3d[] vertices2, double maxDist) {
-		if (Math.abs(maxDist) < 0.0000001) return 0;
+		if (Math.abs(maxDist) < SMOL) return 0;
 		if (vertices == null) computeVertices();
 		double min1 = Double.MAX_VALUE;
 		double max1 = -Double.MAX_VALUE;
@@ -227,10 +229,10 @@ public final class OrientedBox {
 		}
 		if (maxDist > 0) {
 			double dist = min2 - max1;
-			if (dist >= -0.0000001) maxDist = Math.min(maxDist, dist);
+			if (dist >= -SMOL) maxDist = Math.min(maxDist, dist);
 		} else {
 			double dist = max2 - min1;
-			if (dist <= 0.0000001) maxDist = Math.max(maxDist, dist);
+			if (dist <= SMOL) maxDist = Math.max(maxDist, dist);
 		}
 		return maxDist;
 	}

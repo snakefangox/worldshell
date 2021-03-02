@@ -12,7 +12,8 @@ import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -23,15 +24,17 @@ import java.util.Optional;
 public class ShellCollisionHull extends Box implements SpecialBox {
 
 	private static final float PADDING = 1F;
+	private static final double SMOL = 0.0000001;
 	private final WorldLinkEntity entity;
 	private QuaternionD inverseRotation;
 	private Matrix3d matrix;
 	private Matrix3d inverseMatrix;
-	// Very bad not good probably evil mutable global vars
+	// These are here to prevent some high volume functions from requiring allocations
+	// They're never given to anything outside this class and each function that takes them sets them beforehand
 	private final Vec3dM aabbMax = new Vec3dM();
 	private final Vec3dM aabbMin = new Vec3dM();
 	private final Vec3dM pos = new Vec3dM();
-	private final Vec3dM temp = new Vec3dM();
+	private final List<Vec3d> vertexList = new ArrayList<>();
 
 	public ShellCollisionHull(WorldLinkEntity entity) {
 		super(0, 0, 0, 0, 0, 0);
@@ -123,7 +126,7 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		OrientedBox orientedBox = calcRotatedBox(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
 		Vec3d[] basis = orientedBox.getBasis();
 		Box localBox = new Box(aabbMin.x, aabbMin.y, aabbMin.z, aabbMax.x, aabbMax.y, aabbMax.z);
-		double[] maxDistRef = new double[] {maxDist};
+		double[] maxDistRef = new double[]{maxDist};
 		int index = axis.choose(0, 1, 2);
 		int forward = axis.choose(1, 2, 0);
 		int back = axis.choose(2, 0, 1);
@@ -141,11 +144,11 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 					shape.forEachBox((minX1, minY1, minZ1, maxX1, maxY1, maxZ1) -> {
 						setBox(localBox, minX1 + bp.getX(), minY1 + bp.getY(), minZ1 + bp.getZ(),
 								maxX1 + bp.getX(), maxY1 + bp.getY(), maxZ1 + bp.getZ());
-						Vec3d[] vertices = OrientedBox.getVertices(localBox);
-						if (orientedBox.sat(basis[forward], vertices) && orientedBox.sat(basis[back], vertices))
+						Vec3d[] vertices = getClippedVertices(localBox, orientedBox, basis, forward, back, index);
+						if (vertices.length > 1)
 							maxDistRef[0] = orientedBox.maxDistance(basis[index], vertices, maxDistRef[0]);
 					});
-					if (Math.abs(maxDistRef[0]) < 0.0000001)
+					if (Math.abs(maxDistRef[0]) < SMOL)
 						return 0.0D;
 				}
 			}
@@ -153,8 +156,67 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		return maxDistRef[0];
 	}
 
+	private Vec3d[] getClippedVertices(Box box, OrientedBox oBox, Vec3d[] basis, int axis1, int axis2, int axis3) {
+		vertexList.clear();
+		Vec3d prev = null;
+		Vec3d center = oBox.getCenter();
+		double extent1 = oBox.getHalfExtents().getComponentAlongAxis(Direction.Axis.values()[axis1]) - SMOL;
+		double extent2 = oBox.getHalfExtents().getComponentAlongAxis(Direction.Axis.values()[axis2]) - SMOL;
+		Vec3d basis1 = basis[axis1];
+		Vec3d basis2 = basis[axis2];
+		Vec3d finalBasis = basis[axis3];
+		for (int x = 0; x < 3; ++x) {
+			for (int y = 0; y < 3; ++y) {
+				for (int z = 0; z < 3; ++z) {
+					double pX = getVertVal(box, Direction.Axis.X, x);
+					double pY = getVertVal(box, Direction.Axis.Y, y);
+					double pZ = getVertVal(box, Direction.Axis.Z, z);
+					double dX = pX - center.x;
+					double dY = pY - center.y;
+					double dZ = pZ - center.z;
+					double qX = center.x;
+					double qY = center.y;
+					double qZ = center.z;
+
+					double dist1 = dot(dX, dY, dZ, basis1.x, basis1.y, basis1.z);
+					if (dist1 > extent1) dist1 = extent1;
+					if (dist1 < -extent1) dist1 = -extent1;
+					qX += dist1 * basis1.x;
+					qY += dist1 * basis1.y;
+					qZ += dist1 * basis1.z;
+
+					double dist2 = dot(dX, dY, dZ, basis2.x, basis2.y, basis2.z);
+					if (dist2 > extent2) dist2 = extent2;
+					if (dist2 < -extent2) dist2 = -extent2;
+					qX += dist2 * basis2.x;
+					qY += dist2 * basis2.y;
+					qZ += dist2 * basis2.z;
+
+					double finalDist = dot(dX, dY, dZ, finalBasis.x, finalBasis.y, finalBasis.z);
+					qX += finalDist * finalBasis.x;
+					qY += finalDist * finalBasis.y;
+					qZ += finalDist * finalBasis.z;
+
+					if (prev != null && prev.x == qX && prev.y == qY && prev.z == qZ) continue;
+					Vec3d vertex = new Vec3d(qX, qY, qZ);
+					prev = vertex;
+					vertexList.add(vertex);
+				}
+			}
+		}
+		return vertexList.toArray(new Vec3d[0]);
+	}
+
+	private double getVertVal(Box box, Direction.Axis axis, int val) {
+		return val == 0 ? box.getMax(axis) : box.getMin(axis);
+	}
+
+	private double dot(double x1, double y1, double z1, double x2, double y2, double z2) {
+		return x1 * x2 + y1 * y2 + z1 * z2;
+	}
+
 	/**
-	 * Calculates the oriented box that will collide with this and sets the aabb vars to an AABB that encloses it
+	 * Calculates the oriented box version of the AABB given and sets the aabb vars to an AABB that encloses the rotated box
 	 */
 	private OrientedBox calcRotatedBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		aabbMin.setAll(minX, minY, minZ);
@@ -184,22 +246,22 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	private void calcNewAABB(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		aabbMax.setAll(Double.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE);
 		aabbMin.setAll(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-		temp.setAll(minX, maxY, maxZ);
-		checkExtents(temp);
-		temp.setAll(minX, maxY, minZ);
-		checkExtents(temp);
-		temp.setAll(minX, minY, maxZ);
-		checkExtents(temp);
-		temp.setAll(minX, minY, minZ);
-		checkExtents(temp);
-		temp.setAll(maxX, maxY, maxZ);
-		checkExtents(temp);
-		temp.setAll(maxX, maxY, minZ);
-		checkExtents(temp);
-		temp.setAll(maxX, minY, maxZ);
-		checkExtents(temp);
-		temp.setAll(maxX, minY, minZ);
-		checkExtents(temp);
+		pos.setAll(minX, maxY, maxZ);
+		checkExtents(pos);
+		pos.setAll(minX, maxY, minZ);
+		checkExtents(pos);
+		pos.setAll(minX, minY, maxZ);
+		checkExtents(pos);
+		pos.setAll(minX, minY, minZ);
+		checkExtents(pos);
+		pos.setAll(maxX, maxY, maxZ);
+		checkExtents(pos);
+		pos.setAll(maxX, maxY, minZ);
+		checkExtents(pos);
+		pos.setAll(maxX, minY, maxZ);
+		checkExtents(pos);
+		pos.setAll(maxX, minY, minZ);
+		checkExtents(pos);
 	}
 
 	private void checkExtents(Vec3dM vec) {
