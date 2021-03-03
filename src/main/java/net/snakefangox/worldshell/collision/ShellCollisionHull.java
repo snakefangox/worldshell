@@ -123,6 +123,7 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	}
 
 	public double calculateMaxDistance(Direction.Axis axis, Box box, double maxDist) {
+		if (Math.abs(maxDist) < SMOL) return 0;
 		OrientedBox orientedBox = calcRotatedBox(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
 		Vec3d[] basis = orientedBox.getBasis();
 		Box localBox = new Box(aabbMin.x, aabbMin.y, aabbMin.z, aabbMax.x, aabbMax.y, aabbMax.z);
@@ -148,19 +149,16 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 						if (vertices.length > 1 && orientedBox.sat(basis[forward], vertices) && orientedBox.sat(basis[back], vertices))
 							maxDistRef[0] = orientedBox.maxDistance(basis[index], vertices, maxDistRef[0]);
 					});
-					if (Math.abs(maxDistRef[0]) < SMOL)
-						return 0.0D;
+					if (Math.abs(maxDistRef[0]) < SMOL) return 0.0D;
 				}
 			}
 		}
 		return maxDistRef[0];
 	}
 
-	private Vec3d[] getClippedVertices(Box box, OrientedBox oBox, Vec3d[] basis, int axis1, int axis2) {
+	private Vec3d[] getClippedVertices(Box box, OrientedBox oBox, Vec3d[] bases) {
 		vertexList.clear();
 		Vec3d center = oBox.getCenter();
-		Vec3d basis1 = basis[axis1];
-		Vec3d basis2 = basis[axis2];
 		for (int x = 0; x < 3; ++x) {
 			for (int y = 0; y < 3; ++y) {
 				for (int z = 0; z < 3; ++z) {
@@ -170,17 +168,13 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 					double dX = pX - center.x;
 					double dY = pY - center.y;
 					double dZ = pZ - center.z;
-
-					double sign1 = Math.signum(dot(dX, dY, dZ, basis1.x, basis1.y, basis1.z));
-					pX += sign1 * basis1.x * SMOL;
-					pY += sign1 * basis1.y * SMOL;
-					pZ += sign1 * basis1.z * SMOL;
-
-					double sign2 = Math.signum(dot(dX, dY, dZ, basis2.x, basis2.y, basis2.z));
-					pX += sign2 * basis2.x * SMOL;
-					pY += sign2 * basis2.y * SMOL;
-					pZ += sign2 * basis2.z * SMOL;
-
+					for (int i = 0; i < 3; ++i) {
+						Vec3d basis = bases[i];
+						double sign = Math.signum(dot(dX, dY, dZ, basis.x, basis.y, basis.z));
+						pX += sign * basis.x * SMOL;
+						pY += sign * basis.y * SMOL;
+						pZ += sign * basis.z * SMOL;
+					}
 					Vec3d vertex = new Vec3d(pX, pY, pZ);
 					vertexList.add(vertex);
 				}
@@ -234,8 +228,7 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 					qZ += dist2 * basis2.z + (sign2 * basis2.z * SMOL);
 
 					double distF = dot(dX, dY, dZ, basisF.x, basisF.y, basisF.z);
-					if (distF > extentF2) continue;
-					if (distF < -extentF2) continue;
+					if ((sign > 0 && distF < -extentF2) || (sign < 0 && distF > extentF2)) continue;
 					if (distF > extentF) distF = extentF;
 					if (distF < -extentF) distF = -extentF;
 					qX += distF * basisF.x;
