@@ -144,8 +144,8 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 					shape.forEachBox((minX1, minY1, minZ1, maxX1, maxY1, maxZ1) -> {
 						setBox(localBox, minX1 + bp.getX(), minY1 + bp.getY(), minZ1 + bp.getZ(),
 								maxX1 + bp.getX(), maxY1 + bp.getY(), maxZ1 + bp.getZ());
-						Vec3d[] vertices = getClippedVertices(localBox, orientedBox, basis, forward, back, index);
-						if (vertices.length > 1)
+						Vec3d[] vertices = getClippedVertices(localBox, orientedBox, basis, forward, back, index, Math.signum(maxDist));
+						if (vertices.length > 1 && orientedBox.sat(basis[forward], vertices) && orientedBox.sat(basis[back], vertices))
 							maxDistRef[0] = orientedBox.maxDistance(basis[index], vertices, maxDistRef[0]);
 					});
 					if (Math.abs(maxDistRef[0]) < SMOL)
@@ -156,15 +156,11 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		return maxDistRef[0];
 	}
 
-	private Vec3d[] getClippedVertices(Box box, OrientedBox oBox, Vec3d[] basis, int axis1, int axis2, int axis3) {
+	private Vec3d[] getClippedVertices(Box box, OrientedBox oBox, Vec3d[] basis, int axis1, int axis2) {
 		vertexList.clear();
-		Vec3d prev = null;
 		Vec3d center = oBox.getCenter();
-		double extent1 = oBox.getHalfExtents().getComponentAlongAxis(Direction.Axis.values()[axis1]) - SMOL;
-		double extent2 = oBox.getHalfExtents().getComponentAlongAxis(Direction.Axis.values()[axis2]) - SMOL;
 		Vec3d basis1 = basis[axis1];
 		Vec3d basis2 = basis[axis2];
-		Vec3d finalBasis = basis[axis3];
 		for (int x = 0; x < 3; ++x) {
 			for (int y = 0; y < 3; ++y) {
 				for (int z = 0; z < 3; ++z) {
@@ -174,28 +170,77 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 					double dX = pX - center.x;
 					double dY = pY - center.y;
 					double dZ = pZ - center.z;
-					double qX = center.x;
-					double qY = center.y;
-					double qZ = center.z;
+
+					double sign1 = Math.signum(dot(dX, dY, dZ, basis1.x, basis1.y, basis1.z));
+					pX += sign1 * basis1.x * SMOL;
+					pY += sign1 * basis1.y * SMOL;
+					pZ += sign1 * basis1.z * SMOL;
+
+					double sign2 = Math.signum(dot(dX, dY, dZ, basis2.x, basis2.y, basis2.z));
+					pX += sign2 * basis2.x * SMOL;
+					pY += sign2 * basis2.y * SMOL;
+					pZ += sign2 * basis2.z * SMOL;
+
+					Vec3d vertex = new Vec3d(pX, pY, pZ);
+					vertexList.add(vertex);
+				}
+			}
+		}
+		return vertexList.toArray(new Vec3d[0]);
+	}
+
+	private Vec3d[] getClippedVertices(Box box, OrientedBox oBox, Vec3d[] basis, int axis1, int axis2, int axisF, double sign) {
+		vertexList.clear();
+		Vec3d prev = null;
+		Vec3d extents = oBox.getHalfExtents();
+		double extent1 = extents.getComponentAlongAxis(Direction.Axis.values()[axis1]);
+		double extent2 = extents.getComponentAlongAxis(Direction.Axis.values()[axis2]);
+		double extentF = extents.getComponentAlongAxis(Direction.Axis.values()[axisF]);
+		double extentF2 = extentF * 2.0;
+		double signedExtentF2 = sign * extentF * 2.0;
+		Vec3d basis1 = basis[axis1];
+		Vec3d basis2 = basis[axis2];
+		Vec3d basisF = basis[axisF];
+		double centerX = oBox.getCenter().x + (signedExtentF2 * basisF.x);
+		double centerY = oBox.getCenter().y + (signedExtentF2 * basisF.y);
+		double centerZ = oBox.getCenter().z + (signedExtentF2 * basisF.z);
+		for (int x = 0; x < 3; ++x) {
+			for (int y = 0; y < 3; ++y) {
+				for (int z = 0; z < 3; ++z) {
+					double pX = getVertVal(box, Direction.Axis.X, x);
+					double pY = getVertVal(box, Direction.Axis.Y, y);
+					double pZ = getVertVal(box, Direction.Axis.Z, z);
+					double dX = pX - centerX;
+					double dY = pY - centerY;
+					double dZ = pZ - centerZ;
+					double qX = centerX;
+					double qY = centerY;
+					double qZ = centerZ;
 
 					double dist1 = dot(dX, dY, dZ, basis1.x, basis1.y, basis1.z);
 					if (dist1 > extent1) dist1 = extent1;
 					if (dist1 < -extent1) dist1 = -extent1;
-					qX += dist1 * basis1.x;
-					qY += dist1 * basis1.y;
-					qZ += dist1 * basis1.z;
+					double sign1 = Math.signum(dist1);
+					qX += dist1 * basis1.x + (sign1 * basis1.x * SMOL);
+					qY += dist1 * basis1.y + (sign1 * basis1.y * SMOL);
+					qZ += dist1 * basis1.z + (sign1 * basis1.z * SMOL);
 
 					double dist2 = dot(dX, dY, dZ, basis2.x, basis2.y, basis2.z);
 					if (dist2 > extent2) dist2 = extent2;
 					if (dist2 < -extent2) dist2 = -extent2;
-					qX += dist2 * basis2.x;
-					qY += dist2 * basis2.y;
-					qZ += dist2 * basis2.z;
+					double sign2 = Math.signum(dist2);
+					qX += dist2 * basis2.x + (sign2 * basis2.x * SMOL);
+					qY += dist2 * basis2.y + (sign2 * basis2.y * SMOL);
+					qZ += dist2 * basis2.z + (sign2 * basis2.z * SMOL);
 
-					double finalDist = dot(dX, dY, dZ, finalBasis.x, finalBasis.y, finalBasis.z);
-					qX += finalDist * finalBasis.x;
-					qY += finalDist * finalBasis.y;
-					qZ += finalDist * finalBasis.z;
+					double distF = dot(dX, dY, dZ, basisF.x, basisF.y, basisF.z);
+					if (distF > extentF2) continue;
+					if (distF < -extentF2) continue;
+					if (distF > extentF) distF = extentF;
+					if (distF < -extentF) distF = -extentF;
+					qX += distF * basisF.x;
+					qY += distF * basisF.y;
+					qZ += distF * basisF.z;
 
 					if (prev != null && prev.x == qX && prev.y == qY && prev.z == qZ) continue;
 					Vec3d vertex = new Vec3d(qX, qY, qZ);
