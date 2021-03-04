@@ -12,8 +12,6 @@ import net.snakefangox.worldshell.entity.WorldLinkEntity;
 import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -34,7 +32,6 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	private final Vec3dM aabbMax = new Vec3dM();
 	private final Vec3dM aabbMin = new Vec3dM();
 	private final Vec3dM pos = new Vec3dM();
-	private final List<Vec3d> vertexList = new ArrayList<>();
 
 	public ShellCollisionHull(WorldLinkEntity entity) {
 		super(0, 0, 0, 0, 0, 0);
@@ -145,9 +142,9 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 					shape.forEachBox((minX1, minY1, minZ1, maxX1, maxY1, maxZ1) -> {
 						setBox(localBox, minX1 + bp.getX(), minY1 + bp.getY(), minZ1 + bp.getZ(),
 								maxX1 + bp.getX(), maxY1 + bp.getY(), maxZ1 + bp.getZ());
-						Vec3d[] vertices = getClippedVertices(localBox, orientedBox, basis, forward, back, index, Math.signum(maxDist));
-						if (vertices.length > 1 && orientedBox.sat(basis[forward], vertices) && orientedBox.sat(basis[back], vertices))
-							maxDistRef[0] = orientedBox.maxDistance(basis[index], vertices, maxDistRef[0]);
+						Vec3d[] vertices = getVertices(localBox);
+						if (orientedBox.sat(basis[forward], vertices) && orientedBox.sat(basis[back], vertices))
+							maxDistRef[0] = castForDistance(orientedBox, localBox, vertices, basis[index], maxDistRef[0]);
 					});
 					if (Math.abs(maxDistRef[0]) < SMOL) return 0.0D;
 				}
@@ -156,66 +153,83 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		return maxDistRef[0];
 	}
 
-	private Vec3d[] getClippedVertices(Box box, OrientedBox oBox, Vec3d[] basis, int axis1, int axis2, int axisF, double sign) {
-		vertexList.clear();
-		Vec3d prev = null;
-		Vec3d extents = oBox.getHalfExtents();
-		double extent1 = extents.getComponentAlongAxis(Direction.Axis.values()[axis1]);
-		double extent2 = extents.getComponentAlongAxis(Direction.Axis.values()[axis2]);
-		double extentF = extents.getComponentAlongAxis(Direction.Axis.values()[axisF]);
-		double extentF2 = extentF * 2.0;
-		double signedExtentF2 = sign * extentF * 2.0;
-		Vec3d basis1 = basis[axis1];
-		Vec3d basis2 = basis[axis2];
-		Vec3d basisF = basis[axisF];
-		double centerX = oBox.getCenter().x + (signedExtentF2 * basisF.x);
-		double centerY = oBox.getCenter().y + (signedExtentF2 * basisF.y);
-		double centerZ = oBox.getCenter().z + (signedExtentF2 * basisF.z);
+	private Vec3d[] getVertices(Box box) {
+		Vec3d[] vertexList = new Vec3d[8];
+		int i = 0;
 		for (int x = 0; x < 2; ++x) {
 			for (int y = 0; y < 2; ++y) {
 				for (int z = 0; z < 2; ++z) {
 					double pX = getVertVal(box, Direction.Axis.X, x);
 					double pY = getVertVal(box, Direction.Axis.Y, y);
 					double pZ = getVertVal(box, Direction.Axis.Z, z);
-					double dX = pX - centerX;
-					double dY = pY - centerY;
-					double dZ = pZ - centerZ;
-					double qX = centerX;
-					double qY = centerY;
-					double qZ = centerZ;
-
-					double distF = dot(dX, dY, dZ, basisF.x, basisF.y, basisF.z);
-					if ((sign > 0 && distF < -extentF2) || (sign < 0 && distF > extentF2)) continue;
-					if (distF > extentF) distF = extentF;
-					if (distF < -extentF) distF = -extentF;
-					qX += distF * basisF.x;
-					qY += distF * basisF.y;
-					qZ += distF * basisF.z;
-
-					double dist1 = dot(dX, dY, dZ, basis1.x, basis1.y, basis1.z);
-					if (dist1 > extent1) dist1 = extent1;
-					if (dist1 < -extent1) dist1 = -extent1;
-					double sign1 = Math.signum(dist1);
-					qX += dist1 * basis1.x + (sign1 * basis1.x * SMOL);
-					qY += dist1 * basis1.y + (sign1 * basis1.y * SMOL);
-					qZ += dist1 * basis1.z + (sign1 * basis1.z * SMOL);
-
-					double dist2 = dot(dX, dY, dZ, basis2.x, basis2.y, basis2.z);
-					if (dist2 > extent2) dist2 = extent2;
-					if (dist2 < -extent2) dist2 = -extent2;
-					double sign2 = Math.signum(dist2);
-					qX += dist2 * basis2.x + (sign2 * basis2.x * SMOL);
-					qY += dist2 * basis2.y + (sign2 * basis2.y * SMOL);
-					qZ += dist2 * basis2.z + (sign2 * basis2.z * SMOL);
-
-					if (prev != null && prev.x == qX && prev.y == qY && prev.z == qZ) continue;
-					Vec3d vertex = new Vec3d(qX, qY, qZ);
-					prev = vertex;
-					vertexList.add(vertex);
+					vertexList[i++] = new Vec3d(pX, pY, pZ);
 				}
 			}
 		}
-		return vertexList.toArray(new Vec3d[0]);
+		return vertexList;
+	}
+
+	private double castForDistance(OrientedBox orientedBox, Box localBox, Vec3d[] bVertexList, Vec3d basis, double maxDist) {
+		Vec3d oCenter = orientedBox.getCenter();
+		Vec3d bCenter = localBox.getCenter();
+		Vec3d[] oVertexList = orientedBox.getVertices();
+		if (maxDist > 0) {
+			for (Vec3d vec : oVertexList) {
+				double dot = dot(vec.x - oCenter.x, vec.y - oCenter.y, vec.z - oCenter.z, basis.x, basis.y, basis.z);
+				if (dot > 0) {
+					if (localBox.contains(vec)) return 0;
+					Optional<Vec3d> optional = localBox.raycast(vec, new Vec3d(vec.x + basis.x * maxDist,
+							vec.y + basis.y * maxDist, vec.z + basis.z * maxDist));
+					if (optional.isPresent()) {
+						Vec3d result = optional.get();
+						double dist = vec.distanceTo(result);
+						if (dist >= -SMOL) maxDist = Math.min(maxDist, dist);
+						if (Math.abs(maxDist) < SMOL) return 0;
+					}
+				}
+			}
+			for (Vec3d vec : bVertexList) {
+				double dot = dot(vec.x - bCenter.x, vec.y - bCenter.y, vec.z - bCenter.z, basis.x, basis.y, basis.z);
+				if (dot < 0) {
+					if (orientedBox.contains(vec.x, vec.y, vec.z)) return 0;
+					double dist = orientedBox.raycast(vec, new Vec3d(vec.x - basis.x * maxDist,
+							vec.y - basis.y * maxDist, vec.z - basis.z * maxDist));
+					if (dist != -1) {
+						if (dist >= -SMOL) maxDist = Math.min(maxDist, dist);
+						if (Math.abs(maxDist) < SMOL) return 0;
+					}
+				}
+			}
+		} else {
+			for (Vec3d vec : oVertexList) {
+				double dot = dot(vec.x - oCenter.x, vec.y - oCenter.y, vec.z - oCenter.z, basis.x, basis.y, basis.z);
+				if (dot < 0) {
+					if (localBox.contains(vec)) return 0;
+					Optional<Vec3d> optional = localBox.raycast(vec, new Vec3d(vec.x + basis.x * maxDist,
+							vec.y + basis.y * maxDist, vec.z + basis.z * maxDist));
+					if (optional.isPresent()) {
+						Vec3d result = optional.get();
+						double dist = -vec.distanceTo(result);
+						if (dist <= SMOL) maxDist = Math.max(maxDist, dist);
+						if (Math.abs(maxDist) < SMOL) return 0;
+					}
+				}
+			}
+			for (Vec3d vec : bVertexList) {
+				double dot = dot(vec.x - bCenter.x, vec.y - bCenter.y, vec.z - bCenter.z, basis.x, basis.y, basis.z);
+				if (dot > 0) {
+					if (orientedBox.contains(vec.x, vec.y, vec.z)) return 0;
+					double dist = orientedBox.raycast(vec, new Vec3d(vec.x - basis.x * maxDist,
+							vec.y - basis.y * maxDist, vec.z - basis.z * maxDist));
+					if (dist != -1) {
+						dist = -dist;
+						if (dist <= SMOL) maxDist = Math.max(maxDist, dist);
+						if (Math.abs(maxDist) < SMOL) return 0;
+					}
+				}
+			}
+		}
+		return maxDist;
 	}
 
 	private double getVertVal(Box box, Direction.Axis axis, int val) {

@@ -41,8 +41,9 @@ public class WSClient implements ClientModInitializer {
 				VertexConsumer vertexConsumer = renderCtx.consumers().getBuffer(RenderLayer.getLines());
 				MatrixStack matrix = renderCtx.matrixStack();
 				matrix.push();
+				matrix.translate(cam.x, cam.y, cam.z);
 				((WorldRendererMixin) renderCtx.worldRenderer()).invokeDrawBlockOutline(matrix, vertexConsumer,
-						renderCtx.camera().getFocusedEntity(), cam.x, cam.y, cam.z, pos,
+						renderCtx.camera().getFocusedEntity(), 0, 0, 0, pos,
 						entity.getWorldShell().getBlockState(wsResult.getBlockPos()));
 				matrix.pop();
 			}

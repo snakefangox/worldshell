@@ -82,7 +82,7 @@ public class WorldLinkEntity extends Entity {
 	protected void initDataTracker() {
 		getDataTracker().startTracking(ENTITY_BOUNDS, new EntityBounds(1, 1, 1, false));
 		getDataTracker().startTracking(BLOCK_OFFSET, new Vec3d(0, 0, 0));
-		getDataTracker().startTracking(ROTATION, QuaternionD.IDENTITY);
+		getDataTracker().startTracking(ROTATION, new QuaternionD(0, 0, -30, true));
 	}
 
 	@Override
@@ -201,6 +201,7 @@ public class WorldLinkEntity extends Entity {
 			worldShell.tick();
 		}
 		hull.calculateCrudeBounds();
+		hull.setRotation(getRotation());
 	}
 
 	@Override

@@ -76,6 +76,13 @@ public final class OrientedBox {
 		return basis;
 	}
 
+	public Vec3d[] getVertices() {
+		if (vertices == null){
+			computeVertices();
+		}
+		return vertices;
+	}
+
 	public OrientedBox rotate(final QuaternionD quaternion) {
 		if (QuaternionD.IDENTITY.equals(quaternion)) {
 			return this;
@@ -207,34 +214,6 @@ public final class OrientedBox {
 			max2 = Math.max(max2, v);
 		}
 		return min1 <= min2 && min2 <= max1 || min2 <= min1 && min1 <= max2;
-	}
-
-	// Modified sat test. Lets check distances VoxelShape style!
-	public double maxDistance(final Vec3d normal, final Vec3d[] vertices2, double maxDist) {
-		if (Math.abs(maxDist) < SMOL) return 0;
-		if (vertices == null) computeVertices();
-		double min1 = Double.MAX_VALUE;
-		double max1 = -Double.MAX_VALUE;
-		for (final Vec3d d : vertices) {
-			final double v = d.dotProduct(normal);
-			min1 = Math.min(min1, v);
-			max1 = Math.max(max1, v);
-		}
-		double min2 = Double.MAX_VALUE;
-		double max2 = -Double.MAX_VALUE;
-		for (final Vec3d vec3d : vertices2) {
-			final double v = vec3d.dotProduct(normal);
-			min2 = Math.min(min2, v);
-			max2 = Math.max(max2, v);
-		}
-		if (maxDist > 0) {
-			double dist = min2 - max1;
-			if (dist >= -SMOL) maxDist = Math.min(maxDist, dist);
-		} else {
-			double dist = max2 - min1;
-			if (dist <= SMOL) maxDist = Math.max(maxDist, dist);
-		}
-		return maxDist;
 	}
 
 	public double raycast(final Vec3d start, final Vec3d end) {
