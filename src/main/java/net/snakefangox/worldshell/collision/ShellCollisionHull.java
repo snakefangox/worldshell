@@ -156,33 +156,6 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		return maxDistRef[0];
 	}
 
-	private Vec3d[] getClippedVertices(Box box, OrientedBox oBox, Vec3d[] bases) {
-		vertexList.clear();
-		Vec3d center = oBox.getCenter();
-		for (int x = 0; x < 3; ++x) {
-			for (int y = 0; y < 3; ++y) {
-				for (int z = 0; z < 3; ++z) {
-					double pX = getVertVal(box, Direction.Axis.X, x);
-					double pY = getVertVal(box, Direction.Axis.Y, y);
-					double pZ = getVertVal(box, Direction.Axis.Z, z);
-					double dX = pX - center.x;
-					double dY = pY - center.y;
-					double dZ = pZ - center.z;
-					for (int i = 0; i < 3; ++i) {
-						Vec3d basis = bases[i];
-						double sign = Math.signum(dot(dX, dY, dZ, basis.x, basis.y, basis.z));
-						pX += sign * basis.x * SMOL;
-						pY += sign * basis.y * SMOL;
-						pZ += sign * basis.z * SMOL;
-					}
-					Vec3d vertex = new Vec3d(pX, pY, pZ);
-					vertexList.add(vertex);
-				}
-			}
-		}
-		return vertexList.toArray(new Vec3d[0]);
-	}
-
 	private Vec3d[] getClippedVertices(Box box, OrientedBox oBox, Vec3d[] basis, int axis1, int axis2, int axisF, double sign) {
 		vertexList.clear();
 		Vec3d prev = null;
@@ -198,9 +171,9 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		double centerX = oBox.getCenter().x + (signedExtentF2 * basisF.x);
 		double centerY = oBox.getCenter().y + (signedExtentF2 * basisF.y);
 		double centerZ = oBox.getCenter().z + (signedExtentF2 * basisF.z);
-		for (int x = 0; x < 3; ++x) {
-			for (int y = 0; y < 3; ++y) {
-				for (int z = 0; z < 3; ++z) {
+		for (int x = 0; x < 2; ++x) {
+			for (int y = 0; y < 2; ++y) {
+				for (int z = 0; z < 2; ++z) {
 					double pX = getVertVal(box, Direction.Axis.X, x);
 					double pY = getVertVal(box, Direction.Axis.Y, y);
 					double pZ = getVertVal(box, Direction.Axis.Z, z);
@@ -210,6 +183,14 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 					double qX = centerX;
 					double qY = centerY;
 					double qZ = centerZ;
+
+					double distF = dot(dX, dY, dZ, basisF.x, basisF.y, basisF.z);
+					if ((sign > 0 && distF < -extentF2) || (sign < 0 && distF > extentF2)) continue;
+					if (distF > extentF) distF = extentF;
+					if (distF < -extentF) distF = -extentF;
+					qX += distF * basisF.x;
+					qY += distF * basisF.y;
+					qZ += distF * basisF.z;
 
 					double dist1 = dot(dX, dY, dZ, basis1.x, basis1.y, basis1.z);
 					if (dist1 > extent1) dist1 = extent1;
@@ -226,14 +207,6 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 					qX += dist2 * basis2.x + (sign2 * basis2.x * SMOL);
 					qY += dist2 * basis2.y + (sign2 * basis2.y * SMOL);
 					qZ += dist2 * basis2.z + (sign2 * basis2.z * SMOL);
-
-					double distF = dot(dX, dY, dZ, basisF.x, basisF.y, basisF.z);
-					if ((sign > 0 && distF < -extentF2) || (sign < 0 && distF > extentF2)) continue;
-					if (distF > extentF) distF = extentF;
-					if (distF < -extentF) distF = -extentF;
-					qX += distF * basisF.x;
-					qY += distF * basisF.y;
-					qZ += distF * basisF.z;
 
 					if (prev != null && prev.x == qX && prev.y == qY && prev.z == qZ) continue;
 					Vec3d vertex = new Vec3d(qX, qY, qZ);
