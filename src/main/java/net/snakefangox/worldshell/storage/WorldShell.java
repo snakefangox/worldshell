@@ -1,5 +1,7 @@
 package net.snakefangox.worldshell.storage;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -29,9 +31,10 @@ public class WorldShell implements BlockRenderView {
 	private final ProxyWorld proxyWorld;
 	private final Map<BlockPos, BlockState> blockStateMap = new LinkedHashMap<>();
 	private final Map<BlockPos, BlockEntity> blockEntityMap = new LinkedHashMap<>();
-	private final List<ShellTickInvoker<?>> tickInvokers = new ArrayList<>();
+	private final List<ShellTickInvoker> tickInvokers = new ArrayList<>();
 	private final BlockPos.Mutable reusablePos = new BlockPos.Mutable();
-	private final WorldShellRenderCache cache;
+	@Environment(EnvType.CLIENT)
+	private final WorldShellRenderCache cache = new WorldShellRenderCache();
 	private final int cacheValidTime;
 	private int cacheResetTimer = 0;
 
@@ -39,7 +42,6 @@ public class WorldShell implements BlockRenderView {
 		this.parent = parent;
 		this.cacheValidTime = cacheValidTime;
 		proxyWorld = new ProxyWorld(parent.getEntityWorld(), this);
-		cache = parent.world.isClient() ? new WorldShellRenderCache() : null;
 	}
 
 	@Override
@@ -47,7 +49,7 @@ public class WorldShell implements BlockRenderView {
 		return blockEntityMap.get(pos);
 	}
 
-	public void setWorld(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<ShellTickInvoker<?>> tickers) {
+	public void setWorld(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<ShellTickInvoker> tickers) {
 		blockStateMap.putAll(stateMap);
 		if (entityMap != null) {
 			blockEntityMap.putAll(entityMap);
@@ -76,7 +78,7 @@ public class WorldShell implements BlockRenderView {
 			BlockEntity be = ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state);
 			if (be != null) {
 				BlockEntity oldBe = blockEntityMap.put(pos, be);
-				if (oldBe != null) tickInvokers.remove(new ShellTickInvoker<>(oldBe, null));
+				if (oldBe != null) tickInvokers.remove(new ShellTickInvoker(oldBe, null));
 				be.setWorld(proxyWorld);
 				be.setCachedState(blockStateMap.get(pos));
 				if (tag != null) be.fromTag(tag);
@@ -166,6 +168,7 @@ public class WorldShell implements BlockRenderView {
 		cacheResetTimer = cacheValidTime;
 	}
 
+	@Environment(EnvType.CLIENT)
 	public WorldShellRenderCache getCache() {
 		return cache;
 	}
@@ -178,15 +181,18 @@ public class WorldShell implements BlockRenderView {
 		return proxyWorld;
 	}
 
-	public static class ShellTickInvoker<T extends BlockEntity> {
-		private final T be;
-		private final BlockEntityTicker<T> ticker;
+	public static class ShellTickInvoker {
+		private final BlockEntity be;
+		@SuppressWarnings("rawtypes")
+		private final BlockEntityTicker ticker;
 
-		public ShellTickInvoker(T entity, BlockEntityTicker<T> ticker) {
+		@SuppressWarnings("rawtypes")
+		public ShellTickInvoker(BlockEntity entity, BlockEntityTicker ticker) {
 			this.ticker = ticker;
 			this.be = entity;
 		}
 
+		@SuppressWarnings("unchecked")
 		public void tick() {
 			this.ticker.tick(be.getWorld(), be.getPos(), be.getCachedState(), be);
 		}
@@ -196,7 +202,7 @@ public class WorldShell implements BlockRenderView {
 			if (this == o) return true;
 			if (!(o instanceof ShellTickInvoker)) return false;
 
-			ShellTickInvoker<?> invoker = (ShellTickInvoker<?>) o;
+			ShellTickInvoker invoker = (ShellTickInvoker) o;
 
 			return be.equals(invoker.be);
 		}

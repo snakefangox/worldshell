@@ -28,7 +28,7 @@ import net.minecraft.world.level.ServerWorldProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.storage.ShellBay;
+import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.ShellTransferHandler;
@@ -175,7 +175,7 @@ public class ShellStorageWorld extends ServerWorld {
 	}
 
 	private <T> T passCallToEntity(BlockPos pos, T defaultVal, EntityPassthroughFunction<T> consumer) {
-		ShellBay bay = cachedBayData.getBay(cachedBayData.getBayIdFromPos(pos));
+		Bay bay = cachedBayData.getBay(cachedBayData.getBayIdFromPos(pos));
 		if (bay != null && bay.getLinkedEntity().isPresent()) {
 			return consumer.passthrough(bay.getLinkedEntity().get(), bay);
 		}
@@ -183,7 +183,7 @@ public class ShellStorageWorld extends ServerWorld {
 	}
 
 	private void passCallToEntity(BlockPos pos, EntityPassthroughConsumer consumer) {
-		ShellBay bay = cachedBayData.getBay(cachedBayData.getBayIdFromPos(pos));
+		Bay bay = cachedBayData.getBay(cachedBayData.getBayIdFromPos(pos));
 		if (bay != null && bay.getLinkedEntity().isPresent()) {
 			consumer.passthrough(bay.getLinkedEntity().get(), bay);
 		}
@@ -198,10 +198,10 @@ public class ShellStorageWorld extends ServerWorld {
 	}
 
 	public interface EntityPassthroughConsumer {
-		void passthrough(WorldLinkEntity entity, ShellBay bay);
+		void passthrough(WorldLinkEntity entity, Bay bay);
 	}
 
 	public interface EntityPassthroughFunction<T> {
-		T passthrough(WorldLinkEntity entity, ShellBay bay);
+		T passthrough(WorldLinkEntity entity, Bay bay);
 	}
 }

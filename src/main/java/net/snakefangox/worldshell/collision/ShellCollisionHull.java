@@ -27,7 +27,7 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	private QuaternionD inverseRotation;
 	private Matrix3d matrix;
 	private Matrix3d inverseMatrix;
-	// These are here to prevent some high volume functions from requiring allocations
+	// These are here to prevent some high volume functions from requiring as many allocations
 	// They're never given to anything outside this class and each function that takes them sets them beforehand
 	private final Vec3dM aabbMax = new Vec3dM();
 	private final Vec3dM aabbMin = new Vec3dM();

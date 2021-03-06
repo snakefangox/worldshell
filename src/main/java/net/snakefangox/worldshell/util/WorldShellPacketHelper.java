@@ -5,7 +5,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
@@ -63,7 +62,7 @@ public class WorldShellPacketHelper {
 		return buf;
 	}
 
-	public static void readBlocks(PacketByteBuf buf, Map<BlockPos, BlockState> posBlockStateMap, Map<BlockPos, BlockEntity> posBlockEntityMap, List<WorldShell.ShellTickInvoker<?>> tickers) {
+	public static void readBlocks(PacketByteBuf buf, Map<BlockPos, BlockState> posBlockStateMap, Map<BlockPos, BlockEntity> posBlockEntityMap, List<WorldShell.ShellTickInvoker> tickers) {
 		int stateCount = buf.readInt();
 		for (int i = 0; i < stateCount; ++i) {
 			BlockState state = Block.getStateFromRawId(buf.readInt());

@@ -24,7 +24,7 @@ public class ShellStorageData extends PersistentState {
 
 	private int bufferSpace = WorldShellConfig.getBufferSpace();
 	private int freeIndex = 1;
-	private final Map<Integer, ShellBay> bays = new HashMap<>();
+	private final Map<Integer, Bay> bays = new HashMap<>();
 	private final List<Integer> emptyBays = new ArrayList<>();
 
 	public BlockPos getFreeBay() {
@@ -42,11 +42,11 @@ public class ShellStorageData extends PersistentState {
 		return x + ((z - 1) * maxBays);
 	}
 
-	public ShellBay getBay(int shellId) {
+	public Bay getBay(int shellId) {
 		return bays.get(shellId);
 	}
 
-	public int addBay(ShellBay bay) {
+	public int addBay(Bay bay) {
 		int id = findEmptyIndex(true);
 		bays.put(id, bay);
 		markDirty();
@@ -56,7 +56,7 @@ public class ShellStorageData extends PersistentState {
 	public void freeBay(int id, MinecraftServer server) {
 		if (!bays.containsKey(id)) return;
 		World world = WSUniversal.getStorageDim(server);
-		ShellBay bay = bays.remove(id);
+		Bay bay = bays.remove(id);
 		emptyBays.add(id);
 		ShellTransferHandler.forEachInBox(bay.getBounds(), (bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
 		markDirty();
@@ -75,7 +75,7 @@ public class ShellStorageData extends PersistentState {
 		tag.putInt("freeIndex", freeIndex);
 		tag.putInt("bufferSpace", bufferSpace);
 		CompoundTag bayList = new CompoundTag();
-		for (Map.Entry<Integer, ShellBay> entry : bays.entrySet()) {
+		for (Map.Entry<Integer, Bay> entry : bays.entrySet()) {
 			bayList.put(String.valueOf(entry.getKey()), entry.getValue().toTag());
 		}
 		tag.put("bayList", bayList);
@@ -89,7 +89,7 @@ public class ShellStorageData extends PersistentState {
 		storageData.bufferSpace = tag.getInt("bufferSpace");
 		CompoundTag bayList = tag.getCompound("bayList");
 		for (String key : bayList.getKeys()) {
-			storageData.bays.put(Integer.valueOf(key), new ShellBay(bayList.getCompound(key)));
+			storageData.bays.put(Integer.valueOf(key), new Bay(bayList.getCompound(key)));
 		}
 		int[] eb = tag.getIntArray("emptyBays");
 		storageData.emptyBays.clear();

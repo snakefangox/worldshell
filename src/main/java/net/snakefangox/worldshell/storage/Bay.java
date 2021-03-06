@@ -22,7 +22,7 @@ import java.util.*;
  * A bay in the ship storage sense
  * Stores all the data needed to keep track of a shell in the storage dimension
  */
-public class ShellBay {
+public class Bay {
 
 	//The center of the shell
 	private BlockPos center;
@@ -33,12 +33,12 @@ public class ShellBay {
 	//The entity changes to this shell should propagate to
 	private Optional<WorldLinkEntity> linkedEntity = Optional.empty();
 
-	public ShellBay(BlockPos center, BlockBox bounds) {
+	public Bay(BlockPos center, BlockBox bounds) {
 		this.center = center;
 		this.bounds = bounds;
 	}
 
-	public ShellBay(CompoundTag tag) {
+	public Bay(CompoundTag tag) {
 		fromTag(tag);
 	}
 
@@ -133,13 +133,13 @@ public class ShellBay {
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
-		if (!(o instanceof ShellBay)) return false;
+		if (!(o instanceof Bay)) return false;
 
-		ShellBay shellBay = (ShellBay) o;
+		Bay bay = (Bay) o;
 
-		if (center != null ? !center.equals(shellBay.center) : shellBay.center != null) return false;
-		if (bounds != null ? !bounds.equals(shellBay.bounds) : shellBay.bounds != null) return false;
-		return linkedEntity.equals(shellBay.linkedEntity);
+		if (!Objects.equals(center, bay.center)) return false;
+		if (!Objects.equals(bounds, bay.bounds)) return false;
+		return linkedEntity.equals(bay.linkedEntity);
 	}
 
 	@Override

@@ -2,6 +2,12 @@ package net.snakefangox.worldshell.collision;
 
 import net.minecraft.entity.EntityDimensions;
 
+/**
+ * Most minecraft entities only have two dimensions to keep track of.
+ * Lucky us, we have three.
+ * This class adds a length measurement to the vanilla class
+ * and retcons width to refer to the entities Z size.
+ */
 public class EntityBounds extends EntityDimensions {
 	//The X size of the entity
 	public final float length;
@@ -11,6 +17,10 @@ public class EntityBounds extends EntityDimensions {
 		this.length = length;
 	}
 
+	/**
+	 * A very rough but very cheap measurement of the max distance
+	 * you could be from this entity and still interact with it
+	 */
 	public float getRoughMaxDist() {
 		return length + height + width;
 	}

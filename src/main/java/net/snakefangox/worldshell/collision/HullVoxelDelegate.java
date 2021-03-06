@@ -7,6 +7,10 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelSet;
 import net.minecraft.util.shape.VoxelShape;
 
+/**
+ * Vanilla thinks our collision shape is a cube. That's cute but it won't work.
+ * This exists to pass collision calls back to our correctly shaped hull.
+ */
 public class HullVoxelDelegate extends VoxelShape {
 
 	private final ShellCollisionHull hull;

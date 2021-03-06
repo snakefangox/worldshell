@@ -31,7 +31,7 @@ import net.snakefangox.worldshell.WSUniversal;
 import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.collision.QuaternionD;
 import net.snakefangox.worldshell.collision.ShellCollisionHull;
-import net.snakefangox.worldshell.storage.ShellBay;
+import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
@@ -59,7 +59,7 @@ public class WorldLinkEntity extends Entity {
 		super(type, world);
 	}
 
-	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<WorldShell.ShellTickInvoker<?>> tickers) {
+	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<WorldShell.ShellTickInvoker> tickers) {
 		worldShell.setWorld(stateMap, entityMap, tickers);
 	}
 
@@ -69,7 +69,7 @@ public class WorldLinkEntity extends Entity {
 
 	@Override
 	public void onStartedTrackingBy(ServerPlayerEntity player) {
-		Optional<ShellBay> bay = getBay();
+		Optional<Bay> bay = getBay();
 		if (bay.isPresent()) {
 			PacketByteBuf buf = PacketByteBufs.create();
 			buf.writeInt(getId());
@@ -187,7 +187,7 @@ public class WorldLinkEntity extends Entity {
 
 	public void passthroughExplosion(double x, double y, double z, float power, boolean fire, Explosion.DestructionType type) {
 		if (world.isClient()) return;
-		Optional<ShellBay> bay = getBay();
+		Optional<Bay> bay = getBay();
 		if (bay.isPresent()) {
 			Vec3d newExp = CoordUtil.toGlobal(bay.get().getCenter(), CoordUtil.worldToLinkEntity(this, new Vec3d(x, y, z)));
 			WSUniversal.getStorageDim(world.getServer()).createExplosion(null, newExp.x, newExp.y, newExp.z, power, fire, type);
@@ -242,7 +242,7 @@ public class WorldLinkEntity extends Entity {
 		}
 	}
 
-	public Optional<ShellBay> getBay() {
+	public Optional<Bay> getBay() {
 		return Optional.ofNullable(ShellStorageData.getOrCreate(world.getServer()).getBay(shellId));
 	}
 

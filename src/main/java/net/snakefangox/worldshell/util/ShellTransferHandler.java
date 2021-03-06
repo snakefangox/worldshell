@@ -5,7 +5,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.command.argument.BlockStateArgument;
-import net.minecraft.entity.EntityDimensions;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockBox;
@@ -15,7 +14,7 @@ import net.minecraft.world.World;
 import net.snakefangox.worldshell.WSUniversal;
 import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.storage.ShellBay;
+import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 
 import java.util.Collections;
@@ -48,7 +47,7 @@ public class ShellTransferHandler {
 		worldLinkEntity.setBlockOffset(new Vec3d((core.getX() - center.x) - 0.5, core.getY() - bayBounds.minY, (core.getZ() - center.z) - 0.5));
 		blocks.forEach((bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
 		CoordUtil.transformBoxCoordSpace(core, bayPos, bayBounds);
-		int id = storageData.addBay(new ShellBay(bayPos, bayBounds));
+		int id = storageData.addBay(new Bay(bayPos, bayBounds));
 		storageData.getBay(id).loadAllChunks(world.getServer());
 		worldLinkEntity.setShellId(id);
 		return worldLinkEntity;

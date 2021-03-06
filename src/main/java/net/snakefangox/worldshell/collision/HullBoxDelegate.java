@@ -7,6 +7,10 @@ import net.minecraft.util.shape.VoxelShape;
 
 import java.util.Optional;
 
+/**
+ * Vanilla thinks it can change the size of our bounding box
+ * It can but it can't create new ones, so we have this to point back to the original.
+ */
 public class HullBoxDelegate extends Box implements SpecialBox {
 
 	private final ShellCollisionHull hull;

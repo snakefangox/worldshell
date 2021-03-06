@@ -8,7 +8,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.WSUniversal;
-import net.snakefangox.worldshell.storage.ShellBay;
+import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.world.ShellStorageWorld;
@@ -56,7 +56,7 @@ public class ScreenHandlerCheck {
 
 		public double getTransformedDistance(double x, double y, double z) {
 			ShellStorageData data = ((ShellStorageWorld) world).getCachedBayData();
-			ShellBay bay = data.getBay(data.getBayIdFromPos(new BlockPos(x, y, z)));
+			Bay bay = data.getBay(data.getBayIdFromPos(new BlockPos(x, y, z)));
 			if (bay != null && bay.getLinkedEntity().isPresent()) {
 				Vec3d temp = CoordUtil.worldToLinkEntity(bay.getLinkedEntity().get(), getPos());
 				Vec3d vec = CoordUtil.toGlobal(bay.getCenter(), temp);

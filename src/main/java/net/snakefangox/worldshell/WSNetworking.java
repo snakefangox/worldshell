@@ -25,7 +25,7 @@ import net.minecraft.world.World;
 import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.collision.QuaternionD;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.storage.ShellBay;
+import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
@@ -60,7 +60,7 @@ public class WSNetworking {
 			if (entity instanceof WorldLinkEntity) {
 				EntityBounds dimensions = ((WorldLinkEntity)entity).getDimensions();
 				if (player.distanceTo(entity) < dimensions.getRoughMaxDist() + 4.5) {
-					Optional<ShellBay> bay = ((WorldLinkEntity) entity).getBay();
+					Optional<Bay> bay = ((WorldLinkEntity) entity).getBay();
 					if (bay.isPresent()) {
 						World world = WSUniversal.getStorageDim(server);
 						BlockPos bp = CoordUtil.toGlobal(bay.get().getCenter(), hit.getBlockPos());
@@ -96,7 +96,7 @@ public class WSNetworking {
 		int entityID = buf.readInt();
 		Map<BlockPos, BlockState> stateMap = new HashMap<>();
 		Map<BlockPos, BlockEntity> entityMap = new HashMap<>();
-		List<WorldShell.ShellTickInvoker<?>> tickers = new ArrayList<>();
+		List<WorldShell.ShellTickInvoker> tickers = new ArrayList<>();
 		WorldShellPacketHelper.readBlocks(buf, stateMap, entityMap, tickers);
 
 		client.execute(() -> {

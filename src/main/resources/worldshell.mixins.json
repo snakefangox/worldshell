@@ -12,8 +12,6 @@
     "VoxelShapesMixin"
   ],
   "client": [
-    "GameRendererMixin",
-    "WorldRendererMixin"
   ],
   "server": [
   ],
