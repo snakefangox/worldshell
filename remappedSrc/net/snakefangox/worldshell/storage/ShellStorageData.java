@@ -95,7 +95,7 @@ public class ShellStorageData extends PersistentState {
 	}
 
 	@Override
-	public CompoundTag writeNbt(CompoundTag tag) {
+	public CompoundTag toNbt(CompoundTag tag) {
 		tag.putInt("freeIndex", freeIndex);
 		tag.putInt("bufferSpace", bufferSpace);
 		CompoundTag bayList = new CompoundTag();

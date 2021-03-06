@@ -62,7 +62,7 @@ public class ShellTransferHandler {
 			// Non-Mojang code may not check for null when deleting the block, so replace it with an empty BE
 			from.addBlockEntity(((BlockEntityProvider) state.getBlock()).createBlockEntity(oldPos, state));
 		}
-		BlockStateArgument bsa = new BlockStateArgument(state, Collections.emptySet(), be != null ? be.writeNbt(new CompoundTag()) : null);
+		BlockStateArgument bsa = new BlockStateArgument(state, Collections.emptySet(), be != null ? be.toTag(new CompoundTag()) : null);
 		bsa.setBlockState((ServerWorld) to, newPos, FLAGS);
 	}
 

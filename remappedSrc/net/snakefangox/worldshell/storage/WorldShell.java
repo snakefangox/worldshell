@@ -95,7 +95,7 @@ public class WorldShell implements BlockRenderView {
 				if (oldBe != null) tickInvokers.remove(new ShellTickInvoker(oldBe, null));
 				be.setWorld(proxyWorld);
 				be.setCachedState(blockStateMap.get(pos));
-				if (tag != null) be.readNbt(tag);
+				if (tag != null) be.fromTag(tag);
 				BlockEntityTicker<?> ticker = state.getBlockEntityTicker(proxyWorld, be.getType());
 				if (ticker != null) tickInvokers.add(new ShellTickInvoker(be, ticker));
 			}
@@ -147,13 +147,13 @@ public class WorldShell implements BlockRenderView {
 	}
 
 	@Override
-	public int getHeight() {
-		return parent.getEntityWorld().getHeight();
+	public int getSectionCount() {
+		return parent.getEntityWorld().getBottomSectionLimit();
 	}
 
 	@Override
-	public int getBottomY() {
-		return parent.getEntityWorld().getBottomY();
+	public int getBottomSectionLimit() {
+		return parent.getEntityWorld().getBottomSectionLimit();
 	}
 
 	public void tickCache() {

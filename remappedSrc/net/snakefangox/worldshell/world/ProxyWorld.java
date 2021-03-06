@@ -6,6 +6,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.class_5575;
+import net.minecraft.class_5577;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.TargetPredicate;
@@ -23,7 +25,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.tag.TagManager;
-import net.minecraft.util.TypeFilter;
 import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
 import net.minecraft.util.hit.BlockHitResult;
@@ -39,7 +40,6 @@ import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.*;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.entity.EntityLookup;
 import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.explosion.Explosion;
 import net.minecraft.world.explosion.ExplosionBehavior;
@@ -52,7 +52,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
-import java.util.function.*;
+import java.util.function.BiPredicate;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class ProxyWorld extends World {
@@ -66,34 +69,13 @@ public class ProxyWorld extends World {
 		this.proxiedShell = proxiedShell;
 	}
 
-	@Override
-	public @Nullable BlockEntity getBlockEntity(BlockPos pos) {
-		return proxiedShell.getBlockEntity(pos);
-	}
-
-	@Override
-	public BlockState getBlockState(BlockPos pos) {
-		return proxiedShell.getBlockState(pos);
-	}
-
-	@Override
-	public FluidState getFluidState(BlockPos pos) {
-		return proxiedShell.getFluidState(pos);
+	public static boolean isValid(BlockPos pos) {
+		return World.isValid(pos);
 	}
 
 	@Override
 	public float getBrightness(Direction direction, boolean shaded) {
 		return proxiedShell.getBrightness(direction, shaded);
-	}
-
-	@Override
-	public LightingProvider getLightingProvider() {
-		return proxiedShell.getLightingProvider();
-	}
-
-	@Override
-	public int getColor(BlockPos pos, ColorResolver colorResolver) {
-		return proxiedShell.getColor(pos, colorResolver);
 	}
 
 	@Override
@@ -109,16 +91,6 @@ public class ProxyWorld extends World {
 	@Override
 	public boolean isSkyVisible(BlockPos pos) {
 		return proxiedShell.isSkyVisible(pos);
-	}
-
-	@Override
-	public int getHeight() {
-		return proxiedShell.getHeight();
-	}
-
-	@Override
-	public int getBottomY() {
-		return proxiedShell.getBottomY();
 	}
 
 	@Override
@@ -162,28 +134,24 @@ public class ProxyWorld extends World {
 		return proxiedShell.getDismountHeight(pos);
 	}
 
-	public static <T, C> T raycast(Vec3d start, Vec3d end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
-		return BlockView.raycast(start, end, context, blockHitFactory, missFactory);
+	@Override
+	public int getTopHeightLimit() {
+		return proxiedShell.getTopHeightLimit();
 	}
 
 	@Override
-	public int getTopY() {
-		return proxiedShell.getTopY();
+	public int getSections() {
+		return proxiedShell.getSections();
 	}
 
 	@Override
-	public int countVerticalSections() {
-		return proxiedShell.countVerticalSections();
+	public int getMinimumSection() {
+		return proxiedShell.getMinimumSection();
 	}
 
 	@Override
-	public int getBottomSectionCoord() {
-		return proxiedShell.getBottomSectionCoord();
-	}
-
-	@Override
-	public int getTopSectionCoord() {
-		return proxiedShell.getTopSectionCoord();
+	public int getTopSectionLimit() {
+		return proxiedShell.getTopSectionLimit();
 	}
 
 	@Override
@@ -202,13 +170,13 @@ public class ProxyWorld extends World {
 	}
 
 	@Override
-	public int sectionCoordToIndex(int coord) {
-		return proxiedShell.sectionCoordToIndex(coord);
+	public int getSectionIndexFromSection(int section) {
+		return proxiedShell.getSectionIndexFromSection(section);
 	}
 
 	@Override
-	public int sectionIndexToCoord(int index) {
-		return proxiedShell.sectionIndexToCoord(index);
+	public int getSection(int sectionIndex) {
+		return proxiedShell.getSection(sectionIndex);
 	}
 
 	@Override
@@ -225,10 +193,6 @@ public class ProxyWorld extends World {
 	@Override
 	public boolean isInBuildLimit(BlockPos pos) {
 		return proxiedWorld.isInBuildLimit(pos);
-	}
-
-	public static boolean isValid(BlockPos pos) {
-		return World.isValid(pos);
 	}
 
 	@Override
@@ -313,6 +277,21 @@ public class ProxyWorld extends World {
 	}
 
 	@Override
+	public LightingProvider getLightingProvider() {
+		return proxiedShell.getLightingProvider();
+	}
+
+	@Override
+	public BlockState getBlockState(BlockPos pos) {
+		return proxiedShell.getBlockState(pos);
+	}
+
+	@Override
+	public FluidState getFluidState(BlockPos pos) {
+		return proxiedShell.getFluidState(pos);
+	}
+
+	@Override
 	public boolean isDay() {
 		return proxiedWorld.isDay();
 	}
@@ -394,6 +373,12 @@ public class ProxyWorld extends World {
 	}
 
 	@Override
+	@Nullable
+	public BlockEntity getBlockEntity(BlockPos pos) {
+		return proxiedShell.getBlockEntity(pos);
+	}
+
+	@Override
 	public void addBlockEntity(BlockEntity blockEntity) {
 		proxiedWorld.addBlockEntity(blockEntity);
 	}
@@ -445,8 +430,8 @@ public class ProxyWorld extends World {
 	}
 
 	@Override
-	public <T extends Entity> List<T> getEntitiesByType(TypeFilter<Entity, T> filter, Box box, Predicate<? super T> predicate) {
-		return proxiedWorld.getEntitiesByType(filter, box, predicate);
+	public <T extends Entity> List<T> getEntitiesByType(class_5575<Entity, T> arg, Box box, Predicate<? super T> predicate) {
+		return proxiedWorld.getEntitiesByType(arg, box, predicate);
 	}
 
 	@Override
@@ -701,8 +686,13 @@ public class ProxyWorld extends World {
 	}
 
 	@Override
-	protected EntityLookup<Entity> getEntityLookup() {
+	protected class_5577<Entity> getEntityIdMap() {
 		return null;
+	}
+
+	@Override
+	public void emitGameEvent(@Nullable Entity entity, GameEvent gameEvent, BlockPos pos, int range) {
+		proxiedWorld.emitGameEvent(entity, gameEvent, pos);
 	}
 
 	@Override
@@ -761,8 +751,8 @@ public class ProxyWorld extends World {
 	}
 
 	@Override
-	public void emitGameEvent(GameEvent event, Entity emitter) {
-		proxiedWorld.emitGameEvent(event, emitter);
+	public void method_33596(GameEvent gameEvent, Entity entity) {
+		proxiedWorld.method_33596(gameEvent, entity);
 	}
 
 	@Override
@@ -895,6 +885,11 @@ public class ProxyWorld extends World {
 	}
 
 	@Override
+	public int getColor(BlockPos pos, ColorResolver colorResolver) {
+		return proxiedShell.getColor(pos, colorResolver);
+	}
+
+	@Override
 	public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
 		return proxiedWorld.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
 	}
@@ -902,6 +897,16 @@ public class ProxyWorld extends World {
 	@Override
 	public Biome getGeneratorStoredBiome(int biomeX, int biomeY, int biomeZ) {
 		return proxiedWorld.getGeneratorStoredBiome(biomeX, biomeY, biomeZ);
+	}
+
+	@Override
+	public int getBottomSectionLimit() {
+		return proxiedShell.getBottomSectionLimit();
+	}
+
+	@Override
+	public int getSectionCount() {
+		return proxiedShell.getSectionCount();
 	}
 
 	@Override

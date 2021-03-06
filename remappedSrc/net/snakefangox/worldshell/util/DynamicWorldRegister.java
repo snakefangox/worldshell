@@ -1,14 +1,18 @@
-package net.snakefangox.worldshell.mixininterface;
+package net.snakefangox.worldshell.util;
 
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
-import net.snakefangox.worldshell.util.ServerWorldSupplier;
+import net.snakefangox.worldshell.mixininterface.DynamicWorldGen;
 
-public interface DynamicDimGen {
+/**
+ * Static helper class to easily call world register functions on a server.
+ */
+public class DynamicWorldRegister {
 	/**
 	 * Convenience method to use a registered dimension type with {@link #createDynamicDim(RegistryKey, DimensionOptions)}
 	 * Check there for more detailed usage instructions
@@ -18,7 +22,10 @@ public interface DynamicDimGen {
 	 * @param chunkGenerator   the chunkgenerator the world should use
 	 * @return the world that was created
 	 */
-	ServerWorld createDynamicDim(RegistryKey<World> worldRegistryKey, RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator);
+	public static ServerWorld createDynamicWorld(MinecraftServer server, RegistryKey<World> worldRegistryKey,
+											   RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator) {
+		return ((DynamicWorldGen)server).createDynamicWorld(worldRegistryKey, dimensionTypeKey, chunkGenerator);
+	}
 
 	/**
 	 * Registers a dimension while the server is running
@@ -31,7 +38,9 @@ public interface DynamicDimGen {
 	 * @param dimensionOptions the options used for this dimension
 	 * @return the world that was created
 	 */
-	ServerWorld createDynamicDim(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions);
+	public static ServerWorld createDynamicWorld(MinecraftServer server, RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions) {
+		return ((DynamicWorldGen)server).createDynamicWorld(worldRegistryKey, dimensionOptions);
+	}
 
 	/**
 	 * Registers a dimension while the server is running with a custom world class<p>
@@ -43,5 +52,8 @@ public interface DynamicDimGen {
 	 * @param worldSupplier    a supplier of the world type needed
 	 * @return the world that was created
 	 */
-	ServerWorld createDynamicDim(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier);
+	public static ServerWorld createDynamicWorld(MinecraftServer server, RegistryKey<World> worldRegistryKey,
+											   DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier) {
+		return ((DynamicWorldGen)server).createDynamicWorld(worldRegistryKey, dimensionOptions, worldSupplier);
+	}
 }

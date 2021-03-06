@@ -90,9 +90,9 @@ public class WorldShellPacketHelper {
 		int beCount = buf.readInt();
 		for (int i = 0; i < beCount; ++i) {
 			BlockPos bp = buf.readBlockPos();
-			CompoundTag nbt = buf.readCompoundTag();
-			if (nbt != null && posBlockEntityMap.containsKey(bp)) {
-				posBlockEntityMap.get(bp).readNbt(nbt);
+			CompoundTag tag = buf.readCompoundTag();
+			if (tag != null && posBlockEntityMap.containsKey(bp)) {
+				posBlockEntityMap.get(bp).fromTag(tag);
 			}
 		}
 	}

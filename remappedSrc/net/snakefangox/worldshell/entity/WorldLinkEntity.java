@@ -97,7 +97,7 @@ public class WorldLinkEntity extends Entity {
 	}
 
 	@Override
-	protected void readCustomDataFromNbt(CompoundTag tag) {
+	protected void readCustomDataFromTag(CompoundTag tag) {
 		setShellId(tag.getInt("shellId"));
 		setBlockOffset(WSNbtHelper.getVec3d(tag, "blockOffset"));
 		float length = tag.getFloat("length");
@@ -105,10 +105,11 @@ public class WorldLinkEntity extends Entity {
 		float height = tag.getFloat("height");
 		setDimensions(new EntityBounds(length, height, width, false));
 		setRotation(WSNbtHelper.getQuaternion(tag, "rotation"));
+
 	}
 
 	@Override
-	protected void writeCustomDataToNbt(CompoundTag tag) {
+	protected void writeCustomDataToTag(CompoundTag tag) {
 		tag.putInt("shellId", shellId);
 		WSNbtHelper.putVec3d(tag, getBlockOffset(), "blockOffset");
 		tag.putFloat("length", getDimensions().length);

@@ -16,8 +16,6 @@ import net.minecraft.world.gen.chunk.VerticalBlockSample;
 
 import java.util.Collections;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 public class EmptyChunkGenerator extends ChunkGenerator {
 
@@ -51,8 +49,7 @@ public class EmptyChunkGenerator extends ChunkGenerator {
 	}
 
 	@Override
-	public CompletableFuture<Chunk> populateNoise(Executor executor, StructureAccessor accessor, Chunk chunk) {
-		return CompletableFuture.completedFuture(chunk);
+	public void populateNoise(WorldAccess world, StructureAccessor accessor, Chunk chunk) {
 	}
 
 	@Override
