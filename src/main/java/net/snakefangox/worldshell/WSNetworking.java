@@ -24,9 +24,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.collision.QuaternionD;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
-import net.snakefangox.worldshell.storage.WorldShell;
+import net.snakefangox.worldshell.storage.Microcosm;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
@@ -34,10 +34,10 @@ import java.util.*;
 
 public class WSNetworking {
 
-	public static final Identifier SHELL_DATA = new Identifier(WSUniversal.MODID, "data");
-	public static final Identifier SHELL_UPDATE = new Identifier(WSUniversal.MODID, "update");
-	public static final Identifier SHELL_INTERACT = new Identifier(WSUniversal.MODID, "interact");
-	public static final Identifier SHELL_BLOCK_EVENT = new Identifier(WSUniversal.MODID, "block_event");
+	public static final Identifier SHELL_DATA = new Identifier(WorldShell.MODID, "data");
+	public static final Identifier SHELL_UPDATE = new Identifier(WorldShell.MODID, "update");
+	public static final Identifier SHELL_INTERACT = new Identifier(WorldShell.MODID, "interact");
+	public static final Identifier SHELL_BLOCK_EVENT = new Identifier(WorldShell.MODID, "block_event");
 	public static final TrackedDataHandler<EntityBounds> BOUNDS = new TrackedDataHandler<EntityBounds>() {
 
 		@Override
@@ -125,13 +125,13 @@ public class WSNetworking {
 		int entityID = buf.readInt();
 		Map<BlockPos, BlockState> stateMap = new HashMap<>();
 		Map<BlockPos, BlockEntity> entityMap = new HashMap<>();
-		List<WorldShell.ShellTickInvoker> tickers = new ArrayList<>();
+		List<Microcosm.ShellTickInvoker> tickers = new ArrayList<>();
 		WorldShellPacketHelper.readBlocks(buf, stateMap, entityMap, tickers);
 
 		client.execute(() -> {
 			Entity entity = client.world.getEntityById(entityID);
-			if (entity instanceof WorldLinkEntity) {
-				((WorldLinkEntity) entity).initializeWorldShell(stateMap, entityMap, tickers);
+			if (entity instanceof WorldShellEntity) {
+				((WorldShellEntity) entity).initializeWorldShell(stateMap, entityMap, tickers);
 			}
 		});
 	}
@@ -144,8 +144,8 @@ public class WSNetworking {
 
 		client.execute(() -> {
 			Entity entity = client.world.getEntityById(entityID);
-			if (entity instanceof WorldLinkEntity) {
-				((WorldLinkEntity) entity).updateWorldShell(pos, state, tag);
+			if (entity instanceof WorldShellEntity) {
+				((WorldShellEntity) entity).updateWorldShell(pos, state, tag);
 			}
 		});
 	}
@@ -157,8 +157,8 @@ public class WSNetworking {
 		int data = buf.readInt();
 		client.execute(() -> {
 			Entity entity = client.world.getEntityById(entityID);
-			if (entity instanceof WorldLinkEntity) {
-				((WorldLinkEntity) entity).getWorldShell().addBlockEvent(pos, type, data);
+			if (entity instanceof WorldShellEntity) {
+				((WorldShellEntity) entity).getMicrocosm().addBlockEvent(pos, type, data);
 			}
 		});
 	}
@@ -175,12 +175,12 @@ public class WSNetworking {
 
 		server.execute(() -> {
 			Entity entity = player.world.getEntityById(entityID);
-			if (entity instanceof WorldLinkEntity) {
-				EntityBounds dimensions = ((WorldLinkEntity) entity).getDimensions();
+			if (entity instanceof WorldShellEntity) {
+				EntityBounds dimensions = ((WorldShellEntity) entity).getDimensions();
 				if (player.distanceTo(entity) < dimensions.getRoughMaxDist() + 4.5) {
-					Optional<Bay> bay = ((WorldLinkEntity) entity).getBay();
+					Optional<Bay> bay = ((WorldShellEntity) entity).getBay();
 					if (bay.isPresent()) {
-						World world = WSUniversal.getStorageDim(server);
+						World world = WorldShell.getStorageDim(server);
 						BlockPos bp = CoordUtil.toGlobal(bay.get().getCenter(), hit.getBlockPos());
 						if (!world.isChunkLoaded(bp)) return;
 						BlockHitResult gHit = new BlockHitResult(CoordUtil.toGlobal(bay.get().getCenter(), hit.getPos()),

@@ -6,7 +6,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.snakefangox.worldshell.collision.ShellCollisionHull;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,37 +62,37 @@ public class CoordUtil {
 				target.getZ() + (pos.getZ() - current.getZ()));
 	}
 
-	public static Vec3d linkEntityToWorld(BlockPos current, WorldLinkEntity target, Vec3d pos) {
+	public static Vec3d linkEntityToWorld(BlockPos current, WorldShellEntity target, Vec3d pos) {
 		return new Vec3d(target.getX() + target.getBlockOffset().x + (pos.getX() - current.getX()),
 				target.getY() + target.getBlockOffset().y + (pos.getY() - current.getY()),
 				target.getZ() + target.getBlockOffset().z + (pos.getZ() - current.getZ()));
 	}
 
-	public static BlockPos linkEntityToWorld(BlockPos current, WorldLinkEntity target, BlockPos pos) {
+	public static BlockPos linkEntityToWorld(BlockPos current, WorldShellEntity target, BlockPos pos) {
 		return new BlockPos(target.getX() + target.getBlockOffset().x + (pos.getX() - current.getX()),
 				target.getY() + target.getBlockOffset().y + (pos.getY() - current.getY()),
 				target.getZ() + target.getBlockOffset().z + (pos.getZ() - current.getZ()));
 	}
 
-	public static Vec3d linkEntityToWorld(BlockPos current, WorldLinkEntity target, double posX, double posY, double posZ) {
+	public static Vec3d linkEntityToWorld(BlockPos current, WorldShellEntity target, double posX, double posY, double posZ) {
 		return new Vec3d(target.getX() + target.getBlockOffset().x + (posX - current.getX()),
 				target.getY() + target.getBlockOffset().y + (posY - current.getY()),
 				target.getZ() + target.getBlockOffset().z + (posZ - current.getZ()));
 	}
 
-	public static Vec3d worldToLinkEntity(WorldLinkEntity entity, Vec3d pos) {
+	public static Vec3d worldToLinkEntity(WorldShellEntity entity, Vec3d pos) {
 		return new Vec3d(pos.x - (entity.getX() + entity.getBlockOffset().x),
 				pos.y - (entity.getY() + entity.getBlockOffset().y),
 				pos.z - (entity.getZ() + entity.getBlockOffset().z));
 	}
 
-	public static void worldToLinkEntity(WorldLinkEntity entity, ShellCollisionHull.Vec3dM pos) {
+	public static void worldToLinkEntity(WorldShellEntity entity, ShellCollisionHull.Vec3dM pos) {
 		pos.setAll(pos.x - (entity.getX() + entity.getBlockOffset().x),
 				pos.y - (entity.getY() + entity.getBlockOffset().y),
 				pos.z - (entity.getZ() + entity.getBlockOffset().z));
 	}
 
-	public static Vec3d worldToLinkEntity(WorldLinkEntity entity, double x, double y, double z) {
+	public static Vec3d worldToLinkEntity(WorldShellEntity entity, double x, double y, double z) {
 		return new Vec3d(x - (entity.getX() + entity.getBlockOffset().x),
 				y - (entity.getY() + entity.getBlockOffset().y),
 				z - (entity.getZ() + entity.getBlockOffset().z));

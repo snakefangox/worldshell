@@ -15,19 +15,19 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockRenderView;
 import net.minecraft.world.LightType;
-import net.minecraft.world.World;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.level.ColorResolver;
 import net.snakefangox.worldshell.client.WorldShellRenderCache;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.world.DelegateWorld;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class WorldShell implements BlockRenderView {
+/** Stores all of the block information needed to render an accurate world in miniature */
+public class Microcosm implements BlockRenderView {
 
-	private final WorldLinkEntity parent;
+	private final WorldShellEntity parent;
 	private final DelegateWorld delegateWorld;
 	private final Map<BlockPos, BlockState> blockStateMap = new LinkedHashMap<>();
 	private final Map<BlockPos, BlockEntity> blockEntityMap = new LinkedHashMap<>();
@@ -38,16 +38,16 @@ public class WorldShell implements BlockRenderView {
 	private final int cacheValidTime;
 	private int cacheResetTimer = 0;
 
-	/** Creates a server sided worldshell, without the render cache */
-	public WorldShell(WorldLinkEntity parent) {
+	/** Creates a server sided microcosm, without the render cache */
+	public Microcosm(WorldShellEntity parent) {
 		this.parent = parent;
 		cache = null;
 		cacheValidTime = 0;
 		delegateWorld = new DelegateWorld(parent.getEntityWorld(), this);
 	}
 
-	/** Creates a client sided worldshell, with the render cache */
-	public WorldShell(WorldLinkEntity parent, int cacheValidTime) {
+	/** Creates a client sided microcosm, with the render cache */
+	public Microcosm(WorldShellEntity parent, int cacheValidTime) {
 		this.parent = parent;
 		cache = new WorldShellRenderCache();
 		this.cacheValidTime = cacheValidTime;

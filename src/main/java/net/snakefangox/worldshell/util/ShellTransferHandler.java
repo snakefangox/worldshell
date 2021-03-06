@@ -11,9 +11,9 @@ import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.snakefangox.worldshell.WSUniversal;
+import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.collision.EntityBounds;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 
@@ -25,13 +25,13 @@ public class ShellTransferHandler {
 
 	private static final int FLAGS = 2 | 16 | 32 | 64;
 
-	public static WorldLinkEntity transferToShell(ServerWorld world, BlockPos core, List<BlockPos> blocks) {
-		return transferToShell(world, core, blocks, new WorldLinkEntity(WSUniversal.WORLD_LINK_ENTITY_TYPE, world));
+	public static WorldShellEntity transferToShell(ServerWorld world, BlockPos core, List<BlockPos> blocks) {
+		return transferToShell(world, core, blocks, new WorldShellEntity(WorldShell.WORLD_LINK_ENTITY_TYPE, world));
 	}
 
 	//TODO Set this up the same way the clone command works
-	public static <T extends WorldLinkEntity> T transferToShell(ServerWorld world, BlockPos core, List<BlockPos> blocks, T worldLinkEntity) {
-		World shellWorld = WSUniversal.getStorageDim(world.getServer());
+	public static <T extends WorldShellEntity> T transferToShell(ServerWorld world, BlockPos core, List<BlockPos> blocks, T worldLinkEntity) {
+		World shellWorld = WorldShell.getStorageDim(world.getServer());
 		ShellStorageData storageData = ShellStorageData.getOrCreate(world.getServer());
 		BlockPos bayPos = storageData.getFreeBay();
 		BlockBox bayBounds = BlockBox.empty();

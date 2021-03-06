@@ -9,27 +9,27 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 
 @Environment(EnvType.CLIENT)
-public class WorldLinkRenderer extends EntityRenderer<WorldLinkEntity> {
+public class WorldLinkRenderer extends EntityRenderer<WorldShellEntity> {
 
 	protected WorldLinkRenderer(EntityRendererFactory.Context ctx) {
 		super(ctx);
 	}
 
 	@Override
-	public Vec3d getPositionOffset(WorldLinkEntity entity, float tickDelta) {
+	public Vec3d getPositionOffset(WorldShellEntity entity, float tickDelta) {
 		return entity.getBlockOffset();
 	}
 
 	@Override
-	public void render(WorldLinkEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-		WorldShellRender.renderWorldShell(entity.getWorldShell(), matrices, entity.getRotation().toFloatQuat(), entity.world.random, vertexConsumers, light);
+	public void render(WorldShellEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+		WorldShellRender.renderWorldShell(entity.getMicrocosm(), matrices, entity.getRotation().toFloatQuat(), entity.world.random, vertexConsumers, light);
 	}
 
 	@Override
-	public Identifier getTexture(WorldLinkEntity entity) {
+	public Identifier getTexture(WorldShellEntity entity) {
 		return PlayerScreenHandler.BLOCK_ATLAS_TEXTURE;
 	}
 }

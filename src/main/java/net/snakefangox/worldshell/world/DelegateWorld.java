@@ -44,7 +44,7 @@ import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.explosion.Explosion;
 import net.minecraft.world.explosion.ExplosionBehavior;
 import net.minecraft.world.level.ColorResolver;
-import net.snakefangox.worldshell.storage.WorldShell;
+import net.snakefangox.worldshell.storage.Microcosm;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -58,9 +58,9 @@ import java.util.stream.Stream;
 public class DelegateWorld extends World {
 
 	private final World proxiedWorld;
-	private final WorldShell proxiedShell;
+	private final Microcosm proxiedShell;
 
-	public DelegateWorld(World proxiedWorld, WorldShell proxiedShell) {
+	public DelegateWorld(World proxiedWorld, Microcosm proxiedShell) {
 		super(null, null, proxiedWorld.getDimension(), null, proxiedWorld.isClient, false, 0);
 		this.proxiedWorld = proxiedWorld;
 		this.proxiedShell = proxiedShell;

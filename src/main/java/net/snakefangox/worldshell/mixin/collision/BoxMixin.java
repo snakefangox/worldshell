@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.mixin;
+package net.snakefangox.worldshell.mixin.collision;
 
 import net.minecraft.util.math.Box;
 import net.snakefangox.worldshell.collision.SpecialBox;

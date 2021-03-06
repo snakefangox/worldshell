@@ -27,7 +27,7 @@ import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.level.ServerWorldProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.snakefangox.worldshell.WSNetworking;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.util.CoordUtil;
@@ -198,10 +198,10 @@ public class ShellStorageWorld extends ServerWorld {
 	}
 
 	public interface EntityPassthroughConsumer {
-		void passthrough(WorldLinkEntity entity, Bay bay);
+		void passthrough(WorldShellEntity entity, Bay bay);
 	}
 
 	public interface EntityPassthroughFunction<T> {
-		T passthrough(WorldLinkEntity entity, Bay bay);
+		T passthrough(WorldShellEntity entity, Bay bay);
 	}
 }

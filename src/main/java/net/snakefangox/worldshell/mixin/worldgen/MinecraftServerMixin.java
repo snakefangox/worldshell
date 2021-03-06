@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.mixin;
+package net.snakefangox.worldshell.mixin.worldgen;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.server.MinecraftServer;

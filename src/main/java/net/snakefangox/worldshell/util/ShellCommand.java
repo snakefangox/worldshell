@@ -5,7 +5,7 @@ import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ public class ShellCommand {
 				if (!source.getWorld().isAir(bp)) blockPosList.add(bp.toImmutable());
 			});
 			if (blockPosList.size() > 0) {
-				WorldLinkEntity entity = ShellTransferHandler.transferToShell(source.getWorld(), blockPosList.get(0), blockPosList);
+				WorldShellEntity entity = ShellTransferHandler.transferToShell(source.getWorld(), blockPosList.get(0), blockPosList);
 				source.getWorld().spawnEntity(entity);
 			}
 		} catch (Exception e) {

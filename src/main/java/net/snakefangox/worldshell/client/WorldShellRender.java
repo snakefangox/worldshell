@@ -15,7 +15,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Quaternion;
-import net.snakefangox.worldshell.storage.WorldShell;
+import net.snakefangox.worldshell.storage.Microcosm;
 
 import java.util.Map;
 import java.util.Random;
@@ -23,18 +23,18 @@ import java.util.Random;
 @Environment(EnvType.CLIENT)
 public class WorldShellRender {
 
-	public static void renderWorldShell(WorldShell worldShell, MatrixStack matrices, Quaternion quaternion, Random random, VertexConsumerProvider vertexConsumers, int light) {
+	public static void renderWorldShell(Microcosm microcosm, MatrixStack matrices, Quaternion quaternion, Random random, VertexConsumerProvider vertexConsumers, int light) {
 		BlockRenderManager renderManager = MinecraftClient.getInstance().getBlockRenderManager();
 		BlockEntityRenderDispatcher beRenderDispatcher = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
 		matrices.push();
 		matrices.multiply(quaternion);
-		worldShell.tickCache();
-		if (!worldShell.isCacheValid()) {
-			worldShell.getCache().reset();
-			renderToCache(worldShell, renderManager, random);
+		microcosm.tickCache();
+		if (!microcosm.isCacheValid()) {
+			microcosm.getCache().reset();
+			renderToCache(microcosm, renderManager, random);
 		}
-		worldShell.getCache().draw(matrices);
-		for (Map.Entry<BlockPos, BlockEntity> entry : worldShell.getBlockEntities()) {
+		microcosm.getCache().draw(matrices);
+		for (Map.Entry<BlockPos, BlockEntity> entry : microcosm.getBlockEntities()) {
 			matrices.push();
 			BlockPos bp = entry.getKey();
 			BlockEntity be = entry.getValue();
@@ -45,10 +45,10 @@ public class WorldShellRender {
 		matrices.pop();
 	}
 
-	private static void renderToCache(WorldShell worldShell, BlockRenderManager renderManager, Random random) {
+	private static void renderToCache(Microcosm microcosm, BlockRenderManager renderManager, Random random) {
 		MatrixStack matrices = new MatrixStack();
-		WorldShellRenderCache renderCache = worldShell.getCache();
-		for (Map.Entry<BlockPos, BlockState> entry : worldShell.getBlocks()) {
+		WorldShellRenderCache renderCache = microcosm.getCache();
+		for (Map.Entry<BlockPos, BlockState> entry : microcosm.getBlocks()) {
 			BlockState bs = entry.getValue();
 			FluidState fs = bs.getFluidState();
 			BlockPos bp = entry.getKey();
@@ -57,15 +57,15 @@ public class WorldShellRender {
 			if (!fs.isEmpty()) {
 				matrices.push();
 				matrices.translate(-(bp.getX() & 15), -(bp.getY() & 15), -(bp.getZ() & 15));
-				renderManager.renderFluid(bp, worldShell, renderCache.get(RenderLayers.getFluidLayer(fs)), fs);
+				renderManager.renderFluid(bp, microcosm, renderCache.get(RenderLayers.getFluidLayer(fs)), fs);
 				matrices.pop();
 			}
 			if (bs.getRenderType() != BlockRenderType.INVISIBLE) {
-				renderManager.renderBlock(bs, bp, worldShell, matrices, renderCache.get(RenderLayers.getBlockLayer(bs)), true, random);
+				renderManager.renderBlock(bs, bp, microcosm, matrices, renderCache.get(RenderLayers.getBlockLayer(bs)), true, random);
 			}
 			matrices.pop();
 		}
 		renderCache.upload();
-		worldShell.markCacheValid();
+		microcosm.markCacheValid();
 	}
 }

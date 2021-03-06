@@ -8,7 +8,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
-import net.snakefangox.worldshell.WSUniversal;
+import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.WorldShellConfig;
 import net.snakefangox.worldshell.util.ShellTransferHandler;
 
@@ -19,7 +19,7 @@ import java.util.Map;
 
 public class ShellStorageData extends PersistentState {
 
-	private static final String ID = WSUniversal.MODID + ":shell_storage";
+	private static final String ID = WorldShell.MODID + ":shell_storage";
 	private static final int WORLD_RADIUS = 30000000;
 	private final Map<Integer, Bay> bays = new HashMap<>();
 	private final List<Integer> emptyBays = new ArrayList<>();
@@ -27,7 +27,7 @@ public class ShellStorageData extends PersistentState {
 	private int freeIndex = 1;
 
 	public static ShellStorageData getOrCreate(MinecraftServer server) {
-		PersistentStateManager stateManager = WSUniversal.getStorageDim(server).getPersistentStateManager();
+		PersistentStateManager stateManager = WorldShell.getStorageDim(server).getPersistentStateManager();
 		return stateManager.getOrCreate(ShellStorageData::fromNbt, ShellStorageData::new, ID);
 	}
 
@@ -87,7 +87,7 @@ public class ShellStorageData extends PersistentState {
 	//TODO call this on entity death
 	public void freeBay(int id, MinecraftServer server) {
 		if (!bays.containsKey(id)) return;
-		World world = WSUniversal.getStorageDim(server);
+		World world = WorldShell.getStorageDim(server);
 		Bay bay = bays.remove(id);
 		emptyBays.add(id);
 		ShellTransferHandler.forEachInBox(bay.getBounds(), (bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));

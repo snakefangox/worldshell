@@ -1,7 +1,5 @@
 package net.snakefangox.worldshell.entity;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -24,20 +22,19 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import net.minecraft.world.entity.EntityChangeListener;
 import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
-import net.snakefangox.worldshell.WSUniversal;
+import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.collision.QuaternionD;
 import net.snakefangox.worldshell.collision.ShellCollisionHull;
 import net.snakefangox.worldshell.storage.Bay;
+import net.snakefangox.worldshell.storage.Microcosm;
 import net.snakefangox.worldshell.storage.ShellStorageData;
-import net.snakefangox.worldshell.storage.WorldShell;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.WSNbtHelper;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
@@ -47,26 +44,26 @@ import java.util.Map;
 import java.util.Optional;
 
 /** The basic entity that links to a shell, renders it's contents and handles interaction */
-public class WorldLinkEntity extends Entity {
+public class WorldShellEntity extends Entity {
 
-	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.BOUNDS);
-	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.VEC3D);
-	private static final TrackedData<QuaternionD> ROTATION = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.QUATERNION);
-	private final WorldShell worldShell;
+	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldShellEntity.class, WSNetworking.BOUNDS);
+	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldShellEntity.class, WSNetworking.VEC3D);
+	private static final TrackedData<QuaternionD> ROTATION = DataTracker.registerData(WorldShellEntity.class, WSNetworking.QUATERNION);
+	private final Microcosm microcosm;
 	private final ShellCollisionHull hull = new ShellCollisionHull(this);
 	private int shellId = 0;
 
-	public WorldLinkEntity(EntityType<?> type, World world) {
+	public WorldShellEntity(EntityType<?> type, World world) {
 		super(type, world);
-		worldShell = world.isClient() ? new WorldShell(this, 120 /*TODO set to builder*/) : new WorldShell(this);
+		microcosm = world.isClient() ? new Microcosm(this, 120 /*TODO set to builder*/) : new Microcosm(this);
 	}
 
-	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<WorldShell.ShellTickInvoker> tickers) {
-		worldShell.setWorld(stateMap, entityMap, tickers);
+	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<Microcosm.ShellTickInvoker> tickers) {
+		microcosm.setWorld(stateMap, entityMap, tickers);
 	}
 
 	public void updateWorldShell(BlockPos pos, BlockState state, CompoundTag tag) {
-		worldShell.setBlock(pos, state, tag);
+		microcosm.setBlock(pos, state, tag);
 	}
 
 	@Override
@@ -80,7 +77,7 @@ public class WorldLinkEntity extends Entity {
 	public void tick() {
 		super.tick();
 		if (world.isClient) {
-			worldShell.tick();
+			microcosm.tick();
 		}
 		hull.calculateCrudeBounds();
 		hull.setRotation(getRotation());
@@ -122,7 +119,7 @@ public class WorldLinkEntity extends Entity {
 
 	@Override
 	public void setListener(EntityChangeListener listener) {
-		super.setListener(new EntityChangeDelegate(this, listener));
+		super.setListener(new EntityTrackingDelegate(this, listener));
 	}
 
 	public Vec3d getBlockOffset() {
@@ -208,10 +205,10 @@ public class WorldLinkEntity extends Entity {
 		if (rayCastResult.getType() == HitResult.Type.BLOCK) {
 			if (interact) {
 				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT, WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, true));
-				return worldShell.getBlockState(rayCastResult.getBlockPos()).onUse(world, player, hand, rayCastResult);
+				return microcosm.getBlockState(rayCastResult.getBlockPos()).onUse(world, player, hand, rayCastResult);
 			} else {
 				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT, WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, false));
-				worldShell.getBlockState(rayCastResult.getBlockPos()).onBlockBreakStart(world, rayCastResult.getBlockPos(), player);
+				microcosm.getBlockState(rayCastResult.getBlockPos()).onBlockBreakStart(world, rayCastResult.getBlockPos(), player);
 				return ActionResult.SUCCESS;
 			}
 		}
@@ -225,7 +222,7 @@ public class WorldLinkEntity extends Entity {
 				cameraPosVec.add(rotationVec.x * 4.5F, rotationVec.y * 4.5F, rotationVec.z * 4.5F));
 		RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntity(this, cameraPosVec),
 				extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
-		return worldShell.raycast(rayCtx);
+		return microcosm.raycast(rayCtx);
 	}
 
 	public void passThroughExplosion(double x, double y, double z, float power, boolean fire, Explosion.DestructionType type) {
@@ -233,7 +230,7 @@ public class WorldLinkEntity extends Entity {
 		Optional<Bay> bay = getBay();
 		if (bay.isPresent()) {
 			Vec3d newExp = CoordUtil.toGlobal(bay.get().getCenter(), CoordUtil.worldToLinkEntity(this, new Vec3d(x, y, z)));
-			WSUniversal.getStorageDim(world.getServer()).createExplosion(null, newExp.x, newExp.y, newExp.z, power, fire, type);
+			WorldShell.getStorageDim(world.getServer()).createExplosion(null, newExp.x, newExp.y, newExp.z, power, fire, type);
 		}
 	}
 
@@ -248,7 +245,7 @@ public class WorldLinkEntity extends Entity {
 		}
 	}
 
-	public WorldShell getWorldShell() {
-		return worldShell;
+	public Microcosm getMicrocosm() {
+		return microcosm;
 	}
 }

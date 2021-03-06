@@ -4,14 +4,19 @@
   "package": "net.snakefangox.worldshell.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "BoxMixin",
-    "ExplosionMixin",
-    "MinecraftServerMixin",
-    "PlayerEntityMixin",
-    "ServerPlayerEntityMixin",
-    "VoxelShapesMixin"
+    "collision.BoxMixin",
+    "entitytracking.EntityTrackingSectionMixin",
+    "passthrough.ExplosionMixin",
+    "worldgen.MinecraftServerMixin",
+    "passthrough.PlayerEntityMixin",
+    "entitytracking.ServerEntityManagerAccess",
+    "passthrough.ServerPlayerEntityMixin",
+    "entitytracking.ServerWorldAccess",
+    "collision.VoxelShapesMixin"
   ],
   "client": [
+    "entitytracking.ClientEntityManagerAccess",
+    "entitytracking.ClientWorldAccess"
   ],
   "server": [
   ],

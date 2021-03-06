@@ -12,15 +12,15 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.storage.WorldShell;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
+import net.snakefangox.worldshell.storage.Microcosm;
 
 import java.util.List;
 import java.util.Map;
 
 public class WorldShellPacketHelper {
 
-	public static PacketByteBuf writeBlock(PacketByteBuf buf, World world, BlockPos pos, WorldLinkEntity entity, BlockPos center) {
+	public static PacketByteBuf writeBlock(PacketByteBuf buf, World world, BlockPos pos, WorldShellEntity entity, BlockPos center) {
 		buf.writeInt(entity.getId());
 		buf.writeLong(CoordUtil.toLocal(center, pos).asLong());
 		buf.writeInt(Block.getRawIdFromState(world.getBlockState(pos)));
@@ -60,7 +60,7 @@ public class WorldShellPacketHelper {
 		return buf;
 	}
 
-	public static PacketByteBuf writeInteract(WorldLinkEntity entity, BlockHitResult hitResult, Hand hand, boolean interactType) {
+	public static PacketByteBuf writeInteract(WorldShellEntity entity, BlockHitResult hitResult, Hand hand, boolean interactType) {
 		PacketByteBuf buf = PacketByteBufs.create();
 		buf.writeInt(entity.getId());
 		buf.writeBlockHitResult(hitResult);
@@ -69,7 +69,7 @@ public class WorldShellPacketHelper {
 		return buf;
 	}
 
-	public static void readBlocks(PacketByteBuf buf, Map<BlockPos, BlockState> posBlockStateMap, Map<BlockPos, BlockEntity> posBlockEntityMap, List<WorldShell.ShellTickInvoker> tickers) {
+	public static void readBlocks(PacketByteBuf buf, Map<BlockPos, BlockState> posBlockStateMap, Map<BlockPos, BlockEntity> posBlockEntityMap, List<Microcosm.ShellTickInvoker> tickers) {
 		int stateCount = buf.readInt();
 		for (int i = 0; i < stateCount; ++i) {
 			BlockState state = Block.getStateFromRawId(buf.readInt());

@@ -1,9 +1,9 @@
-package net.snakefangox.worldshell.mixin;
+package net.snakefangox.worldshell.mixin.passthrough;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.explosion.Explosion;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,8 +45,8 @@ public abstract class ExplosionMixin {
 	@Inject(method = "collectBlocksAndDamageEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;squaredDistanceTo(Lnet/minecraft/util/math/Vec3d;)D", ordinal = 0),
 			locals = LocalCapture.CAPTURE_FAILSOFT)
 	public void collectBlocksAndDamageEntities(CallbackInfo ci, Set set, float q, int r, int s, int t, int u, int v, int w, List list, Vec3d vec3d, int k, Entity entity) {
-		if (entity instanceof WorldLinkEntity) {
-			((WorldLinkEntity) entity).passThroughExplosion(x, y, z, power, createFire, destructionType);
+		if (entity instanceof WorldShellEntity) {
+			((WorldShellEntity) entity).passThroughExplosion(x, y, z, power, createFire, destructionType);
 		}
 	}
 }

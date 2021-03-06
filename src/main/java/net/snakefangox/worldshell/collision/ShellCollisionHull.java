@@ -8,8 +8,8 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.RaycastContext;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.storage.WorldShell;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
+import net.snakefangox.worldshell.storage.Microcosm;
 import net.snakefangox.worldshell.util.CoordUtil;
 
 import java.util.Optional;
@@ -23,7 +23,7 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 
 	private static final float PADDING = 1F;
 	private static final double SMOL = 0.0000001;
-	private final WorldLinkEntity entity;
+	private final WorldShellEntity entity;
 	// These are here to prevent some high volume functions from requiring as many allocations
 	// They're never given to anything outside this class and each function that takes them sets them beforehand
 	private final Vec3dM aabbMax = new Vec3dM();
@@ -33,7 +33,7 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	private Matrix3d matrix;
 	private Matrix3d inverseMatrix;
 
-	public ShellCollisionHull(WorldLinkEntity entity) {
+	public ShellCollisionHull(WorldShellEntity entity) {
 		super(0, 0, 0, 0, 0, 0);
 		this.entity = entity;
 		setRotation(QuaternionD.IDENTITY);
@@ -109,7 +109,7 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 			int xLimit = (int) Math.ceil(aabbMax.x);
 			int yLimit = (int) Math.ceil(aabbMax.y);
 			int zLimit = (int) Math.ceil(aabbMax.z);
-			WorldShell shell = entity.getWorldShell();
+			Microcosm shell = entity.getMicrocosm();
 			BlockPos.Mutable bp = new BlockPos.Mutable();
 			for (int x = (int) aabbMin.x; x < xLimit; ++x) {
 				for (int y = (int) aabbMin.y; y < yLimit; ++y) {
@@ -136,7 +136,7 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		CoordUtil.worldToLinkEntity(entity, pos);
 		Vec3d vec = inverseMatrix.transform(pos.x, pos.y, pos.z);
 		BlockPos bp = new BlockPos(vec);
-		VoxelShape shape = entity.getWorldShell().getBlockState(bp).getCollisionShape(entity.getWorldShell(), bp);
+		VoxelShape shape = entity.getMicrocosm().getBlockState(bp).getCollisionShape(entity.getMicrocosm(), bp);
 		if (shape.isEmpty()) return false;
 		return shape.getBoundingBox().contains(vec.x, vec.y, vec.z);
 	}
@@ -146,7 +146,7 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		Vec3d nMin = inverseMatrix.transform(CoordUtil.worldToLinkEntity(entity, min));
 		Vec3d nMax = inverseMatrix.transform(CoordUtil.worldToLinkEntity(entity, max));
 		RaycastContext ctx = new RaycastContext(nMin, nMax, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity);
-		BlockHitResult hit = entity.getWorldShell().raycast(ctx);
+		BlockHitResult hit = entity.getMicrocosm().raycast(ctx);
 		return hit.getType() == HitResult.Type.MISS ? Optional.empty() : Optional.of(CoordUtil.linkEntityToWorld(CoordUtil.BP_ZERO, entity, hit.getPos()));
 	}
 
@@ -182,6 +182,13 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		return new HullVoxelDelegate(this);
 	}
 
+	/*TODO the story so far
+	  This doesn't properly handle being inside of blocks, if a player is inside a block
+	  and the game checks the axis that isn't pointing towards the block this will say there is 0 distance
+	  even though there is actually some distance.
+	  This is likely causing issues with bouncing around as calculating push force to remove the player from the block returns 0 push
+	  Try modifying this so we don't end up inside blocks. Then try offsetting and ray casting if we are.
+	 */
 	public double calculateMaxDistance(Direction.Axis axis, Box box, double maxDist) {
 		if (Math.abs(maxDist) < SMOL) return 0;
 		OrientedBox orientedBox = calcRotatedBox(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
@@ -194,7 +201,7 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		int xLimit = (int) Math.ceil(aabbMax.x) + 1;
 		int yLimit = (int) Math.ceil(aabbMax.y) + 1;
 		int zLimit = (int) Math.ceil(aabbMax.z) + 1;
-		WorldShell shell = entity.getWorldShell();
+		Microcosm shell = entity.getMicrocosm();
 		BlockPos.Mutable bp = new BlockPos.Mutable();
 		for (int x = (int) aabbMin.x - 1; x < xLimit; ++x) {
 			for (int y = (int) aabbMin.y - 1; y < yLimit; ++y) {

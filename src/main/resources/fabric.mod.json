@@ -16,7 +16,7 @@
       "net.snakefangox.worldshell.client.WSClient"
     ],
     "main": [
-      "net.snakefangox.worldshell.WSUniversal"
+      "net.snakefangox.worldshell.WorldShell"
     ]
   },
   "mixins": [

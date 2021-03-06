@@ -22,27 +22,29 @@ import net.minecraft.world.biome.source.FixedBiomeSource;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.mixininterface.DynamicWorldGen;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.util.DynamicWorldRegister;
 import net.snakefangox.worldshell.util.ShellCommand;
 import net.snakefangox.worldshell.world.ShellStorageWorld;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.function.Supplier;
 
-public class WSUniversal implements ModInitializer {
+public class WorldShell implements ModInitializer {
 
 	public static final String MODID = "worldshell";
+	public static final Logger LOGGER = LogManager.getLogger();
 
 	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.DIMENSION, new Identifier(MODID, "shell_storage"));
-	public static final EntityType<WorldLinkEntity> WORLD_LINK_ENTITY_TYPE = FabricEntityTypeBuilder.<WorldLinkEntity>create(SpawnGroup.MISC, WorldLinkEntity::new)
+	public static final EntityType<WorldShellEntity> WORLD_LINK_ENTITY_TYPE = FabricEntityTypeBuilder.<WorldShellEntity>create(SpawnGroup.MISC, WorldShellEntity::new)
 			.dimensions(EntityDimensions.changing(1, 1)).build();
 	public static final Block PLACEHOLDER = new Block(FabricBlockSettings.of(Material.BARRIER).strength(0, 0).nonOpaque().breakInstantly().dropsNothing());
 
 	public static ServerWorld getStorageDim(MinecraftServer server) {
-		return server.getWorld(WSUniversal.STORAGE_DIM);
+		return server.getWorld(WorldShell.STORAGE_DIM);
 	}
 
 	@Override

@@ -9,8 +9,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
-import net.snakefangox.worldshell.WSUniversal;
-import net.snakefangox.worldshell.entity.WorldLinkEntity;
+import net.snakefangox.worldshell.WorldShell;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.ShellTransferHandler;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
@@ -31,7 +31,7 @@ public class Bay {
 	private BlockBox bounds;
 
 	//The entity changes to this shell should propagate to
-	private Optional<WorldLinkEntity> linkedEntity = Optional.empty();
+	private Optional<WorldShellEntity> linkedEntity = Optional.empty();
 
 	public Bay(BlockPos center, BlockBox bounds) {
 		this.center = center;
@@ -48,7 +48,7 @@ public class Bay {
 	}
 
 	public PacketByteBuf createClientPacket(MinecraftServer server, PacketByteBuf buf) {
-		World world = WSUniversal.getStorageDim(server);
+		World world = WorldShell.getStorageDim(server);
 		Map<BlockState, List<BlockPos>> stateListMap = new HashMap<>();
 		List<BlockEntity> blockEntities = new ArrayList<>();
 		ShellTransferHandler.forEachInBox(bounds, (bp) -> {
@@ -71,7 +71,7 @@ public class Bay {
 	}
 
 	public void loadAllChunks(MinecraftServer server) {
-		ServerWorld world = WSUniversal.getStorageDim(server);
+		ServerWorld world = WorldShell.getStorageDim(server);
 		ChunkPos.stream(new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.minX), ChunkSectionPos.getSectionCoord(bounds.minZ)),
 				new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.maxX), ChunkSectionPos.getSectionCoord(bounds.maxZ)))
 				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, true));
@@ -104,15 +104,15 @@ public class Bay {
 		return bounds;
 	}
 
-	public void linkEntity(@NotNull WorldLinkEntity worldLinkEntity) {
-		linkedEntity = Optional.of(worldLinkEntity);
-		if (worldLinkEntity.getWorldShell().isEmpty()) {
-			fillServerWorldShell(worldLinkEntity);
+	public void linkEntity(@NotNull WorldShellEntity worldShellEntity) {
+		linkedEntity = Optional.of(worldShellEntity);
+		if (worldShellEntity.getMicrocosm().isEmpty()) {
+			fillServerWorldShell(worldShellEntity);
 		}
 	}
 
-	private void fillServerWorldShell(WorldLinkEntity entity) {
-		World world = WSUniversal.getStorageDim(entity.world.getServer());
+	private void fillServerWorldShell(WorldShellEntity entity) {
+		World world = WorldShell.getStorageDim(entity.world.getServer());
 		Map<BlockPos, BlockState> stateMap = new HashMap<>();
 		ShellTransferHandler.forEachInBox(bounds, (bp) -> {
 			BlockState state = world.getBlockState(bp);
@@ -122,7 +122,7 @@ public class Bay {
 		entity.initializeWorldShell(stateMap, null, null);
 	}
 
-	public Optional<WorldLinkEntity> getLinkedEntity() {
+	public Optional<WorldShellEntity> getLinkedEntity() {
 		return linkedEntity;
 	}
 
