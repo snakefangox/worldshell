@@ -50,10 +50,9 @@ public class WorldLinkEntity extends Entity {
 	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.BOUNDS);
 	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.VEC3D);
 	private static final TrackedData<QuaternionD> ROTATION = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.QUATERNION);
-
-	private int shellId = 0;
 	private final WorldShell worldShell = new WorldShell(this, 120 /*TODO set to builder*/);
 	private final ShellCollisionHull hull = new ShellCollisionHull(this);
+	private int shellId = 0;
 
 	public WorldLinkEntity(EntityType<?> type, World world) {
 		super(type, world);
@@ -68,21 +67,97 @@ public class WorldLinkEntity extends Entity {
 	}
 
 	@Override
-	public void onStartedTrackingBy(ServerPlayerEntity player) {
-		Optional<Bay> bay = getBay();
-		if (bay.isPresent()) {
-			PacketByteBuf buf = PacketByteBufs.create();
-			buf.writeInt(getId());
-			bay.get().createClientPacket(world.getServer(), buf);
-			ServerPlayNetworking.send(player, WSNetworking.SHELL_DATA, buf);
-		}
-	}
-
-	@Override
 	protected void initDataTracker() {
 		getDataTracker().startTracking(ENTITY_BOUNDS, new EntityBounds(1, 1, 1, false));
 		getDataTracker().startTracking(BLOCK_OFFSET, new Vec3d(0, 0, 0));
 		getDataTracker().startTracking(ROTATION, new QuaternionD(0, 0, -30, true));
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (world.isClient) {
+			worldShell.tick();
+		}
+		hull.calculateCrudeBounds();
+		hull.setRotation(getRotation());
+	}
+
+	public QuaternionD getRotation() {
+		return getDataTracker().get(ROTATION);
+	}
+
+	protected void setRotation(QuaternionD quaternion) {
+		getDataTracker().set(ROTATION, quaternion);
+	}
+
+	@Override
+	public boolean collides() {
+		return true;
+	}
+
+	@Override
+	protected void readCustomDataFromTag(CompoundTag tag) {
+		setShellId(tag.getInt("shellId"));
+		setBlockOffset(WSNbtHelper.getVec3d(tag, "blockOffset"));
+		float length = tag.getFloat("length");
+		float width = tag.getFloat("width");
+		float height = tag.getFloat("height");
+		setDimensions(new EntityBounds(length, height, width, false));
+		setRotation(WSNbtHelper.getQuaternion(tag, "rotation"));
+
+	}
+
+	@Override
+	protected void writeCustomDataToTag(CompoundTag tag) {
+		tag.putInt("shellId", shellId);
+		WSNbtHelper.putVec3d(tag, getBlockOffset(), "blockOffset");
+		tag.putFloat("length", getDimensions().length);
+		tag.putFloat("width", getDimensions().width);
+		tag.putFloat("height", getDimensions().height);
+		WSNbtHelper.putQuaternion(tag, "rotation", getRotation());
+	}
+
+	public Vec3d getBlockOffset() {
+		return getDataTracker().get(BLOCK_OFFSET);
+	}
+
+	public EntityBounds getDimensions() {
+		return getDataTracker().get(ENTITY_BOUNDS);
+	}
+
+	public void setDimensions(EntityBounds entityBounds) {
+		getDataTracker().set(ENTITY_BOUNDS, entityBounds);
+	}
+
+	public void setDimensions(EntityDimensions ed) {
+		getDataTracker().set(ENTITY_BOUNDS, new EntityBounds(ed.width, ed.width, ed.height, ed.fixed));
+	}
+
+	public void setBlockOffset(Vec3d offset) {
+		getDataTracker().set(BLOCK_OFFSET, offset);
+	}
+
+	@Override
+	public ActionResult interact(PlayerEntity player, Hand hand) {
+		if (world.isClient()) {
+			return handleInteraction(player, hand, true);
+		}
+		return super.interact(player, hand);
+	}
+
+	@Override
+	public boolean isCollidable() {
+		return true;
+	}
+
+	@Override
+	public boolean handleAttack(Entity attacker) {
+		if (world.isClient() && attacker instanceof PlayerEntity) {
+			PlayerEntity player = (PlayerEntity) attacker;
+			handleInteraction(player, Hand.MAIN_HAND, false);
+		}
+		return super.handleAttack(attacker);
 	}
 
 	@Override
@@ -100,8 +175,20 @@ public class WorldLinkEntity extends Entity {
 		return hull;
 	}
 
-	public EntityBounds getDimensions() {
-		return getDataTracker().get(ENTITY_BOUNDS);
+	@Override
+	public void onStartedTrackingBy(ServerPlayerEntity player) {
+		Optional<Bay> bay = getBay();
+		if (bay.isPresent()) {
+			PacketByteBuf buf = PacketByteBufs.create();
+			buf.writeInt(getId());
+			bay.get().createClientPacket(world.getServer(), buf);
+			ServerPlayNetworking.send(player, WSNetworking.SHELL_DATA, buf);
+		}
+	}
+
+	@Override
+	public Packet<?> createSpawnPacket() {
+		return new EntitySpawnS2CPacket(this);
 	}
 
 	@Override
@@ -109,55 +196,8 @@ public class WorldLinkEntity extends Entity {
 		return getDataTracker().get(ENTITY_BOUNDS);
 	}
 
-	public void setDimensions(EntityBounds entityBounds) {
-		getDataTracker().set(ENTITY_BOUNDS, entityBounds);
-	}
-
-	public void setDimensions(EntityDimensions ed) {
-		getDataTracker().set(ENTITY_BOUNDS, new EntityBounds(ed.width, ed.width, ed.height, ed.fixed));
-	}
-
-	public Vec3d getBlockOffset() {
-		return getDataTracker().get(BLOCK_OFFSET);
-	}
-
-	public void setBlockOffset(Vec3d offset) {
-		getDataTracker().set(BLOCK_OFFSET, offset);
-	}
-
-	public QuaternionD getRotation() {
-		return getDataTracker().get(ROTATION);
-	}
-
-	protected void setRotation(QuaternionD quaternion) {
-		getDataTracker().set(ROTATION, quaternion);
-	}
-
-	@Override
-	public boolean isCollidable() {
-		return true;
-	}
-
-	@Override
-	public boolean collides() {
-		return true;
-	}
-
-	@Override
-	public ActionResult interact(PlayerEntity player, Hand hand) {
-		if (world.isClient()) {
-			return handleInteraction(player, hand, true);
-		}
-		return super.interact(player, hand);
-	}
-
-	@Override
-	public boolean handleAttack(Entity attacker) {
-		if (world.isClient() && attacker instanceof PlayerEntity) {
-			PlayerEntity player = (PlayerEntity) attacker;
-			handleInteraction(player, Hand.MAIN_HAND, false);
-		}
-		return super.handleAttack(attacker);
+	public Optional<Bay> getBay() {
+		return Optional.ofNullable(ShellStorageData.getOrCreate(world.getServer()).getBay(shellId));
 	}
 
 	protected ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean interact) {
@@ -194,43 +234,6 @@ public class WorldLinkEntity extends Entity {
 		}
 	}
 
-	@Override
-	public void tick() {
-		super.tick();
-		if (world.isClient) {
-			worldShell.tick();
-		}
-		hull.calculateCrudeBounds();
-		hull.setRotation(getRotation());
-	}
-
-	@Override
-	protected void readCustomDataFromTag(CompoundTag tag) {
-		setShellId(tag.getInt("shellId"));
-		setBlockOffset(WSNbtHelper.getVec3d(tag, "blockOffset"));
-		float length = tag.getFloat("length");
-		float width = tag.getFloat("width");
-		float height = tag.getFloat("height");
-		setDimensions(new EntityBounds(length, height, width, false));
-		setRotation(WSNbtHelper.getQuaternion(tag, "rotation"));
-
-	}
-
-	@Override
-	protected void writeCustomDataToTag(CompoundTag tag) {
-		tag.putInt("shellId", shellId);
-		WSNbtHelper.putVec3d(tag, getBlockOffset(), "blockOffset");
-		tag.putFloat("length", getDimensions().length);
-		tag.putFloat("width", getDimensions().width);
-		tag.putFloat("height", getDimensions().height);
-		WSNbtHelper.putQuaternion(tag, "rotation", getRotation());
-	}
-
-	@Override
-	public Packet<?> createSpawnPacket() {
-		return new EntitySpawnS2CPacket(this);
-	}
-
 	public int getShellId() {
 		return shellId;
 	}
@@ -240,10 +243,6 @@ public class WorldLinkEntity extends Entity {
 		if (!world.isClient() && shellId > 0) {
 			ShellStorageData.getOrCreate(world.getServer()).getBay(shellId).linkEntity(this);
 		}
-	}
-
-	public Optional<Bay> getBay() {
-		return Optional.ofNullable(ShellStorageData.getOrCreate(world.getServer()).getBay(shellId));
 	}
 
 	public WorldShell getWorldShell() {

@@ -45,13 +45,13 @@ public class ScreenHandlerCheck {
 		}
 
 		@Override
-		public double squaredDistanceTo(Vec3d vector) {
-			return getTransformedDistance(vector.x, vector.y, vector.z);
+		public double squaredDistanceTo(double x, double y, double z) {
+			return getTransformedDistance(x, y, z);
 		}
 
 		@Override
-		public double squaredDistanceTo(double x, double y, double z) {
-			return getTransformedDistance(x, y, z);
+		public double squaredDistanceTo(Vec3d vector) {
+			return getTransformedDistance(vector.x, vector.y, vector.z);
 		}
 
 		public double getTransformedDistance(double x, double y, double z) {

@@ -66,40 +66,6 @@ public class ShellStorageWorld extends ServerWorld {
 	}
 
 	@Override
-	public boolean spawnEntity(Entity entity) {
-		return passCallToEntity(entity.getBlockPos(), false, (worldLinkEntity, bay) -> {
-			Vec3d newPos = bay.toEntityCoordSpace(entity.getPos());
-			entity.setPosition(newPos.x, newPos.y, newPos.z);
-			entity.world = worldLinkEntity.getEntityWorld();
-			return worldLinkEntity.getEntityWorld().spawnEntity(entity);
-		});
-	}
-
-	@Override
-	public <T extends ParticleEffect> int spawnParticles(T particle, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
-		return passCallToEntity(new BlockPos(x, y, z), 0, (entity, bay) -> {
-			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
-			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(particle, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
-		});
-	}
-
-	@Override
-	public <T extends ParticleEffect> boolean spawnParticles(ServerPlayerEntity viewer, T particle, boolean force, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
-		return passCallToEntity(new BlockPos(x, y, z), false, (entity, bay) -> {
-			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
-			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(viewer, particle, force, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
-		});
-	}
-
-	@Override
-	public void playSound(@Nullable PlayerEntity player, double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch) {
-		passCallToEntity(new BlockPos(x, y, z), (entity, bay) -> {
-			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
-			entity.getEntityWorld().playSound(null, newPos.x, newPos.y, newPos.z, sound, category, volume, pitch);
-		});
-	}
-
-	@Override
 	public void playSound(@Nullable PlayerEntity player, BlockPos pos, SoundEvent sound, SoundCategory category, float volume, float pitch) {
 		passCallToEntity(pos, (entity, bay) -> {
 			BlockPos newPos = bay.toEntityCoordSpace(pos);
@@ -116,20 +82,54 @@ public class ShellStorageWorld extends ServerWorld {
 	}
 
 	@Override
+	public List<Entity> getOtherEntities(@Nullable Entity except, Box box, Predicate<? super Entity> predicate) {
+		return passCallToEntity(new BlockPos(box.minX, box.minY, box.minZ), new ArrayList<>(), ((entity, bay) -> {
+			Vec3d newMin = bay.toEntityCoordSpace(box.minX, box.minY, box.minZ);
+			Vec3d newMax = bay.toEntityCoordSpace(box.maxX, box.maxY, box.maxZ);
+			return entity.getEntityWorld().getOtherEntities(except, new Box(newMin, newMax), predicate);
+		}));
+	}
+
+	@Override
+	public <T extends Entity> List<T> getEntitiesByType(class_5575<Entity, T> arg, Box box, Predicate<? super T> predicate) {
+		return passCallToEntity(new BlockPos(box.minX, box.minY, box.minZ), new ArrayList<>(), ((entity, bay) -> {
+			Vec3d newMin = bay.toEntityCoordSpace(box.minX, box.minY, box.minZ);
+			Vec3d newMax = bay.toEntityCoordSpace(box.maxX, box.maxY, box.maxZ);
+			return entity.getEntityWorld().getEntitiesByType(arg, new Box(newMin, newMax), predicate);
+		}));
+	}
+
+	private void passCallToEntity(BlockPos pos, EntityPassthroughConsumer consumer) {
+		Bay bay = cachedBayData.getBay(cachedBayData.getBayIdFromPos(pos));
+		if (bay != null && bay.getLinkedEntity().isPresent()) {
+			consumer.passthrough(bay.getLinkedEntity().get(), bay);
+		}
+	}
+
+	@Override
+	public boolean spawnEntity(Entity entity) {
+		return passCallToEntity(entity.getBlockPos(), false, (worldLinkEntity, bay) -> {
+			Vec3d newPos = bay.toEntityCoordSpace(entity.getPos());
+			entity.setPosition(newPos.x, newPos.y, newPos.z);
+			entity.world = worldLinkEntity.getEntityWorld();
+			return worldLinkEntity.getEntityWorld().spawnEntity(entity);
+		});
+	}
+
+	@Override
+	public void playSound(@Nullable PlayerEntity player, double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch) {
+		passCallToEntity(new BlockPos(x, y, z), (entity, bay) -> {
+			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
+			entity.getEntityWorld().playSound(null, newPos.x, newPos.y, newPos.z, sound, category, volume, pitch);
+		});
+	}
+
+	@Override
 	public void syncGlobalEvent(int eventId, BlockPos pos, int data) {
 		super.syncGlobalEvent(eventId, pos, data);
 		passCallToEntity(pos, (entity, bay) -> {
 			BlockPos newPos = bay.toEntityCoordSpace(pos);
 			entity.getEntityWorld().syncGlobalEvent(eventId, newPos, data);
-		});
-	}
-
-	@Override
-	public void syncWorldEvent(int eventId, BlockPos pos, int data) {
-		super.syncWorldEvent(eventId, pos, data);
-		passCallToEntity(pos, (entity, bay) -> {
-			BlockPos newPos = bay.toEntityCoordSpace(pos);
-			entity.getEntityWorld().syncWorldEvent(eventId, newPos, data);
 		});
 	}
 
@@ -157,21 +157,19 @@ public class ShellStorageWorld extends ServerWorld {
 	}
 
 	@Override
-	public <T extends Entity> List<T> getEntitiesByType(class_5575<Entity, T> arg, Box box, Predicate<? super T> predicate) {
-		return passCallToEntity(new BlockPos(box.minX, box.minY, box.minZ), new ArrayList<>(), ((entity, bay) -> {
-			Vec3d newMin = bay.toEntityCoordSpace(box.minX, box.minY, box.minZ);
-			Vec3d newMax = bay.toEntityCoordSpace(box.maxX, box.maxY, box.maxZ);
-			return entity.getEntityWorld().getEntitiesByType(arg, new Box(newMin, newMax), predicate);
-		}));
+	public <T extends ParticleEffect> int spawnParticles(T particle, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
+		return passCallToEntity(new BlockPos(x, y, z), 0, (entity, bay) -> {
+			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
+			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(particle, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
+		});
 	}
 
 	@Override
-	public List<Entity> getOtherEntities(@Nullable Entity except, Box box, Predicate<? super Entity> predicate) {
-		return passCallToEntity(new BlockPos(box.minX, box.minY, box.minZ), new ArrayList<>(), ((entity, bay) -> {
-			Vec3d newMin = bay.toEntityCoordSpace(box.minX, box.minY, box.minZ);
-			Vec3d newMax = bay.toEntityCoordSpace(box.maxX, box.maxY, box.maxZ);
-			return entity.getEntityWorld().getOtherEntities(except, new Box(newMin, newMax), predicate);
-		}));
+	public <T extends ParticleEffect> boolean spawnParticles(ServerPlayerEntity viewer, T particle, boolean force, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
+		return passCallToEntity(new BlockPos(x, y, z), false, (entity, bay) -> {
+			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
+			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(viewer, particle, force, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
+		});
 	}
 
 	private <T> T passCallToEntity(BlockPos pos, T defaultVal, EntityPassthroughFunction<T> consumer) {
@@ -182,19 +180,21 @@ public class ShellStorageWorld extends ServerWorld {
 		return defaultVal;
 	}
 
-	private void passCallToEntity(BlockPos pos, EntityPassthroughConsumer consumer) {
-		Bay bay = cachedBayData.getBay(cachedBayData.getBayIdFromPos(pos));
-		if (bay != null && bay.getLinkedEntity().isPresent()) {
-			consumer.passthrough(bay.getLinkedEntity().get(), bay);
-		}
-	}
-
-	public void setCachedBayData(ShellStorageData cachedBayData) {
-		this.cachedBayData = cachedBayData;
+	@Override
+	public void syncWorldEvent(int eventId, BlockPos pos, int data) {
+		super.syncWorldEvent(eventId, pos, data);
+		passCallToEntity(pos, (entity, bay) -> {
+			BlockPos newPos = bay.toEntityCoordSpace(pos);
+			entity.getEntityWorld().syncWorldEvent(eventId, newPos, data);
+		});
 	}
 
 	public ShellStorageData getCachedBayData() {
 		return cachedBayData;
+	}
+
+	public void setCachedBayData(ShellStorageData cachedBayData) {
+		this.cachedBayData = cachedBayData;
 	}
 
 	public interface EntityPassthroughConsumer {

@@ -1,7 +1,6 @@
 package net.snakefangox.worldshell.util;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec3d;
 import net.snakefangox.worldshell.collision.QuaternionD;
 

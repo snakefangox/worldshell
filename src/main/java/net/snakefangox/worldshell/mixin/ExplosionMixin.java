@@ -18,23 +18,35 @@ import java.util.Set;
 @Mixin(Explosion.class)
 public abstract class ExplosionMixin {
 
-	@Shadow @Final private float power;
+	@Shadow
+	@Final
+	private float power;
 
-	@Shadow @Final private boolean createFire;
+	@Shadow
+	@Final
+	private boolean createFire;
 
-	@Shadow @Final private double x;
+	@Shadow
+	@Final
+	private double x;
 
-	@Shadow @Final private double y;
+	@Shadow
+	@Final
+	private double y;
 
-	@Shadow @Final private double z;
+	@Shadow
+	@Final
+	private double z;
 
-	@Shadow @Final private Explosion.DestructionType destructionType;
+	@Shadow
+	@Final
+	private Explosion.DestructionType destructionType;
 
 	@Inject(method = "collectBlocksAndDamageEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;squaredDistanceTo(Lnet/minecraft/util/math/Vec3d;)D", ordinal = 0),
 			locals = LocalCapture.CAPTURE_FAILSOFT)
 	public void collectBlocksAndDamageEntities(CallbackInfo ci, Set set, float q, int r, int s, int t, int u, int v, int w, List list, Vec3d vec3d, int k, Entity entity) {
 		if (entity instanceof WorldLinkEntity) {
-			((WorldLinkEntity)entity).passthroughExplosion(x, y, z, power, createFire, destructionType);
+			((WorldLinkEntity) entity).passthroughExplosion(x, y, z, power, createFire, destructionType);
 		}
 	}
 }

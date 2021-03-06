@@ -36,6 +36,15 @@ public class EntityBounds extends EntityDimensions {
 	}
 
 	@Override
+	public int hashCode() {
+		int result = (length != +0.0f ? Float.floatToIntBits(length) : 0);
+		result = 31 * result + (width != +0.0f ? Float.floatToIntBits(width) : 0);
+		result = 31 * result + (height != +0.0f ? Float.floatToIntBits(height) : 0);
+		result = 31 * result + (fixed ? 1 : 0);
+		return result;
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (!(o instanceof EntityBounds)) return false;
@@ -46,14 +55,5 @@ public class EntityBounds extends EntityDimensions {
 		if (Float.compare(that.width, width) != 0) return false;
 		if (Float.compare(that.height, height) != 0) return false;
 		return fixed == that.fixed;
-	}
-
-	@Override
-	public int hashCode() {
-		int result = (length != +0.0f ? Float.floatToIntBits(length) : 0);
-		result = 31 * result + (width != +0.0f ? Float.floatToIntBits(width) : 0);
-		result = 31 * result + (height != +0.0f ? Float.floatToIntBits(height) : 0);
-		result = 31 * result + (fixed ? 1 : 0);
-		return result;
 	}
 }

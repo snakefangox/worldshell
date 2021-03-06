@@ -31,10 +31,6 @@ public class EmptyChunkGenerator extends ChunkGenerator {
 	}
 
 	@Override
-	public void generateFeatures(ChunkRegion region, StructureAccessor accessor) {
-	}
-
-	@Override
 	protected Codec<? extends ChunkGenerator> getCodec() {
 		return CODEC;
 	}
@@ -42,6 +38,10 @@ public class EmptyChunkGenerator extends ChunkGenerator {
 	@Override
 	public ChunkGenerator withSeed(long seed) {
 		return this;
+	}
+
+	@Override
+	public void generateFeatures(ChunkRegion region, StructureAccessor accessor) {
 	}
 
 	@Override

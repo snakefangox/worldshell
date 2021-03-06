@@ -105,6 +105,11 @@ public class CoordUtil {
 		return list;
 	}
 
+	public static void transformBoxCoordSpace(BlockPos current, BlockPos target, BlockBox box) {
+		makeBoxLocal(current, box);
+		makeBoxGlobal(target, box);
+	}
+
 	public static void makeBoxLocal(BlockPos current, BlockBox box) {
 		box.maxX = box.maxX - current.getX();
 		box.minX = box.minX - current.getX();
@@ -121,10 +126,5 @@ public class CoordUtil {
 		box.minY = box.minY + current.getY();
 		box.maxZ = box.maxZ + current.getZ();
 		box.minZ = box.minZ + current.getZ();
-	}
-
-	public static void transformBoxCoordSpace(BlockPos current, BlockPos target, BlockBox box) {
-		makeBoxLocal(current, box);
-		makeBoxGlobal(target, box);
 	}
 }

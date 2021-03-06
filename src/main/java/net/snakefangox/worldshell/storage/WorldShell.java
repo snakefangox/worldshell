@@ -49,6 +49,16 @@ public class WorldShell implements BlockRenderView {
 		return blockEntityMap.get(pos);
 	}
 
+	@Override
+	public BlockState getBlockState(BlockPos pos) {
+		return blockStateMap.containsKey(pos) ? blockStateMap.get(pos) : Blocks.AIR.getDefaultState();
+	}
+
+	@Override
+	public FluidState getFluidState(BlockPos pos) {
+		return blockStateMap.containsKey(pos) ? blockStateMap.get(pos).getFluidState() : Fluids.EMPTY.getDefaultState();
+	}
+
 	public void setWorld(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<ShellTickInvoker> tickers) {
 		blockStateMap.putAll(stateMap);
 		if (entityMap != null) {
@@ -62,6 +72,10 @@ public class WorldShell implements BlockRenderView {
 		if (tickers != null)
 			tickInvokers.addAll(tickers);
 		markCacheInvalid();
+	}
+
+	public void markCacheInvalid() {
+		cacheResetTimer = 0;
 	}
 
 	public Set<Map.Entry<BlockPos, BlockState>> getBlocks() {
@@ -89,23 +103,8 @@ public class WorldShell implements BlockRenderView {
 		markCacheInvalid();
 	}
 
-	private BlockPos toWorldPos(BlockPos pos) {
-		Vec3d offset = parent.getBlockOffset();
-		return reusablePos.set(pos).add(offset.x, offset.y, offset.z).add(parent.getBlockPos());
-	}
-
 	public void addBlockEvent(BlockPos pos, int type, int data) {
 		getBlockState(pos).onSyncedBlockEvent(proxyWorld, pos, type, data);
-	}
-
-	@Override
-	public BlockState getBlockState(BlockPos pos) {
-		return blockStateMap.containsKey(pos) ? blockStateMap.get(pos) : Blocks.AIR.getDefaultState();
-	}
-
-	@Override
-	public FluidState getFluidState(BlockPos pos) {
-		return blockStateMap.containsKey(pos) ? blockStateMap.get(pos).getFluidState() : Fluids.EMPTY.getDefaultState();
 	}
 
 	@Override
@@ -119,6 +118,11 @@ public class WorldShell implements BlockRenderView {
 	}
 
 	@Override
+	public int getColor(BlockPos pos, ColorResolver colorResolver) {
+		return parent.getEntityWorld().getColor(toWorldPos(pos), colorResolver);
+	}
+
+	@Override
 	public int getLightLevel(LightType type, BlockPos pos) {
 		return getLightingProvider().get(type).getLightLevel(toWorldPos(pos));
 	}
@@ -128,14 +132,14 @@ public class WorldShell implements BlockRenderView {
 		return getLightingProvider().getLight(toWorldPos(pos), ambientDarkness);
 	}
 
-	@Override
-	public boolean isSkyVisible(BlockPos pos) {
-		return getLightLevel(LightType.SKY, toWorldPos(pos)) >= this.getMaxLightLevel();
+	private BlockPos toWorldPos(BlockPos pos) {
+		Vec3d offset = parent.getBlockOffset();
+		return reusablePos.set(pos).add(offset.x, offset.y, offset.z).add(parent.getBlockPos());
 	}
 
 	@Override
-	public int getColor(BlockPos pos, ColorResolver colorResolver) {
-		return parent.getEntityWorld().getColor(toWorldPos(pos), colorResolver);
+	public boolean isSkyVisible(BlockPos pos) {
+		return getLightLevel(LightType.SKY, toWorldPos(pos)) >= this.getMaxLightLevel();
 	}
 
 	public void tick() {
@@ -143,12 +147,12 @@ public class WorldShell implements BlockRenderView {
 	}
 
 	@Override
-	public int getBottomSectionLimit() {
+	public int getSectionCount() {
 		return parent.getEntityWorld().getBottomSectionLimit();
 	}
 
 	@Override
-	public int getSectionCount() {
+	public int getBottomSectionLimit() {
 		return parent.getEntityWorld().getBottomSectionLimit();
 	}
 
@@ -158,10 +162,6 @@ public class WorldShell implements BlockRenderView {
 
 	public boolean isCacheValid() {
 		return cacheResetTimer > 0;
-	}
-
-	public void markCacheInvalid() {
-		cacheResetTimer = 0;
 	}
 
 	public void markCacheValid() {
@@ -198,6 +198,11 @@ public class WorldShell implements BlockRenderView {
 		}
 
 		@Override
+		public int hashCode() {
+			return be.hashCode();
+		}
+
+		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			if (!(o instanceof ShellTickInvoker)) return false;
@@ -205,11 +210,6 @@ public class WorldShell implements BlockRenderView {
 			ShellTickInvoker invoker = (ShellTickInvoker) o;
 
 			return be.equals(invoker.be);
-		}
-
-		@Override
-		public int hashCode() {
-			return be.hashCode();
 		}
 	}
 }

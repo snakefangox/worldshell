@@ -69,30 +69,13 @@ public class ProxyWorld extends World {
 		this.proxiedShell = proxiedShell;
 	}
 
-	@Override
-	@Nullable
-	public BlockEntity getBlockEntity(BlockPos pos) {
-		return proxiedShell.getBlockEntity(pos);
-	}
-
-	@Override
-	public BlockState getBlockState(BlockPos pos) {
-		return proxiedShell.getBlockState(pos);
-	}
-
-	@Override
-	public FluidState getFluidState(BlockPos pos) {
-		return proxiedShell.getFluidState(pos);
+	public static boolean isValid(BlockPos pos) {
+		return World.isValid(pos);
 	}
 
 	@Override
 	public float getBrightness(Direction direction, boolean shaded) {
 		return proxiedShell.getBrightness(direction, shaded);
-	}
-
-	@Override
-	public LightingProvider getLightingProvider() {
-		return proxiedShell.getLightingProvider();
 	}
 
 	@Override
@@ -108,21 +91,6 @@ public class ProxyWorld extends World {
 	@Override
 	public boolean isSkyVisible(BlockPos pos) {
 		return proxiedShell.isSkyVisible(pos);
-	}
-
-	@Override
-	public int getColor(BlockPos pos, ColorResolver colorResolver) {
-		return proxiedShell.getColor(pos, colorResolver);
-	}
-
-	@Override
-	public int getBottomSectionLimit() {
-		return proxiedShell.getBottomSectionLimit();
-	}
-
-	@Override
-	public int getSectionCount() {
-		return proxiedShell.getSectionCount();
 	}
 
 	@Override
@@ -227,10 +195,6 @@ public class ProxyWorld extends World {
 		return proxiedWorld.isInBuildLimit(pos);
 	}
 
-	public static boolean isValid(BlockPos pos) {
-		return World.isValid(pos);
-	}
-
 	@Override
 	public WorldChunk getWorldChunk(BlockPos pos) {
 		return proxiedWorld.getWorldChunk(pos);
@@ -313,6 +277,21 @@ public class ProxyWorld extends World {
 	}
 
 	@Override
+	public LightingProvider getLightingProvider() {
+		return proxiedShell.getLightingProvider();
+	}
+
+	@Override
+	public BlockState getBlockState(BlockPos pos) {
+		return proxiedShell.getBlockState(pos);
+	}
+
+	@Override
+	public FluidState getFluidState(BlockPos pos) {
+		return proxiedShell.getFluidState(pos);
+	}
+
+	@Override
 	public boolean isDay() {
 		return proxiedWorld.isDay();
 	}
@@ -391,6 +370,12 @@ public class ProxyWorld extends World {
 	@Override
 	public Explosion createExplosion(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionBehavior behavior, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType destructionType) {
 		return proxiedWorld.createExplosion(entity, damageSource, behavior, x, y, z, power, createFire, destructionType);
+	}
+
+	@Override
+	@Nullable
+	public BlockEntity getBlockEntity(BlockPos pos) {
+		return proxiedShell.getBlockEntity(pos);
 	}
 
 	@Override
@@ -900,6 +885,11 @@ public class ProxyWorld extends World {
 	}
 
 	@Override
+	public int getColor(BlockPos pos, ColorResolver colorResolver) {
+		return proxiedShell.getColor(pos, colorResolver);
+	}
+
+	@Override
 	public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
 		return proxiedWorld.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
 	}
@@ -907,6 +897,16 @@ public class ProxyWorld extends World {
 	@Override
 	public Biome getGeneratorStoredBiome(int biomeX, int biomeY, int biomeZ) {
 		return proxiedWorld.getGeneratorStoredBiome(biomeX, biomeY, biomeZ);
+	}
+
+	@Override
+	public int getBottomSectionLimit() {
+		return proxiedShell.getBottomSectionLimit();
+	}
+
+	@Override
+	public int getSectionCount() {
+		return proxiedShell.getSectionCount();
 	}
 
 	@Override

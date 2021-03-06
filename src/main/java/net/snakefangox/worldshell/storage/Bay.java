@@ -42,6 +42,11 @@ public class Bay {
 		fromTag(tag);
 	}
 
+	public void fromTag(CompoundTag tag) {
+		center = BlockPos.fromLong(tag.getLong("center"));
+		bounds = new BlockBox(((IntArrayTag) tag.get("bounds")).getIntArray());
+	}
+
 	public PacketByteBuf createClientPacket(MinecraftServer server, PacketByteBuf buf) {
 		World world = WSUniversal.getStorageDim(server);
 		Map<BlockState, List<BlockPos>> stateListMap = new HashMap<>();
@@ -63,17 +68,6 @@ public class Bay {
 			}
 		});
 		return WorldShellPacketHelper.writeBlocks(buf, stateListMap, blockEntities, center);
-	}
-
-	private void fillServerWorldShell(WorldLinkEntity entity) {
-		World world = WSUniversal.getStorageDim(entity.world.getServer());
-		Map<BlockPos, BlockState> stateMap = new HashMap<>();
-		ShellTransferHandler.forEachInBox(bounds, (bp) -> {
-			BlockState state = world.getBlockState(bp);
-			if (!state.isAir())
-				stateMap.put(CoordUtil.toLocal(center, bp.toImmutable()), state);
-		});
-		entity.initializeWorldShell(stateMap, null, null);
 	}
 
 	public void loadAllChunks(MinecraftServer server) {
@@ -102,11 +96,6 @@ public class Bay {
 		return tag;
 	}
 
-	public void fromTag(CompoundTag tag) {
-		center = BlockPos.fromLong(tag.getLong("center"));
-		bounds = new BlockBox(((IntArrayTag) tag.get("bounds")).getIntArray());
-	}
-
 	public void markDirty(ServerWorld world) {
 		ShellStorageData.getOrCreate(world).markDirty();
 	}
@@ -122,12 +111,31 @@ public class Bay {
 		}
 	}
 
+	private void fillServerWorldShell(WorldLinkEntity entity) {
+		World world = WSUniversal.getStorageDim(entity.world.getServer());
+		Map<BlockPos, BlockState> stateMap = new HashMap<>();
+		ShellTransferHandler.forEachInBox(bounds, (bp) -> {
+			BlockState state = world.getBlockState(bp);
+			if (!state.isAir())
+				stateMap.put(CoordUtil.toLocal(center, bp.toImmutable()), state);
+		});
+		entity.initializeWorldShell(stateMap, null, null);
+	}
+
 	public Optional<WorldLinkEntity> getLinkedEntity() {
 		return linkedEntity;
 	}
 
 	public BlockPos getCenter() {
 		return center;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = center != null ? center.hashCode() : 0;
+		result = 31 * result + (bounds != null ? bounds.hashCode() : 0);
+		result = 31 * result + linkedEntity.hashCode();
+		return result;
 	}
 
 	@Override
@@ -140,13 +148,5 @@ public class Bay {
 		if (!Objects.equals(center, bay.center)) return false;
 		if (!Objects.equals(bounds, bay.bounds)) return false;
 		return linkedEntity.equals(bay.linkedEntity);
-	}
-
-	@Override
-	public int hashCode() {
-		int result = center != null ? center.hashCode() : 0;
-		result = 31 * result + (bounds != null ? bounds.hashCode() : 0);
-		result = 31 * result + linkedEntity.hashCode();
-		return result;
 	}
 }

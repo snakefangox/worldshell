@@ -38,88 +38,6 @@ public class WSNetworking {
 	public static final Identifier SHELL_UPDATE = new Identifier(WSUniversal.MODID, "update");
 	public static final Identifier SHELL_INTERACT = new Identifier(WSUniversal.MODID, "interact");
 	public static final Identifier SHELL_BLOCK_EVENT = new Identifier(WSUniversal.MODID, "block_event");
-
-	public static void registerClientPackets() {
-		ClientPlayNetworking.registerGlobalReceiver(SHELL_DATA, WSNetworking::handleShellData);
-		ClientPlayNetworking.registerGlobalReceiver(SHELL_UPDATE, WSNetworking::handleShellUpdate);
-		ClientPlayNetworking.registerGlobalReceiver(SHELL_BLOCK_EVENT, WSNetworking::handleShellBlockEvent);
-	}
-
-	public static void registerServerPackets() {
-		ServerPlayNetworking.registerGlobalReceiver(SHELL_INTERACT, WSNetworking::handleShellInteract);
-	}
-
-	private static void handleShellInteract(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
-		int entityID = buf.readInt();
-		BlockHitResult hit = buf.readBlockHitResult();
-		Hand hand = buf.readEnumConstant(Hand.class);
-		boolean interact = buf.readBoolean();
-
-		server.execute(() -> {
-			Entity entity = player.world.getEntityById(entityID);
-			if (entity instanceof WorldLinkEntity) {
-				EntityBounds dimensions = ((WorldLinkEntity)entity).getDimensions();
-				if (player.distanceTo(entity) < dimensions.getRoughMaxDist() + 4.5) {
-					Optional<Bay> bay = ((WorldLinkEntity) entity).getBay();
-					if (bay.isPresent()) {
-						World world = WSUniversal.getStorageDim(server);
-						BlockPos bp = CoordUtil.toGlobal(bay.get().getCenter(), hit.getBlockPos());
-						if (!world.isChunkLoaded(bp)) return;
-						BlockHitResult gHit = new BlockHitResult(CoordUtil.toGlobal(bay.get().getCenter(), hit.getPos()),
-								hit.getSide(), bp, hit.isInsideBlock());
-						if (interact) {
-							world.getBlockState(gHit.getBlockPos()).onUse(world, player, hand, gHit);
-						} else {
-							world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
-						}
-					}
-				}
-			}
-		});
-	}
-
-	private static void handleShellUpdate(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
-		int entityID = buf.readInt();
-		BlockPos pos = BlockPos.fromLong(buf.readLong());
-		BlockState state = Block.getStateFromRawId(buf.readInt());
-		CompoundTag tag = buf.readCompoundTag();
-
-		client.execute(() -> {
-			Entity entity = client.world.getEntityById(entityID);
-			if (entity instanceof WorldLinkEntity) {
-				((WorldLinkEntity) entity).updateWorldShell(pos, state, tag);
-			}
-		});
-	}
-
-	private static void handleShellData(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
-		int entityID = buf.readInt();
-		Map<BlockPos, BlockState> stateMap = new HashMap<>();
-		Map<BlockPos, BlockEntity> entityMap = new HashMap<>();
-		List<WorldShell.ShellTickInvoker> tickers = new ArrayList<>();
-		WorldShellPacketHelper.readBlocks(buf, stateMap, entityMap, tickers);
-
-		client.execute(() -> {
-			Entity entity = client.world.getEntityById(entityID);
-			if (entity instanceof WorldLinkEntity) {
-				((WorldLinkEntity) entity).initializeWorldShell(stateMap, entityMap, tickers);
-			}
-		});
-	}
-
-	private static void handleShellBlockEvent(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
-		int entityID = buf.readInt();
-		BlockPos pos = buf.readBlockPos();
-		int type = buf.readInt();
-		int data = buf.readInt();
-		client.execute(() -> {
-			Entity entity = client.world.getEntityById(entityID);
-			if (entity instanceof WorldLinkEntity) {
-				((WorldLinkEntity) entity).getWorldShell().addBlockEvent(pos, type, data);
-			}
-		});
-	}
-
 	public static final TrackedDataHandler<EntityBounds> BOUNDS = new TrackedDataHandler<EntityBounds>() {
 
 		@Override
@@ -144,7 +62,6 @@ public class WSNetworking {
 			return object;
 		}
 	};
-
 	public static final TrackedDataHandler<Vec3d> VEC3D = new TrackedDataHandler<Vec3d>() {
 
 		@Override
@@ -167,7 +84,6 @@ public class WSNetworking {
 			return object;
 		}
 	};
-
 	public static final TrackedDataHandler<QuaternionD> QUATERNION = new TrackedDataHandler<QuaternionD>() {
 
 		@Override
@@ -197,6 +113,87 @@ public class WSNetworking {
 		TrackedDataHandlerRegistry.register(BOUNDS);
 		TrackedDataHandlerRegistry.register(VEC3D);
 		TrackedDataHandlerRegistry.register(QUATERNION);
+	}
+
+	public static void registerClientPackets() {
+		ClientPlayNetworking.registerGlobalReceiver(SHELL_DATA, WSNetworking::handleShellData);
+		ClientPlayNetworking.registerGlobalReceiver(SHELL_UPDATE, WSNetworking::handleShellUpdate);
+		ClientPlayNetworking.registerGlobalReceiver(SHELL_BLOCK_EVENT, WSNetworking::handleShellBlockEvent);
+	}
+
+	private static void handleShellData(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
+		int entityID = buf.readInt();
+		Map<BlockPos, BlockState> stateMap = new HashMap<>();
+		Map<BlockPos, BlockEntity> entityMap = new HashMap<>();
+		List<WorldShell.ShellTickInvoker> tickers = new ArrayList<>();
+		WorldShellPacketHelper.readBlocks(buf, stateMap, entityMap, tickers);
+
+		client.execute(() -> {
+			Entity entity = client.world.getEntityById(entityID);
+			if (entity instanceof WorldLinkEntity) {
+				((WorldLinkEntity) entity).initializeWorldShell(stateMap, entityMap, tickers);
+			}
+		});
+	}
+
+	private static void handleShellUpdate(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
+		int entityID = buf.readInt();
+		BlockPos pos = BlockPos.fromLong(buf.readLong());
+		BlockState state = Block.getStateFromRawId(buf.readInt());
+		CompoundTag tag = buf.readCompoundTag();
+
+		client.execute(() -> {
+			Entity entity = client.world.getEntityById(entityID);
+			if (entity instanceof WorldLinkEntity) {
+				((WorldLinkEntity) entity).updateWorldShell(pos, state, tag);
+			}
+		});
+	}
+
+	private static void handleShellBlockEvent(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
+		int entityID = buf.readInt();
+		BlockPos pos = buf.readBlockPos();
+		int type = buf.readInt();
+		int data = buf.readInt();
+		client.execute(() -> {
+			Entity entity = client.world.getEntityById(entityID);
+			if (entity instanceof WorldLinkEntity) {
+				((WorldLinkEntity) entity).getWorldShell().addBlockEvent(pos, type, data);
+			}
+		});
+	}
+
+	public static void registerServerPackets() {
+		ServerPlayNetworking.registerGlobalReceiver(SHELL_INTERACT, WSNetworking::handleShellInteract);
+	}
+
+	private static void handleShellInteract(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
+		int entityID = buf.readInt();
+		BlockHitResult hit = buf.readBlockHitResult();
+		Hand hand = buf.readEnumConstant(Hand.class);
+		boolean interact = buf.readBoolean();
+
+		server.execute(() -> {
+			Entity entity = player.world.getEntityById(entityID);
+			if (entity instanceof WorldLinkEntity) {
+				EntityBounds dimensions = ((WorldLinkEntity) entity).getDimensions();
+				if (player.distanceTo(entity) < dimensions.getRoughMaxDist() + 4.5) {
+					Optional<Bay> bay = ((WorldLinkEntity) entity).getBay();
+					if (bay.isPresent()) {
+						World world = WSUniversal.getStorageDim(server);
+						BlockPos bp = CoordUtil.toGlobal(bay.get().getCenter(), hit.getBlockPos());
+						if (!world.isChunkLoaded(bp)) return;
+						BlockHitResult gHit = new BlockHitResult(CoordUtil.toGlobal(bay.get().getCenter(), hit.getPos()),
+								hit.getSide(), bp, hit.isInsideBlock());
+						if (interact) {
+							world.getBlockState(gHit.getBlockPos()).onUse(world, player, hand, gHit);
+						} else {
+							world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
+						}
+					}
+				}
+			}
+		});
 	}
 
 }

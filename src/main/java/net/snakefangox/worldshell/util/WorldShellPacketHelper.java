@@ -36,6 +36,13 @@ public class WorldShellPacketHelper {
 		return buf;
 	}
 
+	private static CompoundTag overwritePos(CompoundTag tag, BlockPos pos) {
+		tag.putInt("x", pos.getX());
+		tag.putInt("y", pos.getY());
+		tag.putInt("z", pos.getZ());
+		return tag;
+	}
+
 	public static PacketByteBuf writeBlocks(PacketByteBuf buf, Map<BlockState, List<BlockPos>> blockStateListMap, List<BlockEntity> blockEntities, BlockPos center) {
 		buf.writeInt(blockStateListMap.size());
 		for (Map.Entry<BlockState, List<BlockPos>> entry : blockStateListMap.entrySet()) {
@@ -88,12 +95,5 @@ public class WorldShellPacketHelper {
 				posBlockEntityMap.get(bp).fromTag(tag);
 			}
 		}
-	}
-
-	private static CompoundTag overwritePos(CompoundTag tag, BlockPos pos) {
-		tag.putInt("x", pos.getX());
-		tag.putInt("y", pos.getY());
-		tag.putInt("z", pos.getZ());
-		return tag;
 	}
 }

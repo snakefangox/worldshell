@@ -21,21 +21,6 @@ public class HullBoxDelegate extends Box implements SpecialBox {
 	}
 
 	@Override
-	public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-		return hull.intersects(minX, minY, minZ, maxX, maxY, maxZ);
-	}
-
-	@Override
-	public boolean contains(double x, double y, double z) {
-		return hull.contains(x, y, z);
-	}
-
-	@Override
-	public Optional<Vec3d> raycast(Vec3d min, Vec3d max) {
-		return hull.raycast(min, max);
-	}
-
-	@Override
 	public Box shrink(double x, double y, double z) {
 		return new HullBoxDelegate(super.shrink(x, y, z), hull);
 	}
@@ -68,6 +53,21 @@ public class HullBoxDelegate extends Box implements SpecialBox {
 	@Override
 	public Box offset(BlockPos blockPos) {
 		return new HullBoxDelegate(super.offset(blockPos), hull);
+	}
+
+	@Override
+	public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		return hull.intersects(minX, minY, minZ, maxX, maxY, maxZ);
+	}
+
+	@Override
+	public boolean contains(double x, double y, double z) {
+		return hull.contains(x, y, z);
+	}
+
+	@Override
+	public Optional<Vec3d> raycast(Vec3d min, Vec3d max) {
+		return hull.raycast(min, max);
 	}
 
 	@Override

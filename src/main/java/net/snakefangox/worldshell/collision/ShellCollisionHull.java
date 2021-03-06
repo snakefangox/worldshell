@@ -24,14 +24,14 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	private static final float PADDING = 1F;
 	private static final double SMOL = 0.0000001;
 	private final WorldLinkEntity entity;
-	private QuaternionD inverseRotation;
-	private Matrix3d matrix;
-	private Matrix3d inverseMatrix;
 	// These are here to prevent some high volume functions from requiring as many allocations
 	// They're never given to anything outside this class and each function that takes them sets them beforehand
 	private final Vec3dM aabbMax = new Vec3dM();
 	private final Vec3dM aabbMin = new Vec3dM();
 	private final Vec3dM pos = new Vec3dM();
+	private QuaternionD inverseRotation;
+	private Matrix3d matrix;
+	private Matrix3d inverseMatrix;
 
 	public ShellCollisionHull(WorldLinkEntity entity) {
 		super(0, 0, 0, 0, 0, 0);
@@ -63,6 +63,36 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		maxX = aabbMax.x + entity.getX() + bo.x + PADDING;
 		maxY = aabbMax.y + entity.getY() + bo.y + PADDING;
 		maxZ = aabbMax.z + entity.getZ() + bo.z + PADDING;
+	}
+
+	private void calcNewAABB(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		aabbMax.setAll(Double.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE);
+		aabbMin.setAll(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+		pos.setAll(minX, maxY, maxZ);
+		checkExtents(pos);
+		pos.setAll(minX, maxY, minZ);
+		checkExtents(pos);
+		pos.setAll(minX, minY, maxZ);
+		checkExtents(pos);
+		pos.setAll(minX, minY, minZ);
+		checkExtents(pos);
+		pos.setAll(maxX, maxY, maxZ);
+		checkExtents(pos);
+		pos.setAll(maxX, maxY, minZ);
+		checkExtents(pos);
+		pos.setAll(maxX, minY, maxZ);
+		checkExtents(pos);
+		pos.setAll(maxX, minY, minZ);
+		checkExtents(pos);
+	}
+
+	private void checkExtents(Vec3dM vec) {
+		if (vec.x > aabbMax.x) aabbMax.x = vec.x;
+		if (vec.y > aabbMax.y) aabbMax.y = vec.y;
+		if (vec.z > aabbMax.z) aabbMax.z = vec.z;
+		if (vec.x < aabbMin.x) aabbMin.x = vec.x;
+		if (vec.y < aabbMin.y) aabbMin.y = vec.y;
+		if (vec.z < aabbMin.z) aabbMin.z = vec.z;
 	}
 
 	@Override
@@ -113,6 +143,34 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		RaycastContext ctx = new RaycastContext(nMin, nMax, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity);
 		BlockHitResult hit = entity.getWorldShell().raycast(ctx);
 		return hit.getType() == HitResult.Type.MISS ? Optional.empty() : Optional.of(CoordUtil.linkEntityToWorld(CoordUtil.BP_ZERO, entity, hit.getPos()));
+	}
+
+	/**
+	 * Calculates the oriented box version of the AABB given and sets the aabb vars to an AABB that encloses the rotated box
+	 */
+	private OrientedBox calcRotatedBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		aabbMin.setAll(minX, minY, minZ);
+		aabbMax.setAll(maxX, maxY, maxZ);
+		double xSize = (aabbMax.x - aabbMin.x) / 2.0;
+		double ySize = (aabbMax.y - aabbMin.y) / 2.0;
+		double zSize = (aabbMax.z - aabbMin.z) / 2.0;
+		CoordUtil.worldToLinkEntity(entity, aabbMin);
+		CoordUtil.worldToLinkEntity(entity, aabbMax);
+		OrientedBox orientedBox = new OrientedBox(inverseMatrix.transform(aabbMin.x + xSize, aabbMin.y + ySize, aabbMin.z + zSize),
+				new Vec3d(xSize, ySize, zSize), inverseRotation);
+		Vec3d min = inverseMatrix.transform(aabbMin.x, aabbMin.y, aabbMin.z);
+		Vec3d max = inverseMatrix.transform(aabbMax.x, aabbMax.y, aabbMax.z);
+		calcNewAABB(min.x, min.y, min.z, max.x, max.y, max.z);
+		return orientedBox;
+	}
+
+	private void setBox(Box box, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		box.minX = minX;
+		box.minY = minY;
+		box.minZ = minZ;
+		box.maxX = maxX;
+		box.maxY = maxY;
+		box.maxZ = maxZ;
 	}
 
 	public VoxelShape toVoxelShape() {
@@ -238,64 +296,6 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 
 	private double dot(double x1, double y1, double z1, double x2, double y2, double z2) {
 		return x1 * x2 + y1 * y2 + z1 * z2;
-	}
-
-	/**
-	 * Calculates the oriented box version of the AABB given and sets the aabb vars to an AABB that encloses the rotated box
-	 */
-	private OrientedBox calcRotatedBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-		aabbMin.setAll(minX, minY, minZ);
-		aabbMax.setAll(maxX, maxY, maxZ);
-		double xSize = (aabbMax.x - aabbMin.x) / 2.0;
-		double ySize = (aabbMax.y - aabbMin.y) / 2.0;
-		double zSize = (aabbMax.z - aabbMin.z) / 2.0;
-		CoordUtil.worldToLinkEntity(entity, aabbMin);
-		CoordUtil.worldToLinkEntity(entity, aabbMax);
-		OrientedBox orientedBox = new OrientedBox(inverseMatrix.transform(aabbMin.x + xSize, aabbMin.y + ySize, aabbMin.z + zSize),
-				new Vec3d(xSize, ySize, zSize), inverseRotation);
-		Vec3d min = inverseMatrix.transform(aabbMin.x, aabbMin.y, aabbMin.z);
-		Vec3d max = inverseMatrix.transform(aabbMax.x, aabbMax.y, aabbMax.z);
-		calcNewAABB(min.x, min.y, min.z, max.x, max.y, max.z);
-		return orientedBox;
-	}
-
-	private void setBox(Box box, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-		box.minX = minX;
-		box.minY = minY;
-		box.minZ = minZ;
-		box.maxX = maxX;
-		box.maxY = maxY;
-		box.maxZ = maxZ;
-	}
-
-	private void calcNewAABB(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-		aabbMax.setAll(Double.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE);
-		aabbMin.setAll(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-		pos.setAll(minX, maxY, maxZ);
-		checkExtents(pos);
-		pos.setAll(minX, maxY, minZ);
-		checkExtents(pos);
-		pos.setAll(minX, minY, maxZ);
-		checkExtents(pos);
-		pos.setAll(minX, minY, minZ);
-		checkExtents(pos);
-		pos.setAll(maxX, maxY, maxZ);
-		checkExtents(pos);
-		pos.setAll(maxX, maxY, minZ);
-		checkExtents(pos);
-		pos.setAll(maxX, minY, maxZ);
-		checkExtents(pos);
-		pos.setAll(maxX, minY, minZ);
-		checkExtents(pos);
-	}
-
-	private void checkExtents(Vec3dM vec) {
-		if (vec.x > aabbMax.x) aabbMax.x = vec.x;
-		if (vec.y > aabbMax.y) aabbMax.y = vec.y;
-		if (vec.z > aabbMax.z) aabbMax.z = vec.z;
-		if (vec.x < aabbMin.x) aabbMin.x = vec.x;
-		if (vec.y < aabbMin.y) aabbMin.y = vec.y;
-		if (vec.z < aabbMin.z) aabbMin.z = vec.z;
 	}
 
 	public static class Vec3dM {

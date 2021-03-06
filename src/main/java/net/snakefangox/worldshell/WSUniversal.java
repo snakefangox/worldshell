@@ -40,6 +40,10 @@ public class WSUniversal implements ModInitializer {
 			.dimensions(EntityDimensions.changing(1, 1)).build();
 	public static final Block PLACEHOLDER = new Block(FabricBlockSettings.of(Material.BARRIER).strength(0, 0).nonOpaque().breakInstantly().dropsNothing());
 
+	public static ServerWorld getStorageDim(MinecraftServer server) {
+		return server.getWorld(WSUniversal.STORAGE_DIM);
+	}
+
 	@Override
 	public void onInitialize() {
 		registerStorageDim();
@@ -50,12 +54,12 @@ public class WSUniversal implements ModInitializer {
 		CreateWorldsEvent.EVENT.register(this::registerShellStorageDimension);
 	}
 
-	private void registerCommands(CommandDispatcher<ServerCommandSource> serverCommandSourceCommandDispatcher, boolean b) {
-		ShellCommand.register(serverCommandSourceCommandDispatcher);
-	}
-
 	public void registerStorageDim() {
 		Registry.register(Registry.CHUNK_GENERATOR, new Identifier(MODID, "empty"), EmptyChunkGenerator.CODEC);
+	}
+
+	private void registerCommands(CommandDispatcher<ServerCommandSource> serverCommandSourceCommandDispatcher, boolean b) {
+		ShellCommand.register(serverCommandSourceCommandDispatcher);
 	}
 
 	public void registerShellStorageDimension(MinecraftServer server) {
@@ -66,9 +70,5 @@ public class WSUniversal implements ModInitializer {
 		DimensionOptions options = new DimensionOptions(typeSupplier, chunkGenerator);
 		ShellStorageWorld world = (ShellStorageWorld) ((DynamicDimGen) server).createDynamicDim(STORAGE_DIM, options, ShellStorageWorld::new);
 		world.setCachedBayData(ShellStorageData.getOrCreate(server));
-	}
-
-	public static ServerWorld getStorageDim(MinecraftServer server) {
-		return server.getWorld(WSUniversal.STORAGE_DIM);
 	}
 }

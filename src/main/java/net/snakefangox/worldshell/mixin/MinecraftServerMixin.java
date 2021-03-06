@@ -47,20 +47,16 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	protected DynamicRegistryManager.Impl registryManager;
 	@Final
 	@Shadow
+	protected LevelStorage.Session session;
+	@Final
+	@Shadow
 	private Executor workerExecutor;
 	@Final
 	@Shadow
 	private WorldGenerationProgressListenerFactory worldGenerationProgressListenerFactory;
 	@Final
 	@Shadow
-	protected LevelStorage.Session session;
-	@Final
-	@Shadow
 	private Map<RegistryKey<World>, ServerWorld> worlds;
-
-	@Shadow
-	public @Nullable
-	abstract ServerWorld getWorld(RegistryKey<World> key);
 
 	public MinecraftServerMixin(String string) {
 		super(string);
@@ -69,6 +65,10 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	public ServerWorld createDynamicDim(RegistryKey<World> worldRegistryKey, RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator) {
 		return createDynamicDim(worldRegistryKey, new DimensionOptions(() -> registryManager.get(Registry.DIMENSION_TYPE_KEY).get(dimensionTypeKey), chunkGenerator));
 	}
+
+	@Shadow
+	public @Nullable
+	abstract ServerWorld getWorld(RegistryKey<World> key);
 
 	public ServerWorld createDynamicDim(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions) {
 		return createDynamicDim(worldRegistryKey, dimensionOptions, ServerWorld::new);

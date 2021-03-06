@@ -21,11 +21,34 @@ public class ShellStorageData extends PersistentState {
 
 	private static final String ID = WSUniversal.MODID + ":shell_storage";
 	private static final int WORLD_RADIUS = 30000000;
-
-	private int bufferSpace = WorldShellConfig.getBufferSpace();
-	private int freeIndex = 1;
 	private final Map<Integer, Bay> bays = new HashMap<>();
 	private final List<Integer> emptyBays = new ArrayList<>();
+	private int bufferSpace = WorldShellConfig.getBufferSpace();
+	private int freeIndex = 1;
+
+	public static ShellStorageData getOrCreate(MinecraftServer server) {
+		PersistentStateManager stateManager = WSUniversal.getStorageDim(server).getPersistentStateManager();
+		return stateManager.getOrCreate(ShellStorageData::fromTag, ShellStorageData::new, ID);
+	}
+
+	public static ShellStorageData fromTag(CompoundTag tag) {
+		ShellStorageData storageData = new ShellStorageData();
+		storageData.freeIndex = tag.getInt("freeIndex");
+		storageData.bufferSpace = tag.getInt("bufferSpace");
+		CompoundTag bayList = tag.getCompound("bayList");
+		for (String key : bayList.getKeys()) {
+			storageData.bays.put(Integer.valueOf(key), new Bay(bayList.getCompound(key)));
+		}
+		int[] eb = tag.getIntArray("emptyBays");
+		storageData.emptyBays.clear();
+		for (int i : eb) storageData.emptyBays.add(i);
+		return storageData;
+	}
+
+	public static ShellStorageData getOrCreate(ServerWorld world) {
+		PersistentStateManager stateManager = world.getPersistentStateManager();
+		return stateManager.getOrCreate(ShellStorageData::fromTag, ShellStorageData::new, ID);
+	}
 
 	public BlockPos getFreeBay() {
 		int id = findEmptyIndex(false);
@@ -33,6 +56,14 @@ public class ShellStorageData extends PersistentState {
 		int x = id % maxBays;
 		int z = (id / maxBays) + 1;
 		return new BlockPos((x * bufferSpace) - WORLD_RADIUS, 0, (z * bufferSpace) - WORLD_RADIUS);
+	}
+
+	private int findEmptyIndex(boolean mutate) {
+		if (emptyBays.size() > 0) {
+			return mutate ? emptyBays.remove(0) : emptyBays.get(0);
+		} else {
+			return mutate ? freeIndex++ : freeIndex;
+		}
 	}
 
 	public int getBayIdFromPos(BlockPos pos) {
@@ -62,14 +93,6 @@ public class ShellStorageData extends PersistentState {
 		markDirty();
 	}
 
-	private int findEmptyIndex(boolean mutate) {
-		if (emptyBays.size() > 0) {
-			return mutate ? emptyBays.remove(0) : emptyBays.get(0);
-		} else {
-			return mutate ? freeIndex++ : freeIndex;
-		}
-	}
-
 	@Override
 	public CompoundTag toNbt(CompoundTag tag) {
 		tag.putInt("freeIndex", freeIndex);
@@ -81,29 +104,5 @@ public class ShellStorageData extends PersistentState {
 		tag.put("bayList", bayList);
 		tag.putIntArray("emptyBays", emptyBays);
 		return tag;
-	}
-
-	public static ShellStorageData fromTag(CompoundTag tag) {
-		ShellStorageData storageData = new ShellStorageData();
-		storageData.freeIndex = tag.getInt("freeIndex");
-		storageData.bufferSpace = tag.getInt("bufferSpace");
-		CompoundTag bayList = tag.getCompound("bayList");
-		for (String key : bayList.getKeys()) {
-			storageData.bays.put(Integer.valueOf(key), new Bay(bayList.getCompound(key)));
-		}
-		int[] eb = tag.getIntArray("emptyBays");
-		storageData.emptyBays.clear();
-		for (int i : eb) storageData.emptyBays.add(i);
-		return storageData;
-	}
-
-	public static ShellStorageData getOrCreate(MinecraftServer server) {
-		PersistentStateManager stateManager = WSUniversal.getStorageDim(server).getPersistentStateManager();
-		return stateManager.getOrCreate(ShellStorageData::fromTag, ShellStorageData::new, ID);
-	}
-
-	public static ShellStorageData getOrCreate(ServerWorld world) {
-		PersistentStateManager stateManager = world.getPersistentStateManager();
-		return stateManager.getOrCreate(ShellStorageData::fromTag, ShellStorageData::new, ID);
 	}
 }

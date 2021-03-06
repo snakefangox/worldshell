@@ -22,6 +22,15 @@ public class WorldShellRenderCache {
 		fillBuffers();
 	}
 
+	private void fillBuffers() {
+		renderLayers.forEach(renderLayer -> {
+			BufferBuilder bufferBuilder = new BufferBuilder(renderLayer.getExpectedBufferSize());
+			bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL);
+			buffers.put(renderLayer, bufferBuilder);
+			bufferStorage.put(renderLayer, new VertexBuffer());
+		});
+	}
+
 	public BufferBuilder get(RenderLayer renderLayer) {
 		if (buffers.containsKey(renderLayer)) {
 			bufferFilled.add(renderLayer);
@@ -30,6 +39,10 @@ public class WorldShellRenderCache {
 			bufferFilled.add(getDefault());
 			return buffers.get(getDefault());
 		}
+	}
+
+	private RenderLayer getDefault() {
+		return RenderLayer.getSolid();
 	}
 
 	public void upload() {
@@ -60,18 +73,5 @@ public class WorldShellRenderCache {
 		buffers.clear();
 		bufferStorage.clear();
 		fillBuffers();
-	}
-
-	private void fillBuffers() {
-		renderLayers.forEach(renderLayer -> {
-			BufferBuilder bufferBuilder = new BufferBuilder(renderLayer.getExpectedBufferSize());
-			bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL);
-			buffers.put(renderLayer, bufferBuilder);
-			bufferStorage.put(renderLayer, new VertexBuffer());
-		});
-	}
-
-	private RenderLayer getDefault() {
-		return RenderLayer.getSolid();
 	}
 }

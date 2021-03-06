@@ -48,25 +48,8 @@ public final class OrientedBox {
 		this.basis = basis;
 	}
 
-	public Matrix3d getMatrix() {
-		if (matrix == null) {
-			matrix = new Matrix3d(rotation);
-		}
-		return matrix;
-	}
-
-	public Matrix3d getInverse() {
-		if (inverse == null) {
-			inverse = getMatrix().invert();
-		}
-		return inverse;
-	}
-
-	public Box getExtents() {
-		if (extents == null) {
-			extents = new Box(halfExtents.multiply(-1), halfExtents);
-		}
-		return extents;
+	private static Vec3d cross(final Vec3d first, final Vec3d second) {
+		return new Vec3d(first.y * second.z - first.z * second.y, first.z * second.x - first.x * second.z, first.x * second.y - first.y * second.x);
 	}
 
 	public Vec3d[] getBasis() {
@@ -77,50 +60,10 @@ public final class OrientedBox {
 	}
 
 	public Vec3d[] getVertices() {
-		if (vertices == null){
+		if (vertices == null) {
 			computeVertices();
 		}
 		return vertices;
-	}
-
-	public OrientedBox rotate(final QuaternionD quaternion) {
-		if (QuaternionD.IDENTITY.equals(quaternion)) {
-			return this;
-		}
-		return new OrientedBox(center, halfExtents, rotation.hamiltonProduct(quaternion));
-	}
-
-	public OrientedBox translate(final double x, final double y, final double z) {
-		if (x == 0 && y == 0 && z == 0) {
-			return this;
-		}
-		final Matrix3d matrix = getMatrix();
-		final double transX = matrix.transformX(x, y, z);
-		final double transY = matrix.transformY(x, y, z);
-		final double transZ = matrix.transformZ(x, y, z);
-		return new OrientedBox(center.add(transX, transY, transZ), halfExtents, rotation, matrix, inverse, basis);
-	}
-
-	public OrientedBox transform(final double x, final double y, final double z, final double pivotX, final double pivotY, final double pivotZ, final QuaternionD quaternion) {
-		final Vec3d vec = getMatrix().transform(x - pivotX, y - pivotY, z - pivotZ);
-		final boolean bl = quaternion.equals(QuaternionD.IDENTITY);
-		return new OrientedBox(center.add(vec), halfExtents, rotation.hamiltonProduct(quaternion), bl ? matrix : null, bl ? inverse : null, bl ? basis : null).translate(pivotX, pivotY, pivotZ);
-	}
-
-	public QuaternionD getRotation() {
-		return rotation;
-	}
-
-	public Vec3d getCenter() {
-		return center;
-	}
-
-	public Vec3d getHalfExtents() {
-		return halfExtents;
-	}
-
-	public OrientedBox offset(final double x, final double y, final double z) {
-		return new OrientedBox(center.add(x, y, z), halfExtents, rotation, matrix, inverse, basis);
 	}
 
 	private void computeVertices() {
@@ -131,6 +74,13 @@ public final class OrientedBox {
 		for (int i = 0; i < vertices.length; i++) {
 			this.vertices[i] = matrix.transform(vertices[i]).add(center);
 		}
+	}
+
+	public Box getExtents() {
+		if (extents == null) {
+			extents = new Box(halfExtents.multiply(-1), halfExtents);
+		}
+		return extents;
 	}
 
 	public static Vec3d[] getVertices(final Box box) {
@@ -147,12 +97,59 @@ public final class OrientedBox {
 		return vertices;
 	}
 
+	public Matrix3d getMatrix() {
+		if (matrix == null) {
+			matrix = new Matrix3d(rotation);
+		}
+		return matrix;
+	}
+
 	private static double getPoint(final Box box, final Direction.AxisDirection direction, final Direction.Axis axis) {
 		if (direction == Direction.AxisDirection.NEGATIVE) {
 			return box.getMin(axis);
 		} else {
 			return box.getMax(axis);
 		}
+	}
+
+	public OrientedBox rotate(final QuaternionD quaternion) {
+		if (QuaternionD.IDENTITY.equals(quaternion)) {
+			return this;
+		}
+		return new OrientedBox(center, halfExtents, rotation.hamiltonProduct(quaternion));
+	}
+
+	public OrientedBox transform(final double x, final double y, final double z, final double pivotX, final double pivotY, final double pivotZ, final QuaternionD quaternion) {
+		final Vec3d vec = getMatrix().transform(x - pivotX, y - pivotY, z - pivotZ);
+		final boolean bl = quaternion.equals(QuaternionD.IDENTITY);
+		return new OrientedBox(center.add(vec), halfExtents, rotation.hamiltonProduct(quaternion), bl ? matrix : null, bl ? inverse : null, bl ? basis : null).translate(pivotX, pivotY, pivotZ);
+	}
+
+	public OrientedBox translate(final double x, final double y, final double z) {
+		if (x == 0 && y == 0 && z == 0) {
+			return this;
+		}
+		final Matrix3d matrix = getMatrix();
+		final double transX = matrix.transformX(x, y, z);
+		final double transY = matrix.transformY(x, y, z);
+		final double transZ = matrix.transformZ(x, y, z);
+		return new OrientedBox(center.add(transX, transY, transZ), halfExtents, rotation, matrix, inverse, basis);
+	}
+
+	public QuaternionD getRotation() {
+		return rotation;
+	}
+
+	public Vec3d getCenter() {
+		return center;
+	}
+
+	public Vec3d getHalfExtents() {
+		return halfExtents;
+	}
+
+	public OrientedBox offset(final double x, final double y, final double z) {
+		return new OrientedBox(center.add(x, y, z), halfExtents, rotation, matrix, inverse, basis);
 	}
 
 	public boolean intersects(final Box other) {
@@ -194,10 +191,6 @@ public final class OrientedBox {
 		return sat(normal, vertices, vertices1);
 	}
 
-	private static Vec3d cross(final Vec3d first, final Vec3d second) {
-		return new Vec3d(first.y * second.z - first.z * second.y, first.z * second.x - first.x * second.z, first.x * second.y - first.y * second.x);
-	}
-
 	public static boolean sat(final Vec3d normal, final Vec3d[] vertices1, final Vec3d[] vertices2) {
 		double min1 = Double.MAX_VALUE;
 		double max1 = -Double.MAX_VALUE;
@@ -221,6 +214,13 @@ public final class OrientedBox {
 		final Vec3d d = inverse.transform(start.x - center.x, start.y - center.y, start.z - center.z);
 		final Vec3d e = inverse.transform(end.x - center.x, end.y - center.y, end.z - center.z);
 		return raycast0(d, e);
+	}
+
+	public Matrix3d getInverse() {
+		if (inverse == null) {
+			inverse = getMatrix().invert();
+		}
+		return inverse;
 	}
 
 	private double raycast0(final Vec3d start, final Vec3d end) {
