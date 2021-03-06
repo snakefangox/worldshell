@@ -16,7 +16,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 public class ShellCommand {
 
 	public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-		dispatcher.register(literal("transfertoshell").requires((serverCommandSource) -> serverCommandSource.hasPermissionLevel(2))
+		dispatcher.register(literal("transfertoshell")
 				.then(argument("from", BlockPosArgumentType.blockPos()).then(argument("to", BlockPosArgumentType.blockPos())
 						.executes((commandCtx) -> execute(commandCtx.getSource(),
 								new BlockBox(BlockPosArgumentType.getLoadedBlockPos(commandCtx, "from"), BlockPosArgumentType.getLoadedBlockPos(commandCtx, "to")))))));

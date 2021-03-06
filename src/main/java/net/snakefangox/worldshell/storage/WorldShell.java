@@ -20,7 +20,7 @@ import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.level.ColorResolver;
 import net.snakefangox.worldshell.client.WorldShellRenderCache;
 import net.snakefangox.worldshell.entity.WorldLinkEntity;
-import net.snakefangox.worldshell.world.ProxyWorld;
+import net.snakefangox.worldshell.world.DelegateWorld;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -28,20 +28,30 @@ import java.util.*;
 public class WorldShell implements BlockRenderView {
 
 	private final WorldLinkEntity parent;
-	private final ProxyWorld proxyWorld;
+	private final DelegateWorld delegateWorld;
 	private final Map<BlockPos, BlockState> blockStateMap = new LinkedHashMap<>();
 	private final Map<BlockPos, BlockEntity> blockEntityMap = new LinkedHashMap<>();
 	private final List<ShellTickInvoker> tickInvokers = new ArrayList<>();
 	private final BlockPos.Mutable reusablePos = new BlockPos.Mutable();
 	@Environment(EnvType.CLIENT)
-	private final WorldShellRenderCache cache = new WorldShellRenderCache();
+	private final WorldShellRenderCache cache;
 	private final int cacheValidTime;
 	private int cacheResetTimer = 0;
 
+	/** Creates a server sided worldshell, without the render cache */
+	public WorldShell(WorldLinkEntity parent) {
+		this.parent = parent;
+		cache = null;
+		cacheValidTime = 0;
+		delegateWorld = new DelegateWorld(parent.getEntityWorld(), this);
+	}
+
+	/** Creates a client sided worldshell, with the render cache */
 	public WorldShell(WorldLinkEntity parent, int cacheValidTime) {
 		this.parent = parent;
+		cache = new WorldShellRenderCache();
 		this.cacheValidTime = cacheValidTime;
-		proxyWorld = new ProxyWorld(parent.getEntityWorld(), this);
+		delegateWorld = new DelegateWorld(parent.getEntityWorld(), this);
 	}
 
 	@Override
@@ -64,8 +74,8 @@ public class WorldShell implements BlockRenderView {
 		if (entityMap != null) {
 			blockEntityMap.putAll(entityMap);
 			for (Map.Entry<BlockPos, BlockEntity> entry : blockEntityMap.entrySet()) {
-				entry.getValue().setWorld(proxyWorld);
-				BlockEntityTicker<?> ticker = blockStateMap.get(entry.getKey()).getBlockEntityTicker(proxyWorld, entry.getValue().getType());
+				entry.getValue().setWorld(delegateWorld);
+				BlockEntityTicker<?> ticker = blockStateMap.get(entry.getKey()).getBlockEntityTicker(delegateWorld, entry.getValue().getType());
 				if (ticker != null) tickers.add(new ShellTickInvoker(entry.getValue(), ticker));
 			}
 		}
@@ -86,17 +96,17 @@ public class WorldShell implements BlockRenderView {
 		return blockEntityMap.entrySet();
 	}
 
-	public void setBlock(BlockPos pos, BlockState state, CompoundTag tag, World world) {
+	public void setBlock(BlockPos pos, BlockState state, CompoundTag tag) {
 		blockStateMap.put(pos, state);
 		if (state.hasBlockEntity()) {
 			BlockEntity be = ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state);
 			if (be != null) {
 				BlockEntity oldBe = blockEntityMap.put(pos, be);
 				if (oldBe != null) tickInvokers.remove(new ShellTickInvoker(oldBe, null));
-				be.setWorld(proxyWorld);
+				be.setWorld(delegateWorld);
 				be.setCachedState(blockStateMap.get(pos));
 				if (tag != null) be.readNbt(tag);
-				BlockEntityTicker<?> ticker = state.getBlockEntityTicker(proxyWorld, be.getType());
+				BlockEntityTicker<?> ticker = state.getBlockEntityTicker(delegateWorld, be.getType());
 				if (ticker != null) tickInvokers.add(new ShellTickInvoker(be, ticker));
 			}
 		}
@@ -104,7 +114,7 @@ public class WorldShell implements BlockRenderView {
 	}
 
 	public void addBlockEvent(BlockPos pos, int type, int data) {
-		getBlockState(pos).onSyncedBlockEvent(proxyWorld, pos, type, data);
+		getBlockState(pos).onSyncedBlockEvent(delegateWorld, pos, type, data);
 	}
 
 	@Override
@@ -177,12 +187,17 @@ public class WorldShell implements BlockRenderView {
 		return blockStateMap.isEmpty();
 	}
 
-	public ProxyWorld getProxyWorld() {
-		return proxyWorld;
+	public DelegateWorld getProxyWorld() {
+		return delegateWorld;
 	}
 
 	public static class ShellTickInvoker {
+
 		private final BlockEntity be;
+		/**
+		 * I would love so much to not have to do this but even Mojang's version of this doesn't work
+		 * It shouldn't ever crash at least
+		 */
 		@SuppressWarnings("rawtypes")
 		private final BlockEntityTicker ticker;
 
@@ -209,7 +224,7 @@ public class WorldShell implements BlockRenderView {
 
 			ShellTickInvoker invoker = (ShellTickInvoker) o;
 
-			return be.equals(invoker.be);
+			return Objects.equals(be, invoker.be);
 		}
 	}
 }

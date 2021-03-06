@@ -15,3 +15,5 @@ mutable field net/minecraft/util/math/Box maxZ D
 
 # We want a custom VoxelShape, for that we need access to the constructor
 accessible method net/minecraft/util/shape/VoxelShape <init> (Lnet/minecraft/util/shape/VoxelSet;)V
+
+# We need to pull data from these listeners, for that we need an accessor mixin, for that they need to be public classes

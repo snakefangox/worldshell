@@ -1,5 +1,7 @@
 package net.snakefangox.worldshell.entity;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -22,9 +24,11 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityChangeListener;
 import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.WSUniversal;
@@ -42,20 +46,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * The basic entity that links to a shell, renders it's contents and handles interaction
- */
+/** The basic entity that links to a shell, renders it's contents and handles interaction */
 public class WorldLinkEntity extends Entity {
 
 	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.BOUNDS);
 	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.VEC3D);
 	private static final TrackedData<QuaternionD> ROTATION = DataTracker.registerData(WorldLinkEntity.class, WSNetworking.QUATERNION);
-	private final WorldShell worldShell = new WorldShell(this, 120 /*TODO set to builder*/);
+	private final WorldShell worldShell;
 	private final ShellCollisionHull hull = new ShellCollisionHull(this);
 	private int shellId = 0;
 
 	public WorldLinkEntity(EntityType<?> type, World world) {
 		super(type, world);
+		worldShell = world.isClient() ? new WorldShell(this, 120 /*TODO set to builder*/) : new WorldShell(this);
 	}
 
 	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<WorldShell.ShellTickInvoker> tickers) {
@@ -63,7 +66,7 @@ public class WorldLinkEntity extends Entity {
 	}
 
 	public void updateWorldShell(BlockPos pos, BlockState state, CompoundTag tag) {
-		worldShell.setBlock(pos, state, tag, getEntityWorld());
+		worldShell.setBlock(pos, state, tag);
 	}
 
 	@Override
@@ -115,6 +118,11 @@ public class WorldLinkEntity extends Entity {
 		tag.putFloat("width", getDimensions().width);
 		tag.putFloat("height", getDimensions().height);
 		WSNbtHelper.putQuaternion(tag, "rotation", getRotation());
+	}
+
+	@Override
+	public void setListener(EntityChangeListener listener) {
+		super.setListener(new EntityChangeDelegate(this, listener));
 	}
 
 	public Vec3d getBlockOffset() {

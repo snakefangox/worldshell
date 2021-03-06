@@ -55,12 +55,12 @@ import java.util.UUID;
 import java.util.function.*;
 import java.util.stream.Stream;
 
-public class ProxyWorld extends World {
+public class DelegateWorld extends World {
 
 	private final World proxiedWorld;
 	private final WorldShell proxiedShell;
 
-	public ProxyWorld(World proxiedWorld, WorldShell proxiedShell) {
+	public DelegateWorld(World proxiedWorld, WorldShell proxiedShell) {
 		super(null, null, proxiedWorld.getDimension(), null, proxiedWorld.isClient, false, 0);
 		this.proxiedWorld = proxiedWorld;
 		this.proxiedShell = proxiedShell;
