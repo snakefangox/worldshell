@@ -20,18 +20,18 @@ import java.util.*;
 
 /**
  * A bay in the ship storage sense
- * Stores all the data needed to keep track of a shell in the storage dimension
+ * Stores all the data needed to keep track of a Worldshell in the storage dimension
  */
 public class Bay {
 
-	//The center of the shell
+	/**The center of the shell*/
 	private BlockPos center;
 
-	//Defines the box the shell fits within
+	/**Defines the box the shell fits within*/
 	private BlockBox bounds;
 
-	//The entity changes to this shell should propagate to
-	private Optional<WorldShellEntity> linkedEntity = Optional.empty();
+	/**The entity changes to this shell should propagate to*/
+	private WorldShellEntity linkedEntity = null;
 
 	public Bay(BlockPos center, BlockBox bounds) {
 		this.center = center;
@@ -77,16 +77,19 @@ public class Bay {
 				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, true));
 	}
 
+	//TODO Change this to call a method on the entity
 	public Vec3d toEntityCoordSpace(Vec3d vec) {
-		return CoordUtil.linkEntityToWorld(center, linkedEntity.get(), vec);
+		return CoordUtil.linkEntityToWorld(center, linkedEntity, vec);
 	}
 
+	//TODO Change this to call a method on the entity
 	public Vec3d toEntityCoordSpace(double x, double y, double z) {
-		return CoordUtil.linkEntityToWorld(center, linkedEntity.get(), x, y, z);
+		return CoordUtil.linkEntityToWorld(center, linkedEntity, x, y, z);
 	}
 
+	//TODO Change this to call a method on the entity
 	public BlockPos toEntityCoordSpace(BlockPos pos) {
-		return CoordUtil.linkEntityToWorld(center, linkedEntity.get(), pos);
+		return CoordUtil.linkEntityToWorld(center, linkedEntity, pos);
 	}
 
 	public CompoundTag toTag() {
@@ -105,7 +108,7 @@ public class Bay {
 	}
 
 	public void linkEntity(@NotNull WorldShellEntity worldShellEntity) {
-		linkedEntity = Optional.of(worldShellEntity);
+		linkedEntity = worldShellEntity;
 		if (worldShellEntity.getMicrocosm().isEmpty()) {
 			fillServerWorldShell(worldShellEntity);
 		}
@@ -123,7 +126,7 @@ public class Bay {
 	}
 
 	public Optional<WorldShellEntity> getLinkedEntity() {
-		return linkedEntity;
+		return Optional.ofNullable(linkedEntity);
 	}
 
 	public BlockPos getCenter() {

@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.util;
+package net.snakefangox.worldshell.world;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;

@@ -16,6 +16,7 @@ import java.util.List;
  * This class contains a lot of static helper methods for doing so. <p>
  * Sorry for the repetition, Vec3i and Vec3d share no common child so I'm stuck with this huge mess.
  */
+//TODO This needs to die
 public class CoordUtil {
 
 	public static final BlockPos BP_ZERO = new BlockPos(0, 0, 0);

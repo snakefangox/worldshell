@@ -27,6 +27,7 @@ import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.util.DynamicWorldRegister;
 import net.snakefangox.worldshell.util.ShellCommand;
+import net.snakefangox.worldshell.world.CreateWorldsEvent;
 import net.snakefangox.worldshell.world.ShellStorageWorld;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

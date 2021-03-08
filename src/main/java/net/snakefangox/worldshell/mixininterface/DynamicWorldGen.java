@@ -7,7 +7,7 @@ import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.snakefangox.worldshell.util.DynamicWorldRegister;
-import net.snakefangox.worldshell.util.ServerWorldSupplier;
+import net.snakefangox.worldshell.world.ServerWorldSupplier;
 
 /**
  * Contains all the methods used to register dynamic dimensions, check the static helper class for more info: @{@link DynamicWorldRegister}
