@@ -70,7 +70,7 @@ public class WorldShellEntity extends Entity {
 	protected void initDataTracker() {
 		getDataTracker().startTracking(ENTITY_BOUNDS, new EntityBounds(1, 1, 1, false));
 		getDataTracker().startTracking(BLOCK_OFFSET, new Vec3d(0, 0, 0));
-		getDataTracker().startTracking(ROTATION, QuaternionD.IDENTITY);
+		getDataTracker().startTracking(ROTATION, new QuaternionD(25, 0, 0, true));
 	}
 
 	@Override

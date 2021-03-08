@@ -212,6 +212,10 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 					shape.forEachBox((minX1, minY1, minZ1, maxX1, maxY1, maxZ1) -> {
 						setBox(localBox, minX1 + bp.getX(), minY1 + bp.getY(), minZ1 + bp.getZ(),
 								maxX1 + bp.getX(), maxY1 + bp.getY(), maxZ1 + bp.getZ());
+						/* Needs work: if (offsetAndTest(orientedBox, localBox, basis[index], Math.signum(maxDist))) {
+							maxDistRef[0] = 0;
+							return;
+						}*/
 						Vec3d[] vertices = getVertices(localBox);
 						if (orientedBox.sat(basis[forward], vertices) && orientedBox.sat(basis[back], vertices))
 							maxDistRef[0] = castForDistance(orientedBox, localBox, vertices, basis[index], maxDistRef[0]);
@@ -221,6 +225,18 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 			}
 		}
 		return maxDistRef[0];
+	}
+
+	private boolean offsetAndTest(OrientedBox orientedBox, Box lBox, Vec3d basis, double sign) {
+		double xOff = SMOL * basis.x * sign;
+		double yOff = SMOL * basis.y * sign;
+		double zOff = SMOL * basis.z * sign;
+		setBox(lBox, lBox.minX - xOff, lBox.minY - yOff, lBox.minZ - zOff,
+				lBox.maxX - xOff, lBox.maxY - yOff, lBox.maxZ - zOff);
+		boolean doesCollide = orientedBox.intersects(lBox);
+		setBox(lBox, lBox.minX + xOff, lBox.minY + yOff, lBox.minZ + zOff,
+				lBox.maxX + xOff, lBox.maxY + yOff, lBox.maxZ + zOff);
+		return doesCollide;
 	}
 
 	private Vec3d[] getVertices(Box box) {
