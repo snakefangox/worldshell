@@ -11,11 +11,11 @@ import net.snakefangox.worldshell.mixinextras.DynamicWorldGen;
 import net.snakefangox.worldshell.world.ServerWorldSupplier;
 
 /**
- * Static helper class to easily call world register functions on a server.
+ * Static helper class to easily call dynamic world register functions on a server.
  */
 public class DynamicWorldRegister {
 	/**
-	 * Convenience method to use a registered dimension type with {@link #createDynamicDim(RegistryKey, DimensionOptions)}
+	 * Convenience method to use a registered dimension type with {@link #createDynamicWorld(MinecraftServer, RegistryKey, DimensionOptions)}
 	 * Check there for more detailed usage instructions
 	 *
 	 * @param worldRegistryKey the key the world will be registered to
@@ -25,7 +25,7 @@ public class DynamicWorldRegister {
 	 */
 	public static ServerWorld createDynamicWorld(MinecraftServer server, RegistryKey<World> worldRegistryKey,
 											   RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator) {
-		return ((DynamicWorldGen)server).createDynamicWorld(worldRegistryKey, dimensionTypeKey, chunkGenerator);
+		return ((DynamicWorldGen)server).worldshell$createDynamicWorld(worldRegistryKey, dimensionTypeKey, chunkGenerator);
 	}
 
 	/**
@@ -40,7 +40,7 @@ public class DynamicWorldRegister {
 	 * @return the world that was created
 	 */
 	public static ServerWorld createDynamicWorld(MinecraftServer server, RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions) {
-		return ((DynamicWorldGen)server).createDynamicWorld(worldRegistryKey, dimensionOptions);
+		return ((DynamicWorldGen)server).worldshell$createDynamicWorld(worldRegistryKey, dimensionOptions);
 	}
 
 	/**
@@ -55,6 +55,6 @@ public class DynamicWorldRegister {
 	 */
 	public static ServerWorld createDynamicWorld(MinecraftServer server, RegistryKey<World> worldRegistryKey,
 											   DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier) {
-		return ((DynamicWorldGen)server).createDynamicWorld(worldRegistryKey, dimensionOptions, worldSupplier);
+		return ((DynamicWorldGen)server).worldshell$createDynamicWorld(worldRegistryKey, dimensionOptions, worldSupplier);
 	}
 }

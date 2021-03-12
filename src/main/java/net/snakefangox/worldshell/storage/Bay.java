@@ -11,8 +11,7 @@ import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
-import net.snakefangox.worldshell.util.CoordUtil;
-import net.snakefangox.worldshell.util.ShellTransferHandler;
+import net.snakefangox.worldshell.util.ShellTransferHandlerOld;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import org.jetbrains.annotations.NotNull;
 
@@ -51,7 +50,7 @@ public class Bay implements LocalSpace {
 		World world = WorldShell.getStorageDim(server);
 		Map<BlockState, List<BlockPos>> stateListMap = new HashMap<>();
 		List<BlockEntity> blockEntities = new ArrayList<>();
-		ShellTransferHandler.forEachInBox(bounds, (bp) -> {
+		ShellTransferHandlerOld.forEachInBox(bounds, (bp) -> {
 			BlockState state = world.getBlockState(bp);
 			if (!state.isAir()) {
 				if (stateListMap.containsKey(state)) {
@@ -114,7 +113,7 @@ public class Bay implements LocalSpace {
 	private void fillServerWorldShell(WorldShellEntity entity) {
 		World world = WorldShell.getStorageDim(entity.world.getServer());
 		Map<BlockPos, BlockState> stateMap = new HashMap<>();
-		ShellTransferHandler.forEachInBox(bounds, (bp) -> {
+		ShellTransferHandlerOld.forEachInBox(bounds, (bp) -> {
 			BlockState state = world.getBlockState(bp);
 			if (!state.isAir())
 				stateMap.put(toLocal(bp), state);

@@ -13,7 +13,7 @@
     "passthrough.ExplosionMixin",
     "passthrough.PlayerEntityMixin",
     "passthrough.ServerPlayerEntityMixin",
-    "worldgen.MinecraftServerMixin"
+    "server.MinecraftServerMixin"
   ],
   "client": [
     "entitytracking.ClientEntityManagerAccess",

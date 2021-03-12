@@ -33,7 +33,7 @@ public class ScreenHandlerCheck {
 
 	private static PlayerEntity getOrCreateFakePlayer(World storageWorld, Vec3d pos) {
 		if (fakePlayer == null) {
-			fakePlayer = new FakePlayerEntity(storageWorld, CoordUtil.BP_ZERO, 0, fakeGameProfile);
+			fakePlayer = new FakePlayerEntity(storageWorld, new BlockPos(0,0,0), 0, fakeGameProfile);
 		}
 		fakePlayer.setPosition(pos.x, pos.y, pos.z);
 		return fakePlayer;

@@ -25,11 +25,11 @@ public class ShellCommand {
 	private static int execute(ServerCommandSource source, BlockBox box) {
 		try {
 			List<BlockPos> blockPosList = new ArrayList<>();
-			ShellTransferHandler.forEachInBox(box, (bp) -> {
+			ShellTransferHandlerOld.forEachInBox(box, (bp) -> {
 				if (!source.getWorld().isAir(bp)) blockPosList.add(bp.toImmutable());
 			});
 			if (blockPosList.size() > 0) {
-				WorldShellEntity entity = ShellTransferHandler.transferToShell(source.getWorld(), blockPosList.get(0), blockPosList);
+				WorldShellEntity entity = ShellTransferHandlerOld.transferToShell(source.getWorld(), blockPosList.get(0), blockPosList);
 				source.getWorld().spawnEntity(entity);
 			}
 		} catch (Exception e) {

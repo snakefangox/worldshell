@@ -16,12 +16,18 @@ import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
+import net.snakefangox.worldshell.util.CoordUtil;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ShellTransferHandler {
+/**
+ * Worldshell entities are complex things, to create one there are a huge number of steps
+ * that need to be performed. As such creating one isn't as simple as calling new WorldShellEntity().
+ * This is a rather non-optional helper class to handle all of that for you.
+ */
+public class ShellTransferHandlerOld {
 
 	private static final int FLAGS = 2 | 16 | 32 | 64;
 

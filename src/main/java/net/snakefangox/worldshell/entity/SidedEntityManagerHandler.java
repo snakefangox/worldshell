@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.util;
+package net.snakefangox.worldshell.entity;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

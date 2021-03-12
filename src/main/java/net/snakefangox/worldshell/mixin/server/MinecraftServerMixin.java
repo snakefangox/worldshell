@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.mixin.worldgen;
+package net.snakefangox.worldshell.mixin.server;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.server.MinecraftServer;
@@ -22,6 +22,8 @@ import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.level.ServerWorldProperties;
 import net.minecraft.world.level.UnmodifiableLevelProperties;
 import net.minecraft.world.level.storage.LevelStorage;
+import net.snakefangox.worldshell.mixinextras.GetShellTransferHandler;
+import net.snakefangox.worldshell.transfer.ShellTransferHandler;
 import net.snakefangox.worldshell.world.CreateWorldsEvent;
 import net.snakefangox.worldshell.mixinextras.DynamicWorldGen;
 import net.snakefangox.worldshell.world.ServerWorldSupplier;
@@ -29,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -37,7 +40,10 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 @Mixin(MinecraftServer.class)
-public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<ServerTask> implements SnooperListener, CommandOutput, AutoCloseable, DynamicWorldGen {
+public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<ServerTask> implements SnooperListener, CommandOutput, AutoCloseable, DynamicWorldGen, GetShellTransferHandler {
+
+	@Unique
+	private final ShellTransferHandler shellTransferHandler = new ShellTransferHandler();
 
 	@Final
 	@Shadow
@@ -62,20 +68,22 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		super(string);
 	}
 
-	public ServerWorld createDynamicWorld(RegistryKey<World> worldRegistryKey, RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator) {
-		return createDynamicWorld(worldRegistryKey, new DimensionOptions(() -> registryManager.get(Registry.DIMENSION_TYPE_KEY).get(dimensionTypeKey), chunkGenerator));
-	}
-
 	@Shadow
 	public @Nullable
 	abstract ServerWorld getWorld(RegistryKey<World> key);
 
-	public ServerWorld createDynamicWorld(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions) {
-		return createDynamicWorld(worldRegistryKey, dimensionOptions, ServerWorld::new);
+	@Override
+	public ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions) {
+		return worldshell$createDynamicWorld(worldRegistryKey, dimensionOptions, ServerWorld::new);
 	}
 
 	@Override
-	public ServerWorld createDynamicWorld(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier) {
+	public ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey, RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator) {
+		return worldshell$createDynamicWorld(worldRegistryKey, new DimensionOptions(() -> registryManager.get(Registry.DIMENSION_TYPE_KEY).get(dimensionTypeKey), chunkGenerator));
+	}
+
+	@Override
+	public ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier) {
 		boolean isDebug = saveProperties.getGeneratorOptions().isDebugWorld();
 		long seed = BiomeAccess.hashSeed(saveProperties.getGeneratorOptions().getSeed());
 		ServerWorldProperties serverWorldProperties = saveProperties.getMainWorldProperties();
@@ -91,5 +99,10 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	@Inject(method = "Lnet/minecraft/server/MinecraftServer;createWorlds(Lnet/minecraft/server/WorldGenerationProgressListener;)V", at = @At("TAIL"))
 	protected void createWorlds(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
 		CreateWorldsEvent.EVENT.invoker().event((MinecraftServer) (Object) this);
+	}
+
+	@Override
+	public ShellTransferHandler worldshell$getShellTransferHandler() {
+		return shellTransferHandler;
 	}
 }

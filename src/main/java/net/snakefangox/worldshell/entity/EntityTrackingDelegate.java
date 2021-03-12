@@ -4,7 +4,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.entity.EntityChangeListener;
-import net.snakefangox.worldshell.util.SidedEntityManagerHandler;
 
 import java.util.HashSet;
 import java.util.Set;

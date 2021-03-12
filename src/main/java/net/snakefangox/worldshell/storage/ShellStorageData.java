@@ -10,7 +10,7 @@ import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.WorldShellConfig;
-import net.snakefangox.worldshell.util.ShellTransferHandler;
+import net.snakefangox.worldshell.util.ShellTransferHandlerOld;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -90,7 +90,7 @@ public class ShellStorageData extends PersistentState {
 		World world = WorldShell.getStorageDim(server);
 		Bay bay = bays.remove(id);
 		emptyBays.add(id);
-		ShellTransferHandler.forEachInBox(bay.getBounds(), (bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
+		ShellTransferHandlerOld.forEachInBox(bay.getBounds(), (bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
 		markDirty();
 	}
 

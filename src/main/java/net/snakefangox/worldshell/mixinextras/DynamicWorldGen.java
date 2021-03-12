@@ -14,9 +14,9 @@ import net.snakefangox.worldshell.world.ServerWorldSupplier;
  */
 public interface DynamicWorldGen {
 
-	ServerWorld createDynamicWorld(RegistryKey<World> worldRegistryKey, RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator);
+	ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions);
 
-	ServerWorld createDynamicWorld(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions);
+	ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey, RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator);
 
-	ServerWorld createDynamicWorld(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier);
+	ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier);
 }

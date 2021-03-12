@@ -3,6 +3,8 @@ package net.snakefangox.worldshell;
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.block.Block;
@@ -25,6 +27,7 @@ import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
 import net.snakefangox.worldshell.storage.ShellStorageData;
+import net.snakefangox.worldshell.transfer.ShellTransferHandler;
 import net.snakefangox.worldshell.util.DynamicWorldRegister;
 import net.snakefangox.worldshell.util.ShellCommand;
 import net.snakefangox.worldshell.world.CreateWorldsEvent;
@@ -56,6 +59,9 @@ public class WorldShell implements ModInitializer {
 		WSNetworking.registerServerPackets();
 		CommandRegistrationCallback.EVENT.register(this::registerCommands);
 		CreateWorldsEvent.EVENT.register(this::registerShellStorageDimension);
+		ServerTickEvents.START_SERVER_TICK.register(ShellTransferHandler::serverStartTick);
+		ServerTickEvents.END_SERVER_TICK.register(ShellTransferHandler::serverEndTick);
+		ServerLifecycleEvents.SERVER_STOPPING.register(ShellTransferHandler::serverStopping);
 	}
 
 	public void registerStorageDim() {
