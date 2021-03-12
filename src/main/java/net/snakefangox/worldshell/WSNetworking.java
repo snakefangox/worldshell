@@ -181,9 +181,9 @@ public class WSNetworking {
 					Optional<Bay> bay = ((WorldShellEntity) entity).getBay();
 					if (bay.isPresent()) {
 						World world = WorldShell.getStorageDim(server);
-						BlockPos bp = CoordUtil.toGlobal(bay.get().getCenter(), hit.getBlockPos());
+						BlockPos bp = bay.get().toGlobal(hit.getBlockPos());
 						if (!world.isChunkLoaded(bp)) return;
-						BlockHitResult gHit = new BlockHitResult(CoordUtil.toGlobal(bay.get().getCenter(), hit.getPos()),
+						BlockHitResult gHit = new BlockHitResult(bay.get().toGlobal(hit.getPos()),
 								hit.getSide(), bp, hit.isInsideBlock());
 						if (interact) {
 							world.getBlockState(gHit.getBlockPos()).onUse(world, player, hand, gHit);

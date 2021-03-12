@@ -29,12 +29,13 @@ public class ShellTransferHandler {
 		return transferToShell(world, core, blocks, new WorldShellEntity(WorldShell.WORLD_LINK_ENTITY_TYPE, world));
 	}
 
-	//TODO Set this up the same way the clone command works
+	//TODO Set this up the same way the clone command works, create an object that implements LocalSpace to hold blocks to be moved
 	public static <T extends WorldShellEntity> T transferToShell(ServerWorld world, BlockPos core, List<BlockPos> blocks, T worldLinkEntity) {
 		World shellWorld = WorldShell.getStorageDim(world.getServer());
 		ShellStorageData storageData = ShellStorageData.getOrCreate(world.getServer());
 		BlockPos bayPos = storageData.getFreeBay();
 		BlockBox bayBounds = BlockBox.empty();
+		Bay bay = new Bay(bayPos, bayBounds);
 		for (BlockPos bp : blocks) {
 			BlockPos dest = CoordUtil.transferCoordSpace(core, bayPos, bp);
 			copyBlock(world, shellWorld, bp, dest);
@@ -47,7 +48,7 @@ public class ShellTransferHandler {
 		worldLinkEntity.setBlockOffset(new Vec3d((core.getX() - center.x) - 0.5, core.getY() - bayBounds.minY, (core.getZ() - center.z) - 0.5));
 		blocks.forEach((bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
 		CoordUtil.transformBoxCoordSpace(core, bayPos, bayBounds);
-		int id = storageData.addBay(new Bay(bayPos, bayBounds));
+		int id = storageData.addBay(bay);
 		storageData.getBay(id).loadAllChunks(world.getServer());
 		worldLinkEntity.setShellId(id);
 		return worldLinkEntity;

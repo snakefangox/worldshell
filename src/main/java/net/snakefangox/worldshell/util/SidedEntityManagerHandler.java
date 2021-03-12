@@ -16,7 +16,7 @@ import net.snakefangox.worldshell.mixin.entitytracking.ClientEntityManagerAccess
 import net.snakefangox.worldshell.mixin.entitytracking.ClientWorldAccess;
 import net.snakefangox.worldshell.mixin.entitytracking.ServerEntityManagerAccess;
 import net.snakefangox.worldshell.mixin.entitytracking.ServerWorldAccess;
-import net.snakefangox.worldshell.mixininterface.WorldShellEntityTracker;
+import net.snakefangox.worldshell.mixinextras.WorldShellEntityTracker;
 
 public class SidedEntityManagerHandler {
 

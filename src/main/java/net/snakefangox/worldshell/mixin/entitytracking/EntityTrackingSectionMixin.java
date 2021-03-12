@@ -6,8 +6,9 @@ import net.minecraft.util.collection.TypeFilterableList;
 import net.minecraft.world.entity.EntityLike;
 import net.minecraft.world.entity.EntityTrackingSection;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
-import net.snakefangox.worldshell.mixininterface.WorldShellEntityTracker;
+import net.snakefangox.worldshell.mixinextras.WorldShellEntityTracker;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -19,6 +20,7 @@ import java.util.function.Predicate;
 @Mixin(EntityTrackingSection.class)
 public abstract class EntityTrackingSectionMixin implements WorldShellEntityTracker {
 
+	@Unique
 	private final TypeFilterableList<Entity> worldShellEntities = new TypeFilterableList<>(Entity.class);
 
 	@Inject(method = "forEach(Ljava/util/function/Predicate;Ljava/util/function/Consumer;)V", at = @At("TAIL"))

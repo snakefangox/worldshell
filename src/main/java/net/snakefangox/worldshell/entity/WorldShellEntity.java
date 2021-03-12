@@ -30,9 +30,11 @@ import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.collision.EntityBounds;
+import net.snakefangox.worldshell.collision.Matrix3d;
 import net.snakefangox.worldshell.collision.QuaternionD;
 import net.snakefangox.worldshell.collision.ShellCollisionHull;
 import net.snakefangox.worldshell.storage.Bay;
+import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.Microcosm;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.util.CoordUtil;
@@ -44,13 +46,15 @@ import java.util.Map;
 import java.util.Optional;
 
 /** The basic entity that links to a shell, renders it's contents and handles interaction */
-public class WorldShellEntity extends Entity {
+public class WorldShellEntity extends Entity implements LocalSpace {
 
 	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldShellEntity.class, WSNetworking.BOUNDS);
 	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldShellEntity.class, WSNetworking.VEC3D);
 	private static final TrackedData<QuaternionD> ROTATION = DataTracker.registerData(WorldShellEntity.class, WSNetworking.QUATERNION);
 	private final Microcosm microcosm;
 	private final ShellCollisionHull hull = new ShellCollisionHull(this);
+	private Matrix3d rotationMatrix = Matrix3d.IDENTITY;
+	private Matrix3d inverseRotationMatrix = Matrix3d.IDENTITY;
 	private int shellId = 0;
 
 	public WorldShellEntity(EntityType<?> type, World world) {
@@ -79,8 +83,12 @@ public class WorldShellEntity extends Entity {
 		if (world.isClient) {
 			microcosm.tick();
 		}
-		hull.calculateCrudeBounds();
-		hull.setRotation(getRotation());
+	}
+
+	@Override
+	public final void setPos(double x, double y, double z) {
+		super.setPos(x, y, z);
+		if (hull != null) hull.calculateCrudeBounds();
 	}
 
 	public QuaternionD getRotation() {
@@ -166,7 +174,11 @@ public class WorldShellEntity extends Entity {
 			dimensions = getDataTracker().get(ENTITY_BOUNDS);
 			hull.sizeUpdate();
 		} else if (ROTATION.equals(data)) {
-			hull.setRotation(getDataTracker().get(ROTATION));
+			QuaternionD quaternion = getDataTracker().get(ROTATION);
+			QuaternionD inverseRotation = new QuaternionD(-quaternion.getX(), -quaternion.getY(), -quaternion.getZ(), quaternion.getW());
+			rotationMatrix = new Matrix3d(quaternion);
+			inverseRotationMatrix = new Matrix3d(inverseRotation);
+			hull.setRotation(inverseRotation, rotationMatrix, inverseRotationMatrix);
 		}
 	}
 
@@ -218,9 +230,8 @@ public class WorldShellEntity extends Entity {
 	public BlockHitResult raycastToWorldShell(PlayerEntity player) {
 		Vec3d cameraPosVec = player.getCameraPosVec(1.0F);
 		Vec3d rotationVec = player.getRotationVec(1.0F);
-		Vec3d extendedVec = CoordUtil.worldToLinkEntity(this,
-				cameraPosVec.add(rotationVec.x * 4.5F, rotationVec.y * 4.5F, rotationVec.z * 4.5F));
-		RaycastContext rayCtx = new RaycastContext(CoordUtil.worldToLinkEntity(this, cameraPosVec),
+		Vec3d extendedVec = toLocal(cameraPosVec.x + rotationVec.x * 4.5F, cameraPosVec.y + rotationVec.y * 4.5F, cameraPosVec.z + rotationVec.z * 4.5F);
+		RaycastContext rayCtx = new RaycastContext(toLocal(cameraPosVec),
 				extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
 		return microcosm.raycast(rayCtx);
 	}
@@ -229,7 +240,7 @@ public class WorldShellEntity extends Entity {
 		if (world.getServer() != null) return; //Like an isClient check but stops IDEA complaining server might be null
 		Optional<Bay> bay = getBay();
 		if (bay.isPresent()) {
-			Vec3d newExp = CoordUtil.toGlobal(bay.get().getCenter(), CoordUtil.worldToLinkEntity(this, new Vec3d(x, y, z)));
+			Vec3d newExp = globalToGlobal(bay.get(), x, y, z);
 			WorldShell.getStorageDim(world.getServer()).createExplosion(null, newExp.x, newExp.y, newExp.z, power, fire, type);
 		}
 	}
@@ -247,5 +258,30 @@ public class WorldShellEntity extends Entity {
 
 	public Microcosm getMicrocosm() {
 		return microcosm;
+	}
+
+	@Override
+	public double getLocalX() {
+		return getX() + getBlockOffset().x;
+	}
+
+	@Override
+	public double getLocalY() {
+		return getY() + getBlockOffset().y;
+	}
+
+	@Override
+	public double getLocalZ() {
+		return getZ() + getBlockOffset().z;
+	}
+
+	@Override
+	public Matrix3d getRotationMatrix() {
+		return rotationMatrix;
+	}
+
+	@Override
+	public Matrix3d getInverseRotationMatrix() {
+		return inverseRotationMatrix;
 	}
 }

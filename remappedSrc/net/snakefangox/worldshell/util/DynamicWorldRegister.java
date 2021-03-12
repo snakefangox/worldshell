@@ -7,7 +7,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
-import net.snakefangox.worldshell.mixininterface.DynamicWorldGen;
+import net.snakefangox.worldshell.mixinextras.DynamicWorldGen;
 
 /**
  * Static helper class to easily call world register functions on a server.

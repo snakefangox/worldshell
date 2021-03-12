@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.mixininterface;
+package net.snakefangox.worldshell.mixinextras;
 
 import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.player.PlayerEntity;

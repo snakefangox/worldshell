@@ -68,7 +68,7 @@ public class ShellStorageWorld extends ServerWorld {
 	@Override
 	public void playSound(@Nullable PlayerEntity player, BlockPos pos, SoundEvent sound, SoundCategory category, float volume, float pitch) {
 		passCallToEntity(pos, (entity, bay) -> {
-			BlockPos newPos = bay.toEntityCoordSpace(pos);
+			BlockPos newPos = bay.toEntityGlobalSpace(pos);
 			entity.getEntityWorld().playSound(null, newPos, sound, category, volume, pitch);
 		});
 	}
@@ -76,7 +76,7 @@ public class ShellStorageWorld extends ServerWorld {
 	@Override
 	public void playSound(double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch, boolean bl) {
 		passCallToEntity(new BlockPos(x, y, z), (entity, bay) -> {
-			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
+			Vec3d newPos = bay.toEntityGlobalSpace(x, y, z);
 			entity.getEntityWorld().playSound(newPos.x, newPos.y, newPos.z, sound, category, volume, pitch, bl);
 		});
 	}
@@ -84,8 +84,8 @@ public class ShellStorageWorld extends ServerWorld {
 	@Override
 	public List<Entity> getOtherEntities(@Nullable Entity except, Box box, Predicate<? super Entity> predicate) {
 		return passCallToEntity(new BlockPos(box.minX, box.minY, box.minZ), new ArrayList<>(), ((entity, bay) -> {
-			Vec3d newMin = bay.toEntityCoordSpace(box.minX, box.minY, box.minZ);
-			Vec3d newMax = bay.toEntityCoordSpace(box.maxX, box.maxY, box.maxZ);
+			Vec3d newMin = bay.toEntityGlobalSpace(box.minX, box.minY, box.minZ);
+			Vec3d newMax = bay.toEntityGlobalSpace(box.maxX, box.maxY, box.maxZ);
 			return entity.getEntityWorld().getOtherEntities(except, new Box(newMin, newMax), predicate);
 		}));
 	}
@@ -93,8 +93,8 @@ public class ShellStorageWorld extends ServerWorld {
 	@Override
 	public <T extends Entity> List<T> getEntitiesByType(TypeFilter<Entity, T> arg, Box box, Predicate<? super T> predicate) {
 		return passCallToEntity(new BlockPos(box.minX, box.minY, box.minZ), new ArrayList<>(), ((entity, bay) -> {
-			Vec3d newMin = bay.toEntityCoordSpace(box.minX, box.minY, box.minZ);
-			Vec3d newMax = bay.toEntityCoordSpace(box.maxX, box.maxY, box.maxZ);
+			Vec3d newMin = bay.toEntityGlobalSpace(box.minX, box.minY, box.minZ);
+			Vec3d newMax = bay.toEntityGlobalSpace(box.maxX, box.maxY, box.maxZ);
 			return entity.getEntityWorld().getEntitiesByType(arg, new Box(newMin, newMax), predicate);
 		}));
 	}
@@ -109,7 +109,7 @@ public class ShellStorageWorld extends ServerWorld {
 	@Override
 	public boolean spawnEntity(Entity entity) {
 		return passCallToEntity(entity.getBlockPos(), false, (worldLinkEntity, bay) -> {
-			Vec3d newPos = bay.toEntityCoordSpace(entity.getPos());
+			Vec3d newPos = bay.toEntityGlobalSpace(entity.getPos());
 			entity.setPosition(newPos.x, newPos.y, newPos.z);
 			entity.world = worldLinkEntity.getEntityWorld();
 			return worldLinkEntity.getEntityWorld().spawnEntity(entity);
@@ -119,7 +119,7 @@ public class ShellStorageWorld extends ServerWorld {
 	@Override
 	public void playSound(@Nullable PlayerEntity player, double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch) {
 		passCallToEntity(new BlockPos(x, y, z), (entity, bay) -> {
-			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
+			Vec3d newPos = bay.toEntityGlobalSpace(x, y, z);
 			entity.getEntityWorld().playSound(null, newPos.x, newPos.y, newPos.z, sound, category, volume, pitch);
 		});
 	}
@@ -128,7 +128,7 @@ public class ShellStorageWorld extends ServerWorld {
 	public void syncGlobalEvent(int eventId, BlockPos pos, int data) {
 		super.syncGlobalEvent(eventId, pos, data);
 		passCallToEntity(pos, (entity, bay) -> {
-			BlockPos newPos = bay.toEntityCoordSpace(pos);
+			BlockPos newPos = bay.toEntityGlobalSpace(pos);
 			entity.getEntityWorld().syncGlobalEvent(eventId, newPos, data);
 		});
 	}
@@ -137,7 +137,7 @@ public class ShellStorageWorld extends ServerWorld {
 	public void syncWorldEvent(@Nullable PlayerEntity player, int eventId, BlockPos pos, int data) {
 		super.syncWorldEvent(player, eventId, pos, data);
 		passCallToEntity(pos, (entity, bay) -> {
-			BlockPos newPos = bay.toEntityCoordSpace(pos);
+			BlockPos newPos = bay.toEntityGlobalSpace(pos);
 			entity.getEntityWorld().syncWorldEvent(null, eventId, newPos, data);
 		});
 	}
@@ -146,7 +146,7 @@ public class ShellStorageWorld extends ServerWorld {
 	public void addSyncedBlockEvent(BlockPos pos, Block block, int type, int data) {
 		super.addSyncedBlockEvent(pos, block, type, data);
 		passCallToEntity(pos, ((entity, bay) -> {
-			BlockPos newPos = CoordUtil.toLocal(bay.getCenter(), pos);
+			BlockPos newPos = bay.toLocal(pos);
 			PacketByteBuf buf = PacketByteBufs.create();
 			buf.writeInt(entity.getId());
 			buf.writeBlockPos(newPos);
@@ -159,7 +159,7 @@ public class ShellStorageWorld extends ServerWorld {
 	@Override
 	public <T extends ParticleEffect> int spawnParticles(T particle, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
 		return passCallToEntity(new BlockPos(x, y, z), 0, (entity, bay) -> {
-			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
+			Vec3d newPos = bay.toEntityGlobalSpace(x, y, z);
 			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(particle, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
 		});
 	}
@@ -167,7 +167,7 @@ public class ShellStorageWorld extends ServerWorld {
 	@Override
 	public <T extends ParticleEffect> boolean spawnParticles(ServerPlayerEntity viewer, T particle, boolean force, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
 		return passCallToEntity(new BlockPos(x, y, z), false, (entity, bay) -> {
-			Vec3d newPos = bay.toEntityCoordSpace(x, y, z);
+			Vec3d newPos = bay.toEntityGlobalSpace(x, y, z);
 			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(viewer, particle, force, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
 		});
 	}
@@ -184,7 +184,7 @@ public class ShellStorageWorld extends ServerWorld {
 	public void syncWorldEvent(int eventId, BlockPos pos, int data) {
 		super.syncWorldEvent(eventId, pos, data);
 		passCallToEntity(pos, (entity, bay) -> {
-			BlockPos newPos = bay.toEntityCoordSpace(pos);
+			BlockPos newPos = bay.toEntityGlobalSpace(pos);
 			entity.getEntityWorld().syncWorldEvent(eventId, newPos, data);
 		});
 	}

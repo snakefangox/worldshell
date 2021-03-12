@@ -14,7 +14,7 @@ public class EntityTrackingDelegate implements EntityChangeListener {
 
 	private final EntityChangeListener proxiedListener;
 	private final WorldShellEntity entity;
-	/** This pos is handled for us by the delegate listener */
+	/** This pos is handled for us by the proxied listener */
 	private long noopPos;
 	private final Set<Long> currentlyTracked = new HashSet<>();
 

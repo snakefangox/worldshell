@@ -23,7 +23,7 @@ import net.minecraft.world.level.ServerWorldProperties;
 import net.minecraft.world.level.UnmodifiableLevelProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.snakefangox.worldshell.CreateWorldsEvent;
-import net.snakefangox.worldshell.mixininterface.DynamicWorldGen;
+import net.snakefangox.worldshell.mixinextras.DynamicWorldGen;
 import net.snakefangox.worldshell.util.ServerWorldSupplier;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;

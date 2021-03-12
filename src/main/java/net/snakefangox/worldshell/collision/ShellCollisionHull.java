@@ -24,25 +24,25 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	private static final float PADDING = 1F;
 	private static final double SMOL = 0.0000001;
 	private final WorldShellEntity entity;
+	private QuaternionD inverseRotation;
+	private Matrix3d matrix;
+	private Matrix3d inverseMatrix;
 	// These are here to prevent some high volume functions from requiring as many allocations
 	// They're never given to anything outside this class and each function that takes them sets them beforehand
 	private final Vec3dM aabbMax = new Vec3dM();
 	private final Vec3dM aabbMin = new Vec3dM();
 	private final Vec3dM pos = new Vec3dM();
-	private QuaternionD inverseRotation;
-	private Matrix3d matrix;
-	private Matrix3d inverseMatrix;
 
 	public ShellCollisionHull(WorldShellEntity entity) {
 		super(0, 0, 0, 0, 0, 0);
 		this.entity = entity;
-		setRotation(QuaternionD.IDENTITY);
+		setRotation(QuaternionD.IDENTITY, Matrix3d.IDENTITY, Matrix3d.IDENTITY);
 	}
 
-	public void setRotation(QuaternionD q) {
-		matrix = new Matrix3d(q);
-		inverseRotation = new QuaternionD(-q.getX(), -q.getY(), -q.getZ(), q.getW());
-		inverseMatrix = new Matrix3d(inverseRotation);
+	public void setRotation(QuaternionD inverseRot, Matrix3d rotationMatrix, Matrix3d inverseRotationMatrix) {
+		inverseRotation = inverseRot;
+		matrix = rotationMatrix;
+		inverseMatrix = inverseRotationMatrix;
 	}
 
 	public void sizeUpdate() {
@@ -133,7 +133,7 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	@Override
 	public boolean contains(double x, double y, double z) {
 		pos.setAll(x, y, z);
-		CoordUtil.worldToLinkEntity(entity, pos);
+		entity.toLocal(pos);
 		Vec3d vec = inverseMatrix.transform(pos.x, pos.y, pos.z);
 		BlockPos bp = new BlockPos(vec);
 		VoxelShape shape = entity.getMicrocosm().getBlockState(bp).getCollisionShape(entity.getMicrocosm(), bp);
@@ -143,11 +143,11 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 
 	@Override
 	public Optional<Vec3d> raycast(Vec3d min, Vec3d max) {
-		Vec3d nMin = inverseMatrix.transform(CoordUtil.worldToLinkEntity(entity, min));
-		Vec3d nMax = inverseMatrix.transform(CoordUtil.worldToLinkEntity(entity, max));
+		Vec3d nMin = inverseMatrix.transform(entity.toLocal(min));
+		Vec3d nMax = inverseMatrix.transform(entity.toLocal(max));
 		RaycastContext ctx = new RaycastContext(nMin, nMax, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity);
 		BlockHitResult hit = entity.getMicrocosm().raycast(ctx);
-		return hit.getType() == HitResult.Type.MISS ? Optional.empty() : Optional.of(CoordUtil.linkEntityToWorld(CoordUtil.BP_ZERO, entity, hit.getPos()));
+		return hit.getType() == HitResult.Type.MISS ? Optional.empty() : Optional.of(entity.toGlobal(hit.getPos()));
 	}
 
 	/**
@@ -159,8 +159,8 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		double xSize = (aabbMax.x - aabbMin.x) / 2.0;
 		double ySize = (aabbMax.y - aabbMin.y) / 2.0;
 		double zSize = (aabbMax.z - aabbMin.z) / 2.0;
-		CoordUtil.worldToLinkEntity(entity, aabbMin);
-		CoordUtil.worldToLinkEntity(entity, aabbMax);
+		entity.toLocal(aabbMin);
+		entity.toLocal(aabbMax);
 		OrientedBox orientedBox = new OrientedBox(inverseMatrix.transform(aabbMin.x + xSize, aabbMin.y + ySize, aabbMin.z + zSize),
 				new Vec3d(xSize, ySize, zSize), inverseRotation);
 		Vec3d min = inverseMatrix.transform(aabbMin.x, aabbMin.y, aabbMin.z);

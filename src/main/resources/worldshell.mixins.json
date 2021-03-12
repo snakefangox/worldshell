@@ -5,14 +5,15 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "collision.BoxMixin",
+    "collision.VoxelShapesMixin",
     "entitytracking.EntityTrackingSectionMixin",
-    "passthrough.ExplosionMixin",
-    "worldgen.MinecraftServerMixin",
-    "passthrough.PlayerEntityMixin",
     "entitytracking.ServerEntityManagerAccess",
-    "passthrough.ServerPlayerEntityMixin",
     "entitytracking.ServerWorldAccess",
-    "collision.VoxelShapesMixin"
+    "entitytracking.WorldMixin",
+    "passthrough.ExplosionMixin",
+    "passthrough.PlayerEntityMixin",
+    "passthrough.ServerPlayerEntityMixin",
+    "worldgen.MinecraftServerMixin"
   ],
   "client": [
     "entitytracking.ClientEntityManagerAccess",

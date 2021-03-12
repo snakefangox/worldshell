@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.mixininterface;
+package net.snakefangox.worldshell.mixinextras;
 
 import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.player.PlayerEntity;
@@ -8,6 +8,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.WorldShell;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.util.CoordUtil;
@@ -58,9 +59,12 @@ public class ScreenHandlerCheck {
 			ShellStorageData data = ((ShellStorageWorld) world).getCachedBayData();
 			Bay bay = data.getBay(data.getBayIdFromPos(new BlockPos(x, y, z)));
 			if (bay != null && bay.getLinkedEntity().isPresent()) {
-				Vec3d temp = CoordUtil.worldToLinkEntity(bay.getLinkedEntity().get(), getPos());
-				Vec3d vec = CoordUtil.toGlobal(bay.getCenter(), temp);
-				setPosition(vec.x, vec.y, vec.z);
+				WorldShellEntity entity = bay.getLinkedEntity().get();
+				Vec3d pos = getPos();
+				double newX = entity.globalToGlobalX(bay, pos.x, pos.y, pos.z);
+				double newY = entity.globalToGlobalY(bay, pos.x, pos.y, pos.z);
+				double newZ = entity.globalToGlobalZ(bay, pos.x, pos.y, pos.z);
+				setPosition(newX, newY, newZ);
 			}
 			return super.squaredDistanceTo(x, y, z);
 		}

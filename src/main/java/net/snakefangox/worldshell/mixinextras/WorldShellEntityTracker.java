@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.mixininterface;
+package net.snakefangox.worldshell.mixinextras;
 
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 

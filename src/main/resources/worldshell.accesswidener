@@ -1,9 +1,10 @@
 accessWidener	v1	named
 
-# Lets us mess with the bounding box and dimensions
+# Lets us extend some private entity methods
 accessible field net/minecraft/entity/Entity dimensions Lnet/minecraft/entity/EntityDimensions;
 mutable field net/minecraft/entity/Entity dimensions Lnet/minecraft/entity/EntityDimensions;
 extendable method net/minecraft/entity/Entity getBoundingBox ()Lnet/minecraft/util/math/Box;
+extendable method net/minecraft/entity/Entity setPos (DDD)V
 
 # Makes Box values mutable
 mutable field net/minecraft/util/math/Box minX D
@@ -15,5 +16,3 @@ mutable field net/minecraft/util/math/Box maxZ D
 
 # We want a custom VoxelShape, for that we need access to the constructor
 accessible method net/minecraft/util/shape/VoxelShape <init> (Lnet/minecraft/util/shape/VoxelSet;)V
-
-# We need to pull data from these listeners, for that we need an accessor mixin, for that they need to be public classes

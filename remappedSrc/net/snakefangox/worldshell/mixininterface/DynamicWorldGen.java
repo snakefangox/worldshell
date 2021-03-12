@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.mixininterface;
+package net.snakefangox.worldshell.mixinextras;
 
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.registry.RegistryKey;

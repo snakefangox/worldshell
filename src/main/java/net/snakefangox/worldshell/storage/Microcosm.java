@@ -39,7 +39,7 @@ public class Microcosm implements BlockRenderView {
 	private int cacheResetTimer = 0;
 
 	/** Creates a server sided microcosm, without the render cache */
-	public Microcosm(WorldShellEntity parent) {
+	public Microcosm(WorldShellEntity parent /*TODO Replace with world and LocalSpace*/) {
 		this.parent = parent;
 		cache = null;
 		cacheValidTime = 0;

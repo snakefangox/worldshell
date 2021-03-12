@@ -22,7 +22,7 @@ import java.util.*;
  * A bay in the ship storage sense
  * Stores all the data needed to keep track of a Worldshell in the storage dimension
  */
-public class Bay {
+public class Bay implements LocalSpace {
 
 	/**The center of the shell*/
 	private BlockPos center;
@@ -77,19 +77,16 @@ public class Bay {
 				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, true));
 	}
 
-	//TODO Change this to call a method on the entity
-	public Vec3d toEntityCoordSpace(Vec3d vec) {
-		return CoordUtil.linkEntityToWorld(center, linkedEntity, vec);
+	public Vec3d toEntityGlobalSpace(Vec3d vec) {
+		return globalToGlobal(linkedEntity, vec);
 	}
 
-	//TODO Change this to call a method on the entity
-	public Vec3d toEntityCoordSpace(double x, double y, double z) {
-		return CoordUtil.linkEntityToWorld(center, linkedEntity, x, y, z);
+	public Vec3d toEntityGlobalSpace(double x, double y, double z) {
+		return globalToGlobal(linkedEntity, x, y, z);
 	}
 
-	//TODO Change this to call a method on the entity
-	public BlockPos toEntityCoordSpace(BlockPos pos) {
-		return CoordUtil.linkEntityToWorld(center, linkedEntity, pos);
+	public BlockPos toEntityGlobalSpace(BlockPos pos) {
+		return globalToGlobal(linkedEntity, pos);
 	}
 
 	public CompoundTag toTag() {
@@ -120,7 +117,7 @@ public class Bay {
 		ShellTransferHandler.forEachInBox(bounds, (bp) -> {
 			BlockState state = world.getBlockState(bp);
 			if (!state.isAir())
-				stateMap.put(CoordUtil.toLocal(center, bp.toImmutable()), state);
+				stateMap.put(toLocal(bp), state);
 		});
 		entity.initializeWorldShell(stateMap, null, null);
 	}
@@ -151,5 +148,20 @@ public class Bay {
 		if (!Objects.equals(center, bay.center)) return false;
 		if (!Objects.equals(bounds, bay.bounds)) return false;
 		return linkedEntity.equals(bay.linkedEntity);
+	}
+
+	@Override
+	public double getLocalX() {
+		return center.getX();
+	}
+
+	@Override
+	public double getLocalY() {
+		return center.getY();
+	}
+
+	@Override
+	public double getLocalZ() {
+		return center.getZ();
 	}
 }
