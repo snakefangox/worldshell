@@ -5,10 +5,9 @@ import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
-import net.snakefangox.worldshell.entity.WorldShellEntity;
-
-import java.util.ArrayList;
-import java.util.List;
+import net.snakefangox.worldshell.WorldShell;
+import net.snakefangox.worldshell.transfer.BlockBoxIterator;
+import net.snakefangox.worldshell.transfer.WorldShellConstructor;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
@@ -24,15 +23,9 @@ public class ShellCommand {
 
 	private static int execute(ServerCommandSource source, BlockBox box) {
 		try {
-			List<BlockPos> blockPosList = new ArrayList<>();
-			ShellTransferHandlerOld.forEachInBox(box, (bp) -> {
-				if (!source.getWorld().isAir(bp)) blockPosList.add(bp.toImmutable());
-			});
-			if (blockPosList.size() > 0) {
-				WorldShellEntity entity = ShellTransferHandlerOld.transferToShell(source.getWorld(), blockPosList.get(0), blockPosList);
-				source.getWorld().spawnEntity(entity);
-			}
-		} catch (Exception e) {
+			BlockPos center = new BlockPos(box.minX, box.minY, box.minZ);
+			WorldShellConstructor.create(source.getWorld(), WorldShell.WORLD_SHELL_ENTITY_TYPE, center, new BlockBoxIterator(box)).construct();
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 		return 1;

@@ -10,6 +10,7 @@
     "entitytracking.ServerEntityManagerAccess",
     "entitytracking.ServerWorldAccess",
     "entitytracking.WorldMixin",
+    "movingblocks.AbstractBlockStateMixin",
     "passthrough.ExplosionMixin",
     "passthrough.PlayerEntityMixin",
     "passthrough.ServerPlayerEntityMixin",

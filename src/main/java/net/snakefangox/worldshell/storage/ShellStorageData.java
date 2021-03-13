@@ -80,6 +80,7 @@ public class ShellStorageData extends PersistentState {
 	public int addBay(Bay bay) {
 		int id = findEmptyIndex(true);
 		bays.put(id, bay);
+		bay.markDirtyFunc = this::markDirty;
 		markDirty();
 		return id;
 	}
@@ -89,6 +90,7 @@ public class ShellStorageData extends PersistentState {
 		if (!bays.containsKey(id)) return;
 		World world = WorldShell.getStorageDim(server);
 		Bay bay = bays.remove(id);
+		bay.markDirtyFunc = () -> {};
 		emptyBays.add(id);
 		ShellTransferHandlerOld.forEachInBox(bay.getBounds(), (bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
 		markDirty();

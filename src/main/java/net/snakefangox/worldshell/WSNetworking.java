@@ -32,6 +32,7 @@ import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
 import java.util.*;
 
+// TODO This is a mess and is next on my kill list
 public class WSNetworking {
 
 	public static final Identifier SHELL_DATA = new Identifier(WorldShell.MODID, "data");

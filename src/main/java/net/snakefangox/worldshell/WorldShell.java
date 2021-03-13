@@ -43,7 +43,8 @@ public class WorldShell implements ModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger();
 
 	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.DIMENSION, new Identifier(MODID, "shell_storage"));
-	public static final EntityType<WorldShellEntity> WORLD_LINK_ENTITY_TYPE = FabricEntityTypeBuilder.<WorldShellEntity>create(SpawnGroup.MISC, WorldShellEntity::new)
+	//TODO Stop registering everything below this line
+	public static final EntityType<WorldShellEntity> WORLD_SHELL_ENTITY_TYPE = FabricEntityTypeBuilder.<WorldShellEntity>create(SpawnGroup.MISC, WorldShellEntity::new)
 			.dimensions(EntityDimensions.changing(1, 1)).build();
 	public static final Block PLACEHOLDER = new Block(FabricBlockSettings.of(Material.BARRIER).strength(0, 0).nonOpaque().breakInstantly().dropsNothing());
 
@@ -54,7 +55,7 @@ public class WorldShell implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		registerStorageDim();
-		Registry.register(Registry.ENTITY_TYPE, new Identifier(MODID, "worldlink"), WORLD_LINK_ENTITY_TYPE);
+		Registry.register(Registry.ENTITY_TYPE, new Identifier(MODID, "worldlink"), WORLD_SHELL_ENTITY_TYPE);
 		Registry.register(Registry.BLOCK, new Identifier(MODID, "placeholder"), PLACEHOLDER);
 		WSNetworking.registerServerPackets();
 		CommandRegistrationCallback.EVENT.register(this::registerCommands);

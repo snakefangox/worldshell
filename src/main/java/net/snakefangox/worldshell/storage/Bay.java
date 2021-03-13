@@ -23,14 +23,17 @@ import java.util.*;
  */
 public class Bay implements LocalSpace {
 
-	/**The center of the shell*/
+	/** The center of the shell */
 	private BlockPos center;
 
-	/**Defines the box the shell fits within*/
+	/** Defines the box the shell fits within */
 	private BlockBox bounds;
 
-	/**The entity changes to this shell should propagate to*/
+	/** The entity changes to this shell should propagate to */
 	private WorldShellEntity linkedEntity = null;
+
+	/** Calls on the {@link ShellStorageData} holding this */
+	Runnable markDirtyFunc = () -> {};
 
 	public Bay(BlockPos center, BlockBox bounds) {
 		this.center = center;
@@ -76,6 +79,10 @@ public class Bay implements LocalSpace {
 				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, true));
 	}
 
+	private void onBoundsUpdate() {
+		markDirty();
+	}
+
 	public Vec3d toEntityGlobalSpace(Vec3d vec) {
 		return globalToGlobal(linkedEntity, vec);
 	}
@@ -95,8 +102,8 @@ public class Bay implements LocalSpace {
 		return tag;
 	}
 
-	public void markDirty(ServerWorld world) {
-		ShellStorageData.getOrCreate(world).markDirty();
+	public void markDirty() {
+		markDirtyFunc.run();
 	}
 
 	public BlockBox getBounds() {
@@ -129,6 +136,54 @@ public class Bay implements LocalSpace {
 		return center;
 	}
 
+	public Vec3d getBoundsCenter() {
+		double x = bounds.minX + (((double) (bounds.maxX - bounds.minX)) / 2.0);
+		double y = bounds.minY + (((double) (bounds.maxY - bounds.minY)) / 2.0);
+		double z = bounds.minZ + (((double) (bounds.maxZ - bounds.minZ)) / 2.0);
+		return new Vec3d(x, y, z);
+	}
+
+	public void updateBoxBounds(BlockPos pos) {
+		boolean hasChanged = false;
+		if (pos.getX() > bounds.maxX) {
+			bounds.maxX = pos.getX();
+			hasChanged = true;
+		} else if (pos.getX() < bounds.minX) {
+			bounds.minX = pos.getX();
+			hasChanged = true;
+		}
+		if (pos.getY() > bounds.maxY) {
+			bounds.maxY = pos.getY();
+			hasChanged = true;
+		} else if (pos.getY() < bounds.minY) {
+			bounds.minY = pos.getY();
+			hasChanged = true;
+		}
+		if (pos.getZ() > bounds.maxZ) {
+			bounds.maxZ = pos.getZ();
+			hasChanged = true;
+		} else if (pos.getZ() < bounds.minZ) {
+			bounds.minZ = pos.getZ();
+			hasChanged = true;
+		}
+		if (hasChanged) onBoundsUpdate();
+	}
+
+	@Override
+	public double getLocalX() {
+		return center.getX();
+	}
+
+	@Override
+	public double getLocalY() {
+		return center.getY();
+	}
+
+	@Override
+	public double getLocalZ() {
+		return center.getZ();
+	}
+
 	@Override
 	public int hashCode() {
 		int result = center != null ? center.hashCode() : 0;
@@ -147,20 +202,5 @@ public class Bay implements LocalSpace {
 		if (!Objects.equals(center, bay.center)) return false;
 		if (!Objects.equals(bounds, bay.bounds)) return false;
 		return linkedEntity.equals(bay.linkedEntity);
-	}
-
-	@Override
-	public double getLocalX() {
-		return center.getX();
-	}
-
-	@Override
-	public double getLocalY() {
-		return center.getY();
-	}
-
-	@Override
-	public double getLocalZ() {
-		return center.getZ();
 	}
 }

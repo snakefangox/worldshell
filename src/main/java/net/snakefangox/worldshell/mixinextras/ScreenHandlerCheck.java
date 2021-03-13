@@ -18,7 +18,7 @@ import java.util.UUID;
 
 public class ScreenHandlerCheck {
 
-	private static final GameProfile fakeGameProfile = new GameProfile(UUID.randomUUID(), "FakePlayer");
+	private static final GameProfile fakeGameProfile = new GameProfile(UUID.fromString("9ab93073-2db5-4511-9d3c-af9fe6ec37af"), "FakePlayer");
 	private static FakePlayerEntity fakePlayer;
 
 	public static boolean checkScreenHandler(ScreenHandler screenHandler, PlayerEntity player) {
@@ -33,7 +33,7 @@ public class ScreenHandlerCheck {
 
 	private static PlayerEntity getOrCreateFakePlayer(World storageWorld, Vec3d pos) {
 		if (fakePlayer == null) {
-			fakePlayer = new FakePlayerEntity(storageWorld, new BlockPos(0,0,0), 0, fakeGameProfile);
+			fakePlayer = new FakePlayerEntity(storageWorld, BlockPos.ORIGIN, 0, fakeGameProfile);
 		}
 		fakePlayer.setPosition(pos.x, pos.y, pos.z);
 		return fakePlayer;

@@ -37,7 +37,6 @@ import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.Microcosm;
 import net.snakefangox.worldshell.storage.ShellStorageData;
-import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.WSNbtHelper;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
@@ -208,10 +207,6 @@ public class WorldShellEntity extends Entity implements LocalSpace {
 		return getDataTracker().get(ENTITY_BOUNDS);
 	}
 
-	public Optional<Bay> getBay() {
-		return Optional.ofNullable(ShellStorageData.getOrCreate(world.getServer()).getBay(shellId));
-	}
-
 	protected ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean interact) {
 		BlockHitResult rayCastResult = raycastToWorldShell(player);
 		if (rayCastResult.getType() == HitResult.Type.BLOCK) {
@@ -238,11 +233,10 @@ public class WorldShellEntity extends Entity implements LocalSpace {
 
 	public void passThroughExplosion(double x, double y, double z, float power, boolean fire, Explosion.DestructionType type) {
 		if (world.getServer() != null) return; //Like an isClient check but stops IDEA complaining server might be null
-		Optional<Bay> bay = getBay();
-		if (bay.isPresent()) {
-			Vec3d newExp = globalToGlobal(bay.get(), x, y, z);
+		getBay().ifPresent(bay -> {
+			Vec3d newExp = globalToGlobal(bay, x, y, z);
 			WorldShell.getStorageDim(world.getServer()).createExplosion(null, newExp.x, newExp.y, newExp.z, power, fire, type);
-		}
+		});
 	}
 
 	public int getShellId() {
@@ -250,10 +244,14 @@ public class WorldShellEntity extends Entity implements LocalSpace {
 	}
 
 	public void setShellId(int shellId) {
-		this.shellId = shellId;
-		if (!world.isClient() && shellId > 0) {
-			ShellStorageData.getOrCreate(world.getServer()).getBay(shellId).linkEntity(this);
+		if (shellId > 0) {
+			this.shellId = shellId;
+			getBay().ifPresent(bay -> bay.linkEntity(this));
 		}
+	}
+
+	public Optional<Bay> getBay() {
+		return Optional.ofNullable(ShellStorageData.getOrCreate(world.getServer()).getBay(shellId));
 	}
 
 	public Microcosm getMicrocosm() {

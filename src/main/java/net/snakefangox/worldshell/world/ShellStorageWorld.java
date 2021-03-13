@@ -54,10 +54,7 @@ public class ShellStorageWorld extends ServerWorld {
 			passCallToEntity(pos, (entity, bay) -> {
 				PacketByteBuf buf = PacketByteBufs.create();
 				WorldShellPacketHelper.writeBlock(buf, this, pos, entity, bay.getCenter());
-				if (!bay.getBounds().contains(pos)) {
-					ShellTransferHandlerOld.updateBoxBounds(bay.getBounds(), pos);
-					bay.markDirty(this);
-				}
+				bay.updateBoxBounds(pos);
 				PlayerLookup.tracking(entity).forEach(player -> ServerPlayNetworking.send(player, WSNetworking.SHELL_UPDATE, buf));
 			});
 		}

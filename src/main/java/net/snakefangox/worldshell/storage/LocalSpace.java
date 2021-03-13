@@ -102,6 +102,22 @@ public interface LocalSpace {
 		return new BlockPos(newX + getLocalX(), newY + getLocalY(), newZ + getLocalZ());
 	}
 
+	default BlockPos.Mutable toLocal(BlockPos.Mutable pos) {
+		double newX = pos.getX() - getLocalX();
+		double newY = pos.getX() - getLocalY();
+		double newZ = pos.getX() - getLocalZ();
+		return pos.set(getInverseRotationMatrix().transformX(newX, newY, newZ),
+				getInverseRotationMatrix().transformY(newX, newY, newZ),
+				getInverseRotationMatrix().transformZ(newX, newY, newZ));
+	}
+
+	default BlockPos.Mutable toGlobal(BlockPos.Mutable pos) {
+		double newX = getRotationMatrix().transformX(pos.getX(), pos.getY(), pos.getZ());
+		double newY = getRotationMatrix().transformY(pos.getX(), pos.getY(), pos.getZ());
+		double newZ = getRotationMatrix().transformZ(pos.getX(), pos.getY(), pos.getZ());
+		return pos.set(newX + getLocalX(), newY + getLocalY(), newZ + getLocalZ());
+	}
+
 	default void toLocal(ShellCollisionHull.Vec3dM pos) {
 		double newX = pos.x - getLocalX();
 		double newY = pos.y - getLocalY();
@@ -169,6 +185,10 @@ public interface LocalSpace {
 
 	default BlockPos globalToGlobal(LocalSpace target, int x, int y, int z) {
 		return target.toGlobal((int) toLocalX(x, y, z), (int) toLocalY(x, y, z), (int) toLocalZ(x, y, z));
+	}
+
+	default BlockPos.Mutable globalToGlobal(LocalSpace target, BlockPos.Mutable pos) {
+		return target.toGlobal(toLocal(pos));
 	}
 
 	default double globalToGlobalX(LocalSpace target, double x, double y, double z) {
