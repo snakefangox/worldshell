@@ -104,8 +104,8 @@ public interface LocalSpace {
 
 	default BlockPos.Mutable toLocal(BlockPos.Mutable pos) {
 		double newX = pos.getX() - getLocalX();
-		double newY = pos.getX() - getLocalY();
-		double newZ = pos.getX() - getLocalZ();
+		double newY = pos.getY() - getLocalY();
+		double newZ = pos.getZ() - getLocalZ();
 		return pos.set(getInverseRotationMatrix().transformX(newX, newY, newZ),
 				getInverseRotationMatrix().transformY(newX, newY, newZ),
 				getInverseRotationMatrix().transformZ(newX, newY, newZ));

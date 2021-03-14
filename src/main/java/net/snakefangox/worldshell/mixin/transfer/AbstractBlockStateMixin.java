@@ -1,4 +1,4 @@
-package net.snakefangox.worldshell.mixin.movingblocks;
+package net.snakefangox.worldshell.mixin.transfer;
 
 import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.MapCodec;

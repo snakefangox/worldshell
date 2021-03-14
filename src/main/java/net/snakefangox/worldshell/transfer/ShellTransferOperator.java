@@ -1,6 +1,7 @@
 package net.snakefangox.worldshell.transfer;
 
 import net.minecraft.server.world.ServerWorld;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Shell operations can take a while. This is a basic interface that the {@link ShellTransferHandler}
@@ -17,5 +18,9 @@ public interface ShellTransferOperator extends Comparable<ShellTransferOperator>
 	boolean isFinished();
 
 	void performPass();
+
+	default int compareTo(@NotNull ShellTransferOperator o) {
+		return getTime() - o.getTime();
+	}
 
 }

@@ -17,7 +17,6 @@ import net.snakefangox.worldshell.mixinextras.NoOpPosWrapper;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.ShellStorageData;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
@@ -48,7 +47,8 @@ import java.util.function.Consumer;
 public final class WorldShellConstructor<T extends WorldShellEntity> implements ShellTransferOperator, LocalSpace {
 
 	private static final int MAX_OPS = 200;
-	private static final int FLAGS = 16 | 32 | 64;
+	private static final int FLAGS = 2 | 16 | 32 | 64;
+	private static final int UPDATE_DEPTH = 3;
 	private static final BlockState CLEAR_STATE = Blocks.AIR.getDefaultState();
 
 	private final ServerWorld world;
@@ -107,11 +107,6 @@ public final class WorldShellConstructor<T extends WorldShellEntity> implements 
 	}
 
 	@Override
-	public int compareTo(@NotNull ShellTransferOperator o) {
-		return timeSpent - o.getTime();
-	}
-
-	@Override
 	public int getTime() {
 		return timeSpent;
 	}
@@ -156,7 +151,7 @@ public final class WorldShellConstructor<T extends WorldShellEntity> implements 
 
 	private void setup() {
 		shellWorld = WorldShell.getStorageDim(world.getServer());
-		shellStorage = ShellStorageData.getOrCreate(world.getServer());
+		shellStorage = ShellStorageData.getOrCreate(world);
 		bay = new Bay(shellStorage.getFreeBay(), BlockBox.empty());
 		stage = Stage.TRANSFER;
 	}
@@ -178,13 +173,18 @@ public final class WorldShellConstructor<T extends WorldShellEntity> implements 
 		T entity = entityType.create(world);
 		if (entity == null)
 			throw new IllegalStateException(entityType.toString() + " constructor returned null, how did we get here?");
+		//Set entity dimensions
 		BlockBox bayBounds = bay.getBounds();
 		EntityBounds bound = new EntityBounds(bayBounds.getBlockCountX(), bayBounds.getBlockCountY(), bayBounds.getBlockCountZ(), false);
 		entity.setDimensions(bound);
-		Vec3d boundsCenter = bay.getBoundsCenter();
-		Vec3d blockOffset = new Vec3d((center.getX() - boundsCenter.x) - 0.5, center.getY() - bayBounds.minY, (center.getZ() - boundsCenter.z) - 0.5);
-		entity.setPosition(center.getX() + 0.5, bayBounds.minY, center.getZ() + 0.5);
+		//Set position
+		Vec3d boundsCenter = bay.globalToGlobal(this, bay.getBoundsCenter());
+		double localBoundsY = bay.globalToGlobalY(this, boundsCenter.x, bayBounds.minY, boundsCenter.z);
+		entity.setPosition(boundsCenter.x + 0.5, localBoundsY, boundsCenter.z + 0.5);
+		//Set offset
+		Vec3d blockOffset = new Vec3d((center.getX() - boundsCenter.x) - 0.5, center.getY() - localBoundsY, (center.getZ() - boundsCenter.z) - 0.5);
 		entity.setBlockOffset(blockOffset);
+		//Register bay
 		int id = shellStorage.addBay(bay);
 		entity.setShellId(id);
 		preSpawnCallback(entity);
@@ -196,7 +196,7 @@ public final class WorldShellConstructor<T extends WorldShellEntity> implements 
 	private void cleanup() {
 		int i = 0;
 		while (!cleanUpPositions.isEmpty() && i < MAX_OPS) {
-			world.updateNeighbors(posWrapper.set(cleanUpPositions.pop()), CLEAR_STATE.getBlock());
+			world.getBlockState(posWrapper.set(cleanUpPositions.pop())).updateNeighbors(world, posWrapper, FLAGS, UPDATE_DEPTH);
 			++i;
 		}
 		if (cleanUpPositions.isEmpty()) stage = Stage.FINISHED;
@@ -275,8 +275,7 @@ public final class WorldShellConstructor<T extends WorldShellEntity> implements 
 		}
 	}
 
-	/** Denotes the constructors current progress in creating the entity */
-	public enum Stage {
+	private enum Stage {
 		SETUP, TRANSFER, SPAWN, CLEANUP, FINISHED
 	}
 }
