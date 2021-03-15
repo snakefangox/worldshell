@@ -25,7 +25,7 @@ public class BlockBoxIterator implements Iterator<BlockPos> {
 
 	@Override
 	public boolean hasNext() {
-		return z < box.maxZ;
+		return x < box.maxX || z < box.maxZ || y < box.maxY;
 	}
 
 	@Override

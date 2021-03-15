@@ -131,7 +131,7 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 
 	private void setup() {
 		shellWorld = WorldShell.getStorageDim(getWorld().getServer());
-		shellStorage = ShellStorageData.getOrCreate(getWorld());
+		shellStorage = ShellStorageData.getOrCreate(shellWorld.getServer());
 		bay = new Bay(shellStorage.getFreeBay(), BlockBox.empty());
 		stage = Stage.TRANSFER;
 	}
@@ -139,7 +139,7 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 	private void transfer() {
 		int i = 0;
 		while (iterator.hasNext() && i < MAX_OPS) {
-			transferBlock(getWorld(), shellWorld, iterator.next(), true);
+			transferBlock(getWorld(), shellWorld, iterator.next());
 			++i;
 		}
 		if (!iterator.hasNext()) stage = Stage.SPAWN;
