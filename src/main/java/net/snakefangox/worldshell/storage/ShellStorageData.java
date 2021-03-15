@@ -10,6 +10,7 @@ import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.WorldShellConfig;
+import net.snakefangox.worldshell.transfer.WorldShellDeconstructor;
 import net.snakefangox.worldshell.util.ShellTransferHandlerOld;
 
 import java.util.ArrayList;
@@ -85,14 +86,12 @@ public class ShellStorageData extends PersistentState {
 		return id;
 	}
 
-	//TODO call this on entity death
-	public void freeBay(int id, MinecraftServer server) {
-		if (!bays.containsKey(id)) return;
-		World world = WorldShell.getStorageDim(server);
+	/** You should not be calling this directly, WorldShellDeconstructor will handle it for you */
+	public void freeBay(int id, WorldShellDeconstructor deconstructor) {
+		if (!bays.containsKey(id) || !deconstructor.isRemoving()) return;
 		Bay bay = bays.remove(id);
 		bay.markDirtyFunc = () -> {};
 		emptyBays.add(id);
-		ShellTransferHandlerOld.forEachInBox(bay.getBounds(), (bp) -> world.setBlockState(bp, Blocks.AIR.getDefaultState()));
 		markDirty();
 	}
 

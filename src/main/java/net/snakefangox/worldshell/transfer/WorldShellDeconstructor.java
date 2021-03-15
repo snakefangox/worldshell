@@ -1,78 +1,109 @@
 package net.snakefangox.worldshell.transfer;
 
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.BlockRotation;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.WorldShell;
+import net.snakefangox.worldshell.collision.Matrix3d;
+import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
+import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 
-public class WorldShellDeconstructor implements ShellTransferOperator {
+public final class WorldShellDeconstructor extends ShellTransferOperator {
 
-	private final ServerWorld world;
-	private final int shellId;
-	private final RotationSolver rotationSolver;
-	private final ConflictSolver conflictSolver;
+    private final int shellId;
+    private final RotationSolver rotationSolver;
+    private final ConflictSolver conflictSolver;
+    private final LocalSpace noRotLocalSpace;
+    private final Matrix3d rotation;
+    private final BlockRotation blockRotation;
 
-	private int timeSpent = 0;
-	private Stage stage = Stage.SETUP;
+    private Stage stage = Stage.SETUP;
 
-	private ShellStorageData shellStorage;
-	private Bay bay;
-	private World shellWorld;
+    private ShellStorageData shellStorage;
+    private Bay bay;
+    private World shellWorld;
+    private BlockBoxIterator iterator;
 
-	public static WorldShellDeconstructor create(ServerWorld world, int shellId, RotationSolver rotationSolver, ConflictSolver conflictSolver) {
-		return new WorldShellDeconstructor(world, shellId, rotationSolver, conflictSolver);
-	}
+    public static WorldShellDeconstructor create(ServerWorld world, int shellId, RotationSolver rotationSolver, ConflictSolver conflictSolver, LocalSpace localSpace) {
+        return new WorldShellDeconstructor(world, shellId, rotationSolver, conflictSolver, localSpace);
+    }
 
-	private WorldShellDeconstructor(ServerWorld world, int shellId, RotationSolver rotationSolver, ConflictSolver conflictSolver) {
-		this.world = world;
-		this.shellId = shellId;
-		this.rotationSolver = rotationSolver;
-		this.conflictSolver = conflictSolver;
-	}
+    public static WorldShellDeconstructor create(WorldShellEntity entity, RotationSolver rotationSolver, ConflictSolver conflictSolver) {
+        if (!(entity.world instanceof ServerWorld))
+            throw new RuntimeException("Trying to create WorldShellDeconstructor on client");
+        return new WorldShellDeconstructor((ServerWorld) entity.world, entity.getShellId(), rotationSolver, conflictSolver,
+                LocalSpace.of(entity.getLocalX(), entity.getLocalY(), entity.getLocalZ()));
+    }
 
-	@Override
-	public int getTime() {
-		return timeSpent;
-	}
+    private WorldShellDeconstructor(ServerWorld world, int shellId, RotationSolver rotationSolver, ConflictSolver conflictSolver, LocalSpace localSpace) {
+        super(world);
+        this.shellId = shellId;
+        this.rotationSolver = rotationSolver;
+        this.conflictSolver = conflictSolver;
+        this.noRotLocalSpace = LocalSpace.of(localSpace.getLocalX(), localSpace.getLocalY(), localSpace.getLocalZ());
+        this.rotation = localSpace.getInverseRotationMatrix();
+        this.blockRotation = BlockRotation.NONE;
+    }
 
-	@Override
-	public void addTime(long amount) {
-		timeSpent += amount;
-	}
+    @Override
+    public boolean isFinished() {
+        return stage == Stage.FINISHED;
+    }
 
-	@Override
-	public ServerWorld getWorld() {
-		return world;
-	}
+    public boolean isRemoving() {
+        return stage == Stage.REMOVE;
+    }
 
-	@Override
-	public boolean isFinished() {
-		return stage == Stage.FINISHED;
-	}
+    @Override
+    protected LocalSpace getLocalSpace() {
+        return noRotLocalSpace;
+    }
 
-	@Override
-	public void performPass() {
-		switch (stage) {
-			case SETUP:
-				setup();
-				break;
-			case PLACE:
-				break;
-			case REMOVE:
-				break;
-			case FINISHED:
-				break;
-		}
-	}
+    @Override
+    protected LocalSpace getRemoteSpace() {
+        return bay;
+    }
 
-	private void setup() {
-		shellStorage = ShellStorageData.getOrCreate(world);
-		bay = shellStorage.getBay(shellId);
-		shellWorld = WorldShell.getStorageDim(world.getServer());
-	}
+    @Override
+    public void performPass() {
+        switch (stage) {
+            case SETUP:
+                setup();
+                break;
+            case PLACE:
+                place();
+                break;
+            case REMOVE:
+                remove();
+                break;
+        }
+    }
 
-	private enum Stage {
-		SETUP, PLACE, REMOVE, FINISHED
-	}
+    private void setup() {
+        shellStorage = ShellStorageData.getOrCreate(getWorld());
+        bay = shellStorage.getBay(shellId);
+        shellWorld = WorldShell.getStorageDim(getWorld().getServer());
+        iterator = new BlockBoxIterator(bay.getBounds());
+        stage = Stage.PLACE;
+    }
+
+    private void place() {
+        int i = 0;
+        while (iterator.hasNext() && i < MAX_OPS) {
+            transferBlock(shellWorld, getWorld(), iterator.next(), false, rotationSolver, rotation, blockRotation, conflictSolver);
+            ++i;
+        }
+        if (!iterator.hasNext()) stage = Stage.REMOVE;
+    }
+
+    private void remove() {
+        shellStorage.freeBay(shellId, this);
+        stage = Stage.FINISHED;
+    }
+
+    private enum Stage {
+        SETUP, PLACE, REMOVE, FINISHED
+    }
 }
