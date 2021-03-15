@@ -112,6 +112,8 @@ public class Bay implements LocalSpace {
 
 	public void linkEntity(@NotNull WorldShellEntity worldShellEntity) {
 		linkedEntity = worldShellEntity;
+		//TODO Move to a better place
+		loadAllChunks(worldShellEntity.world.getServer());
 		if (worldShellEntity.getMicrocosm().isEmpty()) {
 			fillServerWorldShell(worldShellEntity);
 		}

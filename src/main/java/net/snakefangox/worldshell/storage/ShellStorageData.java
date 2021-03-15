@@ -12,6 +12,7 @@ import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.WorldShellConfig;
 import net.snakefangox.worldshell.transfer.WorldShellDeconstructor;
 import net.snakefangox.worldshell.util.ShellTransferHandlerOld;
+import net.snakefangox.worldshell.world.ShellStorageWorld;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +47,7 @@ public class ShellStorageData extends PersistentState {
 		return storageData;
 	}
 
-	public static ShellStorageData getOrCreate(ServerWorld world) {
+	public static ShellStorageData getOrCreate(ShellStorageWorld world) {
 		PersistentStateManager stateManager = world.getPersistentStateManager();
 		return stateManager.getOrCreate(ShellStorageData::fromNbt, ShellStorageData::new, ID);
 	}
