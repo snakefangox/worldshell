@@ -14,8 +14,7 @@
     "passthrough.PlayerEntityMixin",
     "passthrough.ServerPlayerEntityMixin",
     "server.MinecraftServerMixin",
-    "transfer.AbstractBlockStateMixin",
-    "transfer.DirectionTransformationMixin"
+    "transfer.AbstractBlockStateMixin"
   ],
   "client": [
     "entitytracking.ClientEntityManagerAccess",
