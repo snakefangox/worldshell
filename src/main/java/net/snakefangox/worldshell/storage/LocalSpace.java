@@ -42,6 +42,36 @@ public interface LocalSpace {
         };
     }
 
+    /** Creates a local space with the given rotation and with origin at the given point */
+    static LocalSpace of(double x, double y, double z, Matrix3d rotation, Matrix3d invRotation) {
+        return new LocalSpace() {
+            @Override
+            public double getLocalX() {
+                return x;
+            }
+
+            @Override
+            public double getLocalY() {
+                return y;
+            }
+
+            @Override
+            public double getLocalZ() {
+                return z;
+            }
+
+            @Override
+            public Matrix3d getRotationMatrix() {
+                return rotation;
+            }
+
+            @Override
+            public Matrix3d getInverseRotationMatrix() {
+                return invRotation;
+            }
+        };
+    }
+
     /** Returns the world coordinate where this local space's X coordinate is zero */
     double getLocalX();
 
@@ -60,6 +90,8 @@ public interface LocalSpace {
     default Matrix3d getInverseRotationMatrix() {
         return Matrix3d.IDENTITY;
     }
+
+    /* -- Below this line lies only madness and a lot of matrix transforms -- */
 
     default BlockPos toLocal(BlockPos pos) {
         double newX = pos.getX() - getLocalX();

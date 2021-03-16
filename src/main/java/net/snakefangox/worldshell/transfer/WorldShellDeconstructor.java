@@ -25,6 +25,7 @@ public final class WorldShellDeconstructor extends ShellTransferOperator {
     private Bay bay;
     private World shellWorld;
     private BlockBoxIterator iterator;
+    private Runnable postDeconstructCallback;
 
     public static WorldShellDeconstructor create(ServerWorld world, int shellId, RotationSolver rotationSolver, ConflictSolver conflictSolver, LocalSpace localSpace) {
         return new WorldShellDeconstructor(world, shellId, rotationSolver, conflictSolver, localSpace);
@@ -44,7 +45,22 @@ public final class WorldShellDeconstructor extends ShellTransferOperator {
         this.conflictSolver = conflictSolver;
         this.noRotLocalSpace = LocalSpace.of(localSpace.getLocalX(), localSpace.getLocalY(), localSpace.getLocalZ());
         this.rotation = localSpace.getInverseRotationMatrix();
-        this.blockRotation = BlockRotation.NONE;
+        this.blockRotation = getBlockRotation(rotation);
+    }
+
+    /**
+     * Begins deconstructing the bay
+     *
+     * @param postDeconstructCallback is called after the bay is returned to the world
+     */
+    public void deconstruct(Runnable postDeconstructCallback) {
+        this.postDeconstructCallback = postDeconstructCallback;
+        ShellTransferHandler.queueOperator(this);
+    }
+
+    /** Begins deconstructing the bay */
+    public void deconstruct() {
+        deconstruct(null);
     }
 
     @Override
@@ -100,6 +116,7 @@ public final class WorldShellDeconstructor extends ShellTransferOperator {
 
     private void remove() {
         shellStorage.freeBay(shellId, this);
+        if (postDeconstructCallback != null) postDeconstructCallback.run();
         stage = Stage.FINISHED;
     }
 

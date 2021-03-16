@@ -37,6 +37,7 @@ import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.Microcosm;
 import net.snakefangox.worldshell.storage.ShellStorageData;
+import net.snakefangox.worldshell.transfer.WorldShellDeconstructor;
 import net.snakefangox.worldshell.util.WSNbtHelper;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
@@ -45,20 +46,24 @@ import java.util.Map;
 import java.util.Optional;
 
 /** The basic entity that links to a shell, renders it's contents and handles interaction */
-public class WorldShellEntity extends Entity implements LocalSpace {
+public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
 	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldShellEntity.class, WSNetworking.BOUNDS);
 	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldShellEntity.class, WSNetworking.VEC3D);
 	private static final TrackedData<QuaternionD> ROTATION = DataTracker.registerData(WorldShellEntity.class, WSNetworking.QUATERNION);
+
+	private final WorldShellSettings settings;
 	private final Microcosm microcosm;
 	private final ShellCollisionHull hull = new ShellCollisionHull(this);
+
 	private Matrix3d rotationMatrix = Matrix3d.IDENTITY;
 	private Matrix3d inverseRotationMatrix = Matrix3d.IDENTITY;
 	private int shellId = 0;
 
-	public WorldShellEntity(EntityType<?> type, World world) {
+	public WorldShellEntity(EntityType<?> type, World world, WorldShellSettings shellSettings) {
 		super(type, world);
-		microcosm = world.isClient() ? new Microcosm(this, 120 /*TODO set to builder*/) : new Microcosm(this);
+		this.settings = shellSettings;
+		microcosm = world.isClient() ? new Microcosm(this, settings.updateFrames()) : new Microcosm(this);
 	}
 
 	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<Microcosm.ShellTickInvoker> tickers) {
@@ -100,7 +105,7 @@ public class WorldShellEntity extends Entity implements LocalSpace {
 
 	@Override
 	public boolean collides() {
-		return true;
+		return settings.doCollision(this);
 	}
 
 	@Override
@@ -207,7 +212,14 @@ public class WorldShellEntity extends Entity implements LocalSpace {
 		return getDataTracker().get(ENTITY_BOUNDS);
 	}
 
+	@Override
+	public void remove(RemovalReason reason) {
+		super.remove(reason);
+		WorldShellDeconstructor.create(this, settings.getRotationSolver(this), settings.getConflictSolver(this));
+	}
+
 	protected ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean interact) {
+		if (!settings.passthroughInteraction(this, interact)) return ActionResult.PASS;
 		BlockHitResult rayCastResult = raycastToWorldShell(player);
 		if (rayCastResult.getType() == HitResult.Type.BLOCK) {
 			if (interact) {
@@ -232,7 +244,7 @@ public class WorldShellEntity extends Entity implements LocalSpace {
 	}
 
 	public void passThroughExplosion(double x, double y, double z, float power, boolean fire, Explosion.DestructionType type) {
-		if (world.getServer() != null) return; //Like an isClient check but stops IDEA complaining server might be null
+		if (world.getServer() != null || !settings.passthroughExplosion(this, power, fire, type)) return;
 		getBay().ifPresent(bay -> {
 			Vec3d newExp = globalToGlobal(bay, x, y, z);
 			WorldShell.getStorageDim(world.getServer()).createExplosion(null, newExp.x, newExp.y, newExp.z, power, fire, type);

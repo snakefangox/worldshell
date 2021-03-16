@@ -1,18 +1,13 @@
 package net.snakefangox.worldshell.storage;
 
-import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
-import net.minecraft.world.World;
 import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.WorldShellConfig;
 import net.snakefangox.worldshell.transfer.WorldShellDeconstructor;
-import net.snakefangox.worldshell.util.ShellTransferHandlerOld;
-import net.snakefangox.worldshell.world.ShellStorageWorld;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,11 +40,6 @@ public class ShellStorageData extends PersistentState {
 		storageData.emptyBays.clear();
 		for (int i : eb) storageData.emptyBays.add(i);
 		return storageData;
-	}
-
-	public static ShellStorageData getOrCreate(ShellStorageWorld world) {
-		PersistentStateManager stateManager = world.getPersistentStateManager();
-		return stateManager.getOrCreate(ShellStorageData::fromNbt, ShellStorageData::new, ID);
 	}
 
 	public BlockPos getFreeBay() {

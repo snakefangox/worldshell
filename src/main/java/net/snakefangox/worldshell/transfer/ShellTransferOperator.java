@@ -25,6 +25,7 @@ public abstract class ShellTransferOperator implements Comparable<ShellTransferO
     protected static final int MAX_OPS = 200;
     protected static final int FLAGS = 2 | 16 | 32 | 64;
     protected static final int UPDATE_DEPTH = 3;
+    private static final double ROTATE_BACK = 0.7071067;
     protected static final BlockState CLEAR_STATE = Blocks.AIR.getDefaultState();
 
     private final ServerWorld world;
@@ -61,6 +62,24 @@ public abstract class ShellTransferOperator implements Comparable<ShellTransferO
         return getTime() - o.getTime();
     }
 
+    protected BlockRotation getBlockRotation(Matrix3d rotation) {
+        double x = rotation.transformX(ROTATE_BACK, 0.0, ROTATE_BACK);
+        double z = rotation.transformZ(ROTATE_BACK, 0.0, ROTATE_BACK);
+        if (x > 0) {
+            if (z > 0) {
+                return BlockRotation.NONE;
+            } else {
+                return BlockRotation.CLOCKWISE_90;
+            }
+        } else {
+            if (z > 0) {
+                return BlockRotation.COUNTERCLOCKWISE_90;
+            } else {
+                return BlockRotation.CLOCKWISE_180;
+            }
+        }
+    }
+
     protected void transferBlock(World from, World to, BlockPos pos) {
         transferBlock(from, to, pos, true, RotationSolver.ORIGINAL, Matrix3d.IDENTITY, BlockRotation.NONE, ConflictSolver.OVERWRITE);
     }
@@ -76,7 +95,6 @@ public abstract class ShellTransferOperator implements Comparable<ShellTransferO
         if (!currentState.getMaterial().isReplaceable())
             state = conflictSolver.solveConflict(to, posWrapper, state, currentState);
         to.setBlockState(posWrapper, state, FLAGS, 0);
-        System.out.println(pos.toShortString() + " to " + posWrapper.toShortString());
         if (getRemoteSpace() instanceof Bay) ((Bay) getRemoteSpace()).updateBoxBounds(posWrapper);
         if (state.hasBlockEntity()) {
             BlockEntity blockEntity = from.getBlockEntity(pos);
