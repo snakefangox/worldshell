@@ -12,24 +12,24 @@ import net.minecraft.util.math.Vec3d;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 
 @Environment(EnvType.CLIENT)
-public class WorldLinkRenderer extends EntityRenderer<WorldShellEntity> {
+public class WorldShellEntityRenderer<T extends WorldShellEntity> extends EntityRenderer<T> {
 
-	protected WorldLinkRenderer(EntityRendererFactory.Context ctx) {
+	protected WorldShellEntityRenderer(EntityRendererFactory.Context ctx) {
 		super(ctx);
 	}
 
 	@Override
-	public Vec3d getPositionOffset(WorldShellEntity entity, float tickDelta) {
+	public Vec3d getPositionOffset(T entity, float tickDelta) {
 		return entity.getBlockOffset();
 	}
 
 	@Override
-	public void render(WorldShellEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+	public void render(T entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
 		WorldShellRender.renderMicrocosm(entity, matrices, vertexConsumers, light);
 	}
 
 	@Override
-	public Identifier getTexture(WorldShellEntity entity) {
+	public Identifier getTexture(T entity) {
 		return PlayerScreenHandler.BLOCK_ATLAS_TEXTURE;
 	}
 }

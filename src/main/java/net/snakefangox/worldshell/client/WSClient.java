@@ -11,7 +11,6 @@ import net.snakefangox.worldshell.WorldShell;
 public class WSClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
-		EntityRendererRegistry.INSTANCE.register(WorldShell.WORLD_SHELL_ENTITY_TYPE, WorldLinkRenderer::new);
 		WSNetworking.registerClientPackets();
 	}
 }
