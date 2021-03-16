@@ -44,8 +44,13 @@ import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
-/** The basic entity that links to a shell, renders it's contents and handles interaction */
+/**
+ * The basic entity that links to a shell, renders it's contents and handles interaction.
+ * This will need to be extended by you and provided with a default constructor (i.e. {@link Entity#Entity(EntityType, World)}).
+ * The settings object should be fixed although you can implement your own should you desire custom behavior.
+ */
 public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
 	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldShellEntity.class, WSNetworking.BOUNDS);
@@ -160,7 +165,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
 	@Override
 	public boolean isCollidable() {
-		return true;
+		return settings.doCollision(this);
 	}
 
 	@Override
@@ -215,7 +220,16 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	@Override
 	public void remove(RemovalReason reason) {
 		super.remove(reason);
-		WorldShellDeconstructor.create(this, settings.getRotationSolver(this), settings.getConflictSolver(this));
+		if (!world.isClient())
+			getBay().ifPresent(b -> b.setLoadForChunks(world.getServer(), false));
+		if (reason.shouldDestroy()) {
+			Consumer<WorldShellEntity> onDestroy = settings.onDestroy(this);
+			if (onDestroy != null){
+				onDestroy.accept(this);
+			}else {
+				WorldShellDeconstructor.create(this, settings.getRotationSolver(this), settings.getConflictSolver(this)).deconstruct();
+			}
+		}
 	}
 
 	protected ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean interact) {

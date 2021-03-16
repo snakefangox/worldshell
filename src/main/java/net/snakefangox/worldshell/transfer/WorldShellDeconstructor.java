@@ -101,7 +101,7 @@ public final class WorldShellDeconstructor extends ShellTransferOperator {
         shellStorage = ShellStorageData.getOrCreate(getWorld().getServer());
         bay = shellStorage.getBay(shellId);
         shellWorld = WorldShell.getStorageDim(getWorld().getServer());
-        iterator = new BlockBoxIterator(bay.getBounds());
+        iterator = BlockBoxIterator.of(bay.getBounds());
         stage = Stage.PLACE;
     }
 

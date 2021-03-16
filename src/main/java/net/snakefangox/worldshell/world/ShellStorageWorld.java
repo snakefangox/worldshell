@@ -30,7 +30,6 @@ import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
-import net.snakefangox.worldshell.util.ShellTransferHandlerOld;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,8 +52,9 @@ public class ShellStorageWorld extends ServerWorld {
 		if (changed) {
 			passCallToEntity(pos, (entity, bay) -> {
 				PacketByteBuf buf = PacketByteBufs.create();
-				WorldShellPacketHelper.writeBlock(buf, this, pos, entity, bay.getCenter());
-				bay.updateBoxBounds(pos);
+				WorldShellPacketHelper.writeBlock(buf, this, pos, entity, bay);
+				boolean boundChanged = bay.updateBoxBounds(pos);
+				if (boundChanged) bay.setLoadForChunks(getServer(), true);
 				PlayerLookup.tracking(entity).forEach(player -> ServerPlayNetworking.send(player, WSNetworking.SHELL_UPDATE, buf));
 			});
 		}

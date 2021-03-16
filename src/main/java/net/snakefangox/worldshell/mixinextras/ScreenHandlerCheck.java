@@ -11,7 +11,6 @@ import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
-import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.world.ShellStorageWorld;
 
 import java.util.UUID;

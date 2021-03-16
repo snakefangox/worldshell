@@ -13,6 +13,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
+import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.Microcosm;
 
 import java.util.List;
@@ -20,9 +21,9 @@ import java.util.Map;
 
 public class WorldShellPacketHelper {
 
-	public static PacketByteBuf writeBlock(PacketByteBuf buf, World world, BlockPos pos, WorldShellEntity entity, BlockPos center) {
+	public static PacketByteBuf writeBlock(PacketByteBuf buf, World world, BlockPos pos, WorldShellEntity entity, LocalSpace local) {
 		buf.writeInt(entity.getId());
-		buf.writeLong(CoordUtil.toLocal(center, pos).asLong());
+		buf.writeLong(local.toLocal(pos).asLong());
 		buf.writeInt(Block.getRawIdFromState(world.getBlockState(pos)));
 		BlockEntity blockEntity = world.getBlockEntity(pos);
 		if (blockEntity != null) {
@@ -43,16 +44,16 @@ public class WorldShellPacketHelper {
 		return tag;
 	}
 
-	public static PacketByteBuf writeBlocks(PacketByteBuf buf, Map<BlockState, List<BlockPos>> blockStateListMap, List<BlockEntity> blockEntities, BlockPos center) {
+	public static PacketByteBuf writeBlocks(PacketByteBuf buf, Map<BlockState, List<BlockPos>> blockStateListMap, List<BlockEntity> blockEntities, LocalSpace local) {
 		buf.writeInt(blockStateListMap.size());
 		for (Map.Entry<BlockState, List<BlockPos>> entry : blockStateListMap.entrySet()) {
 			buf.writeInt(Block.getRawIdFromState(entry.getKey()));
 			buf.writeVarInt(entry.getValue().size());
-			for (BlockPos bp : entry.getValue()) buf.writeBlockPos(CoordUtil.toLocal(center, bp));
+			for (BlockPos bp : entry.getValue()) buf.writeBlockPos(local.toLocal(bp));
 		}
 		buf.writeInt(blockEntities.size());
 		for (BlockEntity be : blockEntities) {
-			BlockPos pos = CoordUtil.toLocal(center, be.getPos());
+			BlockPos pos = local.toLocal(be.getPos());
 			buf.writeBlockPos(pos);
 			BlockEntityUpdateS2CPacket packet = be.toUpdatePacket();
 			buf.writeCompoundTag(overwritePos(packet.getCompoundTag(), pos));

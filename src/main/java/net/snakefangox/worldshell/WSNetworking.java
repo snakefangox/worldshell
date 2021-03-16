@@ -27,7 +27,6 @@ import net.snakefangox.worldshell.collision.QuaternionD;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.Microcosm;
-import net.snakefangox.worldshell.util.CoordUtil;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
 import java.util.*;

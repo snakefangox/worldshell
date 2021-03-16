@@ -1,19 +1,9 @@
 package net.snakefangox.worldshell;
 
-import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
-import net.minecraft.block.Block;
-import net.minecraft.block.Material;
-import net.minecraft.entity.EntityDimensions;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnGroup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -24,12 +14,10 @@ import net.minecraft.world.biome.source.FixedBiomeSource;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
-import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.transfer.ShellTransferHandler;
 import net.snakefangox.worldshell.util.DynamicWorldRegister;
-import net.snakefangox.worldshell.util.ShellCommand;
 import net.snakefangox.worldshell.world.CreateWorldsEvent;
 import net.snakefangox.worldshell.world.ShellStorageWorld;
 import org.apache.logging.log4j.LogManager;
@@ -43,10 +31,6 @@ public class WorldShell implements ModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger();
 
 	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.DIMENSION, new Identifier(MODID, "shell_storage"));
-	//TODO Stop registering everything below this line
-	public static final EntityType<WorldShellEntity> WORLD_SHELL_ENTITY_TYPE = FabricEntityTypeBuilder.<WorldShellEntity>create(SpawnGroup.MISC, WorldShellEntity::new)
-			.dimensions(EntityDimensions.changing(1, 1)).build();
-	public static final Block PLACEHOLDER = new Block(FabricBlockSettings.of(Material.BARRIER).strength(0, 0).nonOpaque().breakInstantly().dropsNothing());
 
 	public static ServerWorld getStorageDim(MinecraftServer server) {
 		return server.getWorld(WorldShell.STORAGE_DIM);
@@ -55,10 +39,7 @@ public class WorldShell implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		registerStorageDim();
-		Registry.register(Registry.ENTITY_TYPE, new Identifier(MODID, "worldlink"), WORLD_SHELL_ENTITY_TYPE);
-		Registry.register(Registry.BLOCK, new Identifier(MODID, "placeholder"), PLACEHOLDER);
 		WSNetworking.registerServerPackets();
-		CommandRegistrationCallback.EVENT.register(this::registerCommands);
 		CreateWorldsEvent.EVENT.register(this::registerShellStorageDimension);
 		ServerTickEvents.START_SERVER_TICK.register(ShellTransferHandler::serverStartTick);
 		ServerTickEvents.END_SERVER_TICK.register(ShellTransferHandler::serverEndTick);
@@ -67,10 +48,6 @@ public class WorldShell implements ModInitializer {
 
 	public void registerStorageDim() {
 		Registry.register(Registry.CHUNK_GENERATOR, new Identifier(MODID, "empty"), EmptyChunkGenerator.CODEC);
-	}
-
-	private void registerCommands(CommandDispatcher<ServerCommandSource> serverCommandSourceCommandDispatcher, boolean b) {
-		ShellCommand.register(serverCommandSourceCommandDispatcher);
 	}
 
 	public void registerShellStorageDimension(MinecraftServer server) {

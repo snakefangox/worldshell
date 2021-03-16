@@ -10,7 +10,6 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.RaycastContext;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Microcosm;
-import net.snakefangox.worldshell.util.CoordUtil;
 
 import java.util.Optional;
 

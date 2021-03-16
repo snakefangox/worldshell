@@ -11,7 +11,7 @@ import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
-import net.snakefangox.worldshell.util.ShellTransferHandlerOld;
+import net.snakefangox.worldshell.transfer.BlockBoxIterator;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import org.jetbrains.annotations.NotNull;
 
@@ -53,7 +53,7 @@ public class Bay implements LocalSpace {
 		World world = WorldShell.getStorageDim(server);
 		Map<BlockState, List<BlockPos>> stateListMap = new HashMap<>();
 		List<BlockEntity> blockEntities = new ArrayList<>();
-		ShellTransferHandlerOld.forEachInBox(bounds, (bp) -> {
+		BlockBoxIterator.of(bounds).forEachRemaining(bp -> {
 			BlockState state = world.getBlockState(bp);
 			if (!state.isAir()) {
 				if (stateListMap.containsKey(state)) {
@@ -69,18 +69,14 @@ public class Bay implements LocalSpace {
 				}
 			}
 		});
-		return WorldShellPacketHelper.writeBlocks(buf, stateListMap, blockEntities, center);
+		return WorldShellPacketHelper.writeBlocks(buf, stateListMap, blockEntities, this);
 	}
 
-	public void loadAllChunks(MinecraftServer server) {
+	public void setLoadForChunks(MinecraftServer server, boolean load) {
 		ServerWorld world = WorldShell.getStorageDim(server);
 		ChunkPos.stream(new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.minX), ChunkSectionPos.getSectionCoord(bounds.minZ)),
 				new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.maxX), ChunkSectionPos.getSectionCoord(bounds.maxZ)))
-				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, true));
-	}
-
-	private void onBoundsUpdate() {
-		markDirty();
+				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, load));
 	}
 
 	public Vec3d toEntityGlobalSpace(Vec3d vec) {
@@ -112,8 +108,7 @@ public class Bay implements LocalSpace {
 
 	public void linkEntity(@NotNull WorldShellEntity worldShellEntity) {
 		linkedEntity = worldShellEntity;
-		//TODO Move to a better place
-		loadAllChunks(worldShellEntity.world.getServer());
+		setLoadForChunks(worldShellEntity.world.getServer(), true);
 		if (worldShellEntity.getMicrocosm().isEmpty()) {
 			fillServerWorldShell(worldShellEntity);
 		}
@@ -122,7 +117,7 @@ public class Bay implements LocalSpace {
 	private void fillServerWorldShell(WorldShellEntity entity) {
 		World world = WorldShell.getStorageDim(entity.world.getServer());
 		Map<BlockPos, BlockState> stateMap = new HashMap<>();
-		ShellTransferHandlerOld.forEachInBox(bounds, (bp) -> {
+		BlockBoxIterator.of(bounds).forEachRemaining(bp -> {
 			BlockState state = world.getBlockState(bp);
 			if (!state.isAir())
 				stateMap.put(toLocal(bp), state);
@@ -145,7 +140,7 @@ public class Bay implements LocalSpace {
 		return new Vec3d(x, y, z);
 	}
 
-	public void updateBoxBounds(BlockPos pos) {
+	public boolean updateBoxBounds(BlockPos pos) {
 		boolean hasChanged = false;
 		if (pos.getX() > bounds.maxX) {
 			bounds.maxX = pos.getX();
@@ -168,7 +163,8 @@ public class Bay implements LocalSpace {
 			bounds.minZ = pos.getZ();
 			hasChanged = true;
 		}
-		if (hasChanged) onBoundsUpdate();
+		if (hasChanged) markDirty();
+		return hasChanged;
 	}
 
 	@Override

@@ -3,7 +3,11 @@ package net.snakefangox.worldshell.entity;
 import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.transfer.ConflictSolver;
 import net.snakefangox.worldshell.transfer.RotationSolver;
+import net.snakefangox.worldshell.transfer.WorldShellDeconstructor;
 import net.snakefangox.worldshell.world.ShellStorageWorld;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Consumer;
 
 /**
  * Contains the settings for a WorldShell entity, this includes things like whether explosions can affect it,
@@ -40,6 +44,12 @@ public interface WorldShellSettings {
     boolean doCollision(WorldShellEntity entity);
 
     /**
+     * What to do when the worldshell is destroyed, returning null will deconstruct the
+     * entity to the world respecting other settings.
+     */
+    Consumer<WorldShellEntity> onDestroy(WorldShellEntity entity);
+
+    /**
      * If player interaction (attacks, right clicks) will be passed through to the world.
      * If this returns false the interaction will fail
      *
@@ -66,6 +76,8 @@ public interface WorldShellSettings {
         private final boolean isComplex;
         private int updateFrames = 120;
         private boolean doCollision = true;
+        @Nullable
+        private Consumer<WorldShellEntity> onDestroy = null;
         private boolean passThroughInteract = true;
         private boolean passThroughAttack = true;
         private boolean passThroughExplosion = true;
@@ -90,6 +102,12 @@ public interface WorldShellSettings {
         public Builder setDoCollision(boolean doCollision) {
             check();
             this.doCollision = doCollision;
+            return this;
+        }
+
+        public Builder setOnDestroy(Consumer<WorldShellEntity> onDestroy) {
+            check();
+            this.onDestroy = onDestroy;
             return this;
         }
 
@@ -140,6 +158,11 @@ public interface WorldShellSettings {
                 @Override
                 public boolean doCollision(WorldShellEntity entity) {
                     return doCollision;
+                }
+
+                @Override
+                public Consumer<WorldShellEntity> onDestroy(WorldShellEntity entity) {
+                    return onDestroy;
                 }
 
                 @Override
