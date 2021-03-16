@@ -5,6 +5,9 @@
 *.ipr
 *.iws
 
+# Remap your own source
+remappedSrc/
+
 # IntelliJ
 out/
 # mpeltonen/sbt-idea plugin
