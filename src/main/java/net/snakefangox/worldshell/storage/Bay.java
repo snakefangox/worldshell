@@ -2,8 +2,8 @@ package net.snakefangox.worldshell.storage;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.IntArrayTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtIntArray;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
@@ -12,6 +12,7 @@ import net.minecraft.world.World;
 import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.transfer.BlockBoxIterator;
+import net.snakefangox.worldshell.util.WSNbtHelper;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,13 +41,14 @@ public class Bay implements LocalSpace {
 		this.bounds = bounds;
 	}
 
-	public Bay(CompoundTag tag) {
-		fromTag(tag);
+	public Bay(NbtCompound tag) {
+		fromNbt(tag);
 	}
 
-	public void fromTag(CompoundTag tag) {
+	public void fromNbt(NbtCompound tag) {
 		center = BlockPos.fromLong(tag.getLong("center"));
-		bounds = new BlockBox(((IntArrayTag) tag.get("bounds")).getIntArray());
+		int[] dims = ((NbtIntArray) tag.get("bounds")).getIntArray();
+		bounds = WSNbtHelper.blockBoxFromNbt(dims);
 	}
 
 	public PacketByteBuf createClientPacket(MinecraftServer server, PacketByteBuf buf) {
@@ -91,10 +93,10 @@ public class Bay implements LocalSpace {
 		return globalToGlobal(linkedEntity, pos);
 	}
 
-	public CompoundTag toTag() {
-		CompoundTag tag = new CompoundTag();
+	public NbtCompound toNbt() {
+		NbtCompound tag = new NbtCompound();
 		tag.putLong("center", center.asLong());
-		tag.put("bounds", bounds.toNbt());
+		tag.put("bounds", WSNbtHelper.blockBoxToNbt(bounds));
 		return tag;
 	}
 

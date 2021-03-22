@@ -1,6 +1,6 @@
 package net.snakefangox.worldshell.storage;
 
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.PersistentState;
@@ -28,11 +28,11 @@ public class ShellStorageData extends PersistentState {
 		return stateManager.getOrCreate(ShellStorageData::fromNbt, ShellStorageData::new, ID);
 	}
 
-	public static ShellStorageData fromNbt(CompoundTag tag) {
+	public static ShellStorageData fromNbt(NbtCompound tag) {
 		ShellStorageData storageData = new ShellStorageData();
 		storageData.freeIndex = tag.getInt("freeIndex");
 		storageData.bufferSpace = tag.getInt("bufferSpace");
-		CompoundTag bayList = tag.getCompound("bayList");
+		NbtCompound bayList = tag.getCompound("bayList");
 		for (String key : bayList.getKeys()) {
 			storageData.bays.put(Integer.valueOf(key), new Bay(bayList.getCompound(key)));
 		}
@@ -87,12 +87,12 @@ public class ShellStorageData extends PersistentState {
 	}
 
 	@Override
-	public CompoundTag writeNbt(CompoundTag tag) {
+	public NbtCompound writeNbt(NbtCompound tag) {
 		tag.putInt("freeIndex", freeIndex);
 		tag.putInt("bufferSpace", bufferSpace);
-		CompoundTag bayList = new CompoundTag();
+		NbtCompound bayList = new NbtCompound();
 		for (Map.Entry<Integer, Bay> entry : bays.entrySet()) {
-			bayList.put(String.valueOf(entry.getKey()), entry.getValue().toTag());
+			bayList.put(String.valueOf(entry.getKey()), entry.getValue().toNbt());
 		}
 		tag.put("bayList", bayList);
 		tag.putIntArray("emptyBays", emptyBays);

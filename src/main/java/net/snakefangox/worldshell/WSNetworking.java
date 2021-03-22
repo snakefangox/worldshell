@@ -11,7 +11,7 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -140,7 +140,7 @@ public class WSNetworking {
 		int entityID = buf.readInt();
 		BlockPos pos = BlockPos.fromLong(buf.readLong());
 		BlockState state = Block.getStateFromRawId(buf.readInt());
-		CompoundTag tag = buf.readCompoundTag();
+		NbtCompound tag = buf.readCompoundTag();
 
 		client.execute(() -> {
 			Entity entity = client.world.getEntityById(entityID);

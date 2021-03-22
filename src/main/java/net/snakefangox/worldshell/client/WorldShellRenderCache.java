@@ -1,10 +1,7 @@
 package net.snakefangox.worldshell.client;
 
 import net.minecraft.client.gl.VertexBuffer;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 
 import java.util.*;
@@ -58,8 +55,9 @@ public class WorldShellRenderCache {
 				VertexBuffer entry = bufferStorage.get(key);
 				key.startDrawing();
 				entry.bind();
-				vertexFormat.startDrawing(0L);
-				entry.draw(matrices.peek().getModel());
+				vertexFormat.startDrawing();
+				//TODO I don't think this is correct
+				entry.method_34427(matrices.peek().getModel(), matrices.peek().getModel(), GameRenderer.getBlockShader());
 				VertexBuffer.unbind();
 				vertexFormat.endDrawing();
 				key.endDrawing();

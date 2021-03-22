@@ -6,6 +6,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelSet;
 import net.minecraft.util.shape.VoxelShape;
+import net.snakefangox.worldshell.collision.HullVoxelDelegate.VoxelSetDelegate;
 
 /**
  * Vanilla thinks our collision shape is a cube. That's cute but it won't work.

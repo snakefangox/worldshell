@@ -9,7 +9,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -96,7 +96,7 @@ public class Microcosm implements BlockRenderView {
 		return blockEntityMap.entrySet();
 	}
 
-	public void setBlock(BlockPos pos, BlockState state, CompoundTag tag) {
+	public void setBlock(BlockPos pos, BlockState state, NbtCompound tag) {
 		blockStateMap.put(pos, state);
 		if (state.hasBlockEntity()) {
 			BlockEntity be = ((BlockEntityProvider) state.getBlock()).createBlockEntity(pos, state);

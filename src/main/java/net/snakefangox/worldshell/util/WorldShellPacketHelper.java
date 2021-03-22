@@ -5,7 +5,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.util.Hand;
@@ -37,7 +37,7 @@ public class WorldShellPacketHelper {
 		return buf;
 	}
 
-	private static CompoundTag overwritePos(CompoundTag tag, BlockPos pos) {
+	private static NbtCompound overwritePos(NbtCompound tag, BlockPos pos) {
 		tag.putInt("x", pos.getX());
 		tag.putInt("y", pos.getY());
 		tag.putInt("z", pos.getZ());
@@ -91,7 +91,7 @@ public class WorldShellPacketHelper {
 		int beCount = buf.readInt();
 		for (int i = 0; i < beCount; ++i) {
 			BlockPos bp = buf.readBlockPos();
-			CompoundTag nbt = buf.readCompoundTag();
+			NbtCompound nbt = buf.readCompoundTag();
 			if (nbt != null && posBlockEntityMap.containsKey(bp)) {
 				posBlockEntityMap.get(bp).readNbt(nbt);
 			}

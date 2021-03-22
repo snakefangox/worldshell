@@ -3,7 +3,7 @@ package net.snakefangox.worldshell.transfer;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
@@ -106,7 +106,7 @@ public abstract class ShellTransferOperator implements Comparable<ShellTransferO
     }
 
     protected void transferBlockEntity(World from, World to, BlockPos oldPos, BlockPos newPos, BlockEntity blockEntity, BlockState state) {
-        CompoundTag nbt = new CompoundTag();
+        NbtCompound nbt = new NbtCompound();
         blockEntity.writeNbt(nbt);
         from.removeBlockEntity(oldPos);
         nbt.putInt("x", newPos.getX());

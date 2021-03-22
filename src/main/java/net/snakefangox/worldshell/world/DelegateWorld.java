@@ -14,7 +14,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.map.MapState;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.recipe.RecipeManager;
@@ -606,7 +606,7 @@ public class DelegateWorld extends World {
 
 	@Override
 	@Environment(EnvType.CLIENT)
-	public void addFireworkParticle(double x, double y, double z, double velocityX, double velocityY, double velocityZ, @Nullable CompoundTag tag) {
+	public void addFireworkParticle(double x, double y, double z, double velocityX, double velocityY, double velocityZ, @Nullable NbtCompound tag) {
 		proxiedWorld.addFireworkParticle(x, y, z, velocityX, velocityY, velocityZ, tag);
 	}
 
@@ -890,8 +890,8 @@ public class DelegateWorld extends World {
 	}
 
 	@Override
-	public Stream<BlockState> method_29556(Box box) {
-		return proxiedWorld.method_29556(box);
+	public Stream<BlockState> getStatesInBoxIfLoaded(Box box) {
+		return proxiedWorld.getStatesInBoxIfLoaded(box);
 	}
 
 	@Override
@@ -957,8 +957,8 @@ public class DelegateWorld extends World {
 
 	@Override
 	@Deprecated
-	public boolean method_33598(int i, int j) {
-		return proxiedWorld.method_33598(i, j);
+	public boolean isPosLoaded(int i, int j) {
+		return proxiedWorld.isPosLoaded(i, j);
 	}
 
 	@Override
@@ -981,8 +981,8 @@ public class DelegateWorld extends World {
 
 	@Override
 	@Deprecated
-	public boolean method_33597(int i, int j, int k, int l) {
-		return proxiedWorld.method_33597(i, j, k, l);
+	public boolean isRegionLoaded(int i, int j, int k, int l) {
+		return proxiedWorld.isRegionLoaded(i, j, k, l);
 	}
 
 	@Override
@@ -1042,8 +1042,8 @@ public class DelegateWorld extends World {
 	}
 
 	@Override
-	public Biome method_31609(ChunkPos chunkPos) {
-		return proxiedWorld.method_31609(chunkPos);
+	public Biome getBiomeForNoiseGen(ChunkPos chunkPos) {
+		return proxiedWorld.getBiomeForNoiseGen(chunkPos);
 	}
 
 	@Override

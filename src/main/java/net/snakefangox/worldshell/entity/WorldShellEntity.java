@@ -12,7 +12,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
@@ -75,7 +75,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		microcosm.setWorld(stateMap, entityMap, tickers);
 	}
 
-	public void updateWorldShell(BlockPos pos, BlockState state, CompoundTag tag) {
+	public void updateWorldShell(BlockPos pos, BlockState state, NbtCompound tag) {
 		microcosm.setBlock(pos, state, tag);
 	}
 
@@ -114,7 +114,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	}
 
 	@Override
-	protected void readCustomDataFromNbt(CompoundTag tag) {
+	protected void readCustomDataFromNbt(NbtCompound tag) {
 		setShellId(tag.getInt("shellId"));
 		setBlockOffset(WSNbtHelper.getVec3d(tag, "blockOffset"));
 		float length = tag.getFloat("length");
@@ -125,7 +125,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	}
 
 	@Override
-	protected void writeCustomDataToNbt(CompoundTag tag) {
+	protected void writeCustomDataToNbt(NbtCompound tag) {
 		tag.putInt("shellId", shellId);
 		WSNbtHelper.putVec3d(tag, getBlockOffset(), "blockOffset");
 		tag.putFloat("length", getDimensions().length);
