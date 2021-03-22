@@ -13,7 +13,6 @@ public class WorldShellRenderCache {
 	private final Map<RenderLayer, VertexBuffer> bufferStorage = new HashMap<>();
 	private final Map<RenderLayer, BufferBuilder> buffers = new HashMap<>();
 	private final Set<RenderLayer> bufferFilled = new HashSet<>();
-	private final VertexFormat vertexFormat = VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL;
 
 	public WorldShellRenderCache() {
 		fillBuffers();
@@ -55,11 +54,8 @@ public class WorldShellRenderCache {
 				VertexBuffer entry = bufferStorage.get(key);
 				key.startDrawing();
 				entry.bind();
-				vertexFormat.startDrawing();
-				//TODO I don't think this is correct
+				//TODO I'm not sure this is correct
 				entry.method_34427(matrices.peek().getModel(), matrices.peek().getModel(), GameRenderer.getBlockShader());
-				VertexBuffer.unbind();
-				vertexFormat.endDrawing();
 				key.endDrawing();
 			}
 		});
