@@ -3,8 +3,6 @@ package net.snakefangox.worldshell.transfer;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
-import net.snakefangox.worldshell.collision.Matrix3d;
-import net.snakefangox.worldshell.collision.QuaternionD;
 
 /**
  * When returning a worldshell to the world we cannot preserve rotation.

@@ -30,8 +30,7 @@ import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.WorldShell;
 import net.snakefangox.worldshell.collision.EntityBounds;
-import net.snakefangox.worldshell.collision.Matrix3d;
-import net.snakefangox.worldshell.collision.QuaternionD;
+import net.snakefangox.worldshell.collision.RotationHelper;
 import net.snakefangox.worldshell.collision.ShellCollisionHull;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
@@ -40,6 +39,8 @@ import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.transfer.WorldShellDeconstructor;
 import net.snakefangox.worldshell.util.WSNbtHelper;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
+import oimo.common.Mat3;
+import oimo.common.Quat;
 
 import java.util.List;
 import java.util.Map;
@@ -55,14 +56,14 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
 	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldShellEntity.class, WSNetworking.BOUNDS);
 	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldShellEntity.class, WSNetworking.VEC3D);
-	private static final TrackedData<QuaternionD> ROTATION = DataTracker.registerData(WorldShellEntity.class, WSNetworking.QUATERNION);
+	private static final TrackedData<Quat> ROTATION = DataTracker.registerData(WorldShellEntity.class, WSNetworking.QUATERNION);
 
 	private final WorldShellSettings settings;
 	private final Microcosm microcosm;
 	private final ShellCollisionHull hull = new ShellCollisionHull(this);
 
-	private Matrix3d rotationMatrix = Matrix3d.IDENTITY;
-	private Matrix3d inverseRotationMatrix = Matrix3d.IDENTITY;
+	private Mat3 rotationMatrix = RotationHelper.identityMat3();
+	private Mat3 inverseRotationMatrix = RotationHelper.identityMat3();
 	private int shellId = 0;
 
 	public WorldShellEntity(EntityType<?> type, World world, WorldShellSettings shellSettings) {
@@ -83,7 +84,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	protected void initDataTracker() {
 		getDataTracker().startTracking(ENTITY_BOUNDS, new EntityBounds(1, 1, 1, false));
 		getDataTracker().startTracking(BLOCK_OFFSET, new Vec3d(0, 0, 0));
-		getDataTracker().startTracking(ROTATION, QuaternionD.IDENTITY);
+		getDataTracker().startTracking(ROTATION, RotationHelper.identityQuat());
 	}
 
 	@Override
@@ -100,11 +101,11 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		if (hull != null) hull.calculateCrudeBounds();
 	}
 
-	public QuaternionD getRotation() {
+	public Quat getRotation() {
 		return getDataTracker().get(ROTATION);
 	}
 
-	protected void setRotation(QuaternionD quaternion) {
+	protected void setRotation(Quat quaternion) {
 		getDataTracker().set(ROTATION, quaternion);
 	}
 
@@ -183,10 +184,10 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 			dimensions = getDataTracker().get(ENTITY_BOUNDS);
 			hull.sizeUpdate();
 		} else if (ROTATION.equals(data)) {
-			QuaternionD quaternion = getDataTracker().get(ROTATION);
-			QuaternionD inverseRotation = new QuaternionD(-quaternion.getX(), -quaternion.getY(), -quaternion.getZ(), quaternion.getW());
-			rotationMatrix = new Matrix3d(quaternion);
-			inverseRotationMatrix = new Matrix3d(inverseRotation);
+			Quat quaternion = getDataTracker().get(ROTATION);
+			Quat inverseRotation = new Quat(-quaternion.x, -quaternion.y, -quaternion.z, quaternion.w);
+			rotationMatrix = quaternion.toMat3();
+			inverseRotationMatrix = inverseRotation.toMat3();
 			hull.setRotation(inverseRotation, rotationMatrix, inverseRotationMatrix);
 		}
 	}
@@ -300,12 +301,12 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	}
 
 	@Override
-	public Matrix3d getRotationMatrix() {
+	public Mat3 getRotationMatrix() {
 		return rotationMatrix;
 	}
 
 	@Override
-	public Matrix3d getInverseRotationMatrix() {
+	public Mat3 getInverseRotationMatrix() {
 		return inverseRotationMatrix;
 	}
 }

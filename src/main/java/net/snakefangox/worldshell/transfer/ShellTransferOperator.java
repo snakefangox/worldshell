@@ -8,7 +8,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.snakefangox.worldshell.collision.Matrix3d;
 import net.snakefangox.worldshell.mixinextras.NoOpPosWrapper;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;

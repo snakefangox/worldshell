@@ -4,7 +4,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.WorldShell;
-import net.snakefangox.worldshell.collision.Matrix3d;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;

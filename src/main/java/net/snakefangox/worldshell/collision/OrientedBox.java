@@ -3,6 +3,7 @@ package net.snakefangox.worldshell.collision;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import oimo.common.Quat;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -136,7 +137,7 @@ public final class OrientedBox {
 		return new OrientedBox(center.add(transX, transY, transZ), halfExtents, rotation, matrix, inverse, basis);
 	}
 
-	public QuaternionD getRotation() {
+	public Quat getRotation() {
 		return rotation;
 	}
 

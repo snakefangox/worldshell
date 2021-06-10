@@ -2,16 +2,16 @@ package net.snakefangox.worldshell.storage;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.snakefangox.worldshell.collision.Matrix3d;
+import net.snakefangox.worldshell.collision.RotationHelper;
 import net.snakefangox.worldshell.collision.ShellCollisionHull;
+import oimo.common.Mat3;
+import oimo.common.Vec3;
 
 /**
  * Indicates that a given object contains a local coordinate space that differs from
  * the world space. Contains default methods to translate <i>most</i> of minecraft's many coordinate
  * types between the world space and this space or between this space and another local space.
  * <p>
- * The single coordinate methods exist to avoid allocation if you don't need it,
- * they require all three coordinates so they can rotate properly.
  *
  * <h1>WARNING: DO NOT IMPLEMENT THE DEFAULT METHODS</h1>
  * They're happy just how they are and you'll be happier not having manually written ~25 basic
@@ -43,7 +43,7 @@ public interface LocalSpace {
     }
 
     /** Creates a local space with the given rotation and with origin at the given point */
-    static LocalSpace of(double x, double y, double z, Matrix3d rotation, Matrix3d invRotation) {
+    static LocalSpace of(double x, double y, double z, Mat3 rotation, Mat3 invRotation) {
         return new LocalSpace() {
             @Override
             public double getLocalX() {
@@ -61,12 +61,12 @@ public interface LocalSpace {
             }
 
             @Override
-            public Matrix3d getRotationMatrix() {
+            public Mat3 getRotationMatrix() {
                 return rotation;
             }
 
             @Override
-            public Matrix3d getInverseRotationMatrix() {
+            public Mat3 getInverseRotationMatrix() {
                 return invRotation;
             }
         };
@@ -82,13 +82,13 @@ public interface LocalSpace {
     double getLocalZ();
 
     /** Returns the matrix the local world is rotated by */
-    default Matrix3d getRotationMatrix() {
-        return Matrix3d.IDENTITY;
+    default Mat3 getRotationMatrix() {
+        return RotationHelper.identityMat3();
     }
 
     /** Returns the inverse of the matrix the local world is rotated by */
-    default Matrix3d getInverseRotationMatrix() {
-        return Matrix3d.IDENTITY;
+    default Mat3 getInverseRotationMatrix() {
+        return RotationHelper.identityMat3();
     }
 
     /** -- Below this line lies only madness and a lot of matrix transforms -- **/
@@ -97,132 +97,104 @@ public interface LocalSpace {
         double newX = pos.getX() - getLocalX();
         double newY = pos.getY() - getLocalY();
         double newZ = pos.getZ() - getLocalZ();
-        return new BlockPos(getInverseRotationMatrix().transformX(newX, newY, newZ),
-                getInverseRotationMatrix().transformY(newX, newY, newZ),
-                getInverseRotationMatrix().transformZ(newX, newY, newZ));
+        Vec3 vec = RotationHelper.rotatePosition(getInverseRotationMatrix(), newX, newY, newZ);
+        return new BlockPos(vec.x, vec.y, vec.z);
     }
 
     default BlockPos toGlobal(BlockPos pos) {
-        double newX = getRotationMatrix().transformX(pos.getX(), pos.getY(), pos.getZ());
-        double newY = getRotationMatrix().transformY(pos.getX(), pos.getY(), pos.getZ());
-        double newZ = getRotationMatrix().transformZ(pos.getX(), pos.getY(), pos.getZ());
-        return new BlockPos(newX + getLocalX(), newY + getLocalY(), newZ + getLocalZ());
+        Vec3 vec = RotationHelper.rotatePosition(getRotationMatrix(), pos.getX(), pos.getY(), pos.getZ());
+        return new BlockPos(vec.x + getLocalX(), vec.y + getLocalY(), vec.z + getLocalZ());
     }
 
     default Vec3d toLocal(Vec3d pos) {
         double newX = pos.getX() - getLocalX();
         double newY = pos.getY() - getLocalY();
         double newZ = pos.getZ() - getLocalZ();
-        return new Vec3d(getInverseRotationMatrix().transformX(newX, newY, newZ),
-                getInverseRotationMatrix().transformY(newX, newY, newZ),
-                getInverseRotationMatrix().transformZ(newX, newY, newZ));
+        Vec3 vec = RotationHelper.rotatePosition(getInverseRotationMatrix(), newX, newY, newZ);
+        return new Vec3d(vec.x, vec.y, vec.z);
     }
 
     default Vec3d toGlobal(Vec3d pos) {
-        double newX = getRotationMatrix().transformX(pos.getX(), pos.getY(), pos.getZ());
-        double newY = getRotationMatrix().transformY(pos.getX(), pos.getY(), pos.getZ());
-        double newZ = getRotationMatrix().transformZ(pos.getX(), pos.getY(), pos.getZ());
-        return new Vec3d(newX + getLocalX(), newY + getLocalY(), newZ + getLocalZ());
+        Vec3 vec = RotationHelper.rotatePosition(getRotationMatrix(), pos.getX(), pos.getY(), pos.getZ());
+        return new Vec3d(vec.x + getLocalX(), vec.y + getLocalY(), vec.z + getLocalZ());
     }
 
     default Vec3d toLocal(double x, double y, double z) {
         double newX = x - getLocalX();
         double newY = y - getLocalY();
         double newZ = z - getLocalZ();
-        return new Vec3d(getInverseRotationMatrix().transformX(newX, newY, newZ),
-                getInverseRotationMatrix().transformY(newX, newY, newZ),
-                getInverseRotationMatrix().transformZ(newX, newY, newZ));
+        Vec3 vec = RotationHelper.rotatePosition(getInverseRotationMatrix(), newX, newY, newZ);
+        return new Vec3d(vec.x, vec.y, vec.z);
     }
 
     default Vec3d toGlobal(double x, double y, double z) {
-        double newX = getRotationMatrix().transformX(x, y, z);
-        double newY = getRotationMatrix().transformY(x, y, z);
-        double newZ = getRotationMatrix().transformZ(x, y, z);
-        return new Vec3d(newX + getLocalX(), newY + getLocalY(), newZ + getLocalZ());
+        Vec3 vec = RotationHelper.rotatePosition(getRotationMatrix(), x, y, z);
+        return new Vec3d(vec.x + getLocalX(), vec.y + getLocalY(), vec.z + getLocalZ());
     }
 
     default BlockPos toLocal(int x, int y, int z) {
         double newX = x - getLocalX();
         double newY = y - getLocalY();
         double newZ = z - getLocalZ();
-        return new BlockPos(getInverseRotationMatrix().transformX(newX, newY, newZ),
-                getInverseRotationMatrix().transformY(newX, newY, newZ),
-                getInverseRotationMatrix().transformZ(newX, newY, newZ));
+        Vec3 vec = RotationHelper.rotatePosition(getInverseRotationMatrix(), newX, newY, newZ);
+        return new BlockPos(vec.x, vec.y, vec.z);
     }
 
     default BlockPos toGlobal(int x, int y, int z) {
-        double newX = getRotationMatrix().transformX(x, y, z);
-        double newY = getRotationMatrix().transformY(x, y, z);
-        double newZ = getRotationMatrix().transformZ(x, y, z);
-        return new BlockPos(newX + getLocalX(), newY + getLocalY(), newZ + getLocalZ());
+        Vec3 vec = RotationHelper.rotatePosition(getRotationMatrix(), x, y, z);
+        return new BlockPos(vec.x + getLocalX(), vec.y + getLocalY(), vec.z + getLocalZ());
     }
 
     default BlockPos.Mutable toLocal(BlockPos.Mutable pos) {
         double newX = pos.getX() - getLocalX();
         double newY = pos.getY() - getLocalY();
         double newZ = pos.getZ() - getLocalZ();
-        return pos.set(getInverseRotationMatrix().transformX(newX, newY, newZ),
-                getInverseRotationMatrix().transformY(newX, newY, newZ),
-                getInverseRotationMatrix().transformZ(newX, newY, newZ));
+        Vec3 vec = RotationHelper.rotatePosition(getInverseRotationMatrix(), newX, newY, newZ);
+        return pos.set(vec.x, vec.y, vec.z);
     }
 
     default BlockPos.Mutable toGlobal(BlockPos.Mutable pos) {
-        double newX = getRotationMatrix().transformX(pos.getX(), pos.getY(), pos.getZ());
-        double newY = getRotationMatrix().transformY(pos.getX(), pos.getY(), pos.getZ());
-        double newZ = getRotationMatrix().transformZ(pos.getX(), pos.getY(), pos.getZ());
-        return pos.set(newX + getLocalX(), newY + getLocalY(), newZ + getLocalZ());
-    }
-
-    default void toLocal(ShellCollisionHull.Vec3dM pos) {
-        double newX = pos.x - getLocalX();
-        double newY = pos.y - getLocalY();
-        double newZ = pos.z - getLocalZ();
-        pos.setAll(getInverseRotationMatrix().transformX(newX, newY, newZ),
-                getInverseRotationMatrix().transformY(newX, newY, newZ),
-                getInverseRotationMatrix().transformZ(newX, newY, newZ));
-    }
-
-    default void toGlobal(ShellCollisionHull.Vec3dM pos) {
-        double newX = getRotationMatrix().transformX(pos.x, pos.y, pos.z);
-        double newY = getRotationMatrix().transformY(pos.x, pos.y, pos.z);
-        double newZ = getRotationMatrix().transformZ(pos.x, pos.y, pos.z);
-        pos.setAll(newX + getLocalX(), newY + getLocalY(), newZ + getLocalZ());
+        Vec3 vec = RotationHelper.rotatePosition(getRotationMatrix(), pos.getX(), pos.getY(), pos.getZ());
+        return pos.set(vec.x + getLocalX(), vec.y + getLocalY(), vec.z + getLocalZ());
     }
 
     default double toLocalX(double x, double y, double z) {
         double newX = x - getLocalX();
         double newY = y - getLocalY();
         double newZ = z - getLocalZ();
-        return getInverseRotationMatrix().transformX(newX, newY, newZ);
+        Vec3 vec = RotationHelper.rotatePosition(getInverseRotationMatrix(), newX, newY, newZ);
+        return vec.x;
     }
 
     default double toLocalY(double x, double y, double z) {
         double newX = x - getLocalX();
         double newY = y - getLocalY();
         double newZ = z - getLocalZ();
-        return getInverseRotationMatrix().transformY(newX, newY, newZ);
+        Vec3 vec = RotationHelper.rotatePosition(getInverseRotationMatrix(), newX, newY, newZ);
+        return vec.y;
     }
 
     default double toLocalZ(double x, double y, double z) {
         double newX = x - getLocalX();
         double newY = y - getLocalY();
         double newZ = z - getLocalZ();
-        return getInverseRotationMatrix().transformZ(newX, newY, newZ);
+        Vec3 vec = RotationHelper.rotatePosition(getInverseRotationMatrix(), newX, newY, newZ);
+        return vec.z;
     }
 
     default double toGlobalX(double x, double y, double z) {
-        double newX = getRotationMatrix().transformX(x, y, z);
-        return newX + getLocalX();
+        Vec3 vec = RotationHelper.rotatePosition(getRotationMatrix(), x, y, z);
+        return vec.x + getLocalX();
     }
 
     default double toGlobalY(double x, double y, double z) {
-        double newY = getRotationMatrix().transformY(x, y, z);
-        return newY + getLocalY();
+        Vec3 vec = RotationHelper.rotatePosition(getRotationMatrix(), x, y, z);
+        return vec.y + getLocalY();
     }
 
     default double toGlobalZ(double x, double y, double z) {
-        double newZ = getRotationMatrix().transformZ(x, y, z);
-        return newZ + getLocalZ();
+        Vec3 vec = RotationHelper.rotatePosition(getRotationMatrix(), x, y, z);
+        return vec.z + getLocalZ();
     }
 
     default BlockPos globalToGlobal(LocalSpace target, BlockPos pos) {

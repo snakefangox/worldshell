@@ -3,7 +3,7 @@ package net.snakefangox.worldshell.util;
 import net.minecraft.nbt.*;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.Vec3d;
-import net.snakefangox.worldshell.collision.QuaternionD;
+import oimo.common.Quat;
 
 /** A common place for implementations of NBT serialization */
 public class WSNbtHelper {
@@ -21,18 +21,18 @@ public class WSNbtHelper {
 		return new Vec3d(list.getDouble(0), list.getDouble(1), list.getDouble(2));
 	}
 
-	public static void putQuaternion(NbtCompound tag, String name, QuaternionD rotation) {
+	public static void putQuaternion(NbtCompound tag, String name, Quat rotation) {
 		NbtList list = new NbtList();
-		list.add(NbtDouble.of(rotation.getX()));
-		list.add(NbtDouble.of(rotation.getY()));
-		list.add(NbtDouble.of(rotation.getZ()));
-		list.add(NbtDouble.of(rotation.getW()));
+		list.add(NbtDouble.of(rotation.x));
+		list.add(NbtDouble.of(rotation.y));
+		list.add(NbtDouble.of(rotation.z));
+		list.add(NbtDouble.of(rotation.w));
 		tag.put(name, list);
 	}
 
-	public static QuaternionD getQuaternion(NbtCompound tag, String name) {
+	public static Quat getQuaternion(NbtCompound tag, String name) {
 		NbtList list = tag.getList(name, NbtDouble.ZERO.getType());
-		return new QuaternionD(list.getDouble(0), list.getDouble(1), list.getDouble(2), list.getDouble(3));
+		return new Quat(list.getDouble(0), list.getDouble(1), list.getDouble(2), list.getDouble(3));
 	}
 
     public static NbtIntArray blockBoxToNbt(BlockBox bounds) {

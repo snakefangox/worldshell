@@ -10,6 +10,9 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.RaycastContext;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Microcosm;
+import oimo.common.Mat3;
+import oimo.common.Quat;
+import oimo.dynamics.World;
 
 import java.util.Optional;
 
@@ -21,9 +24,10 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	private static final float PADDING = 1F;
 	private static final double SMOL = 0.0000001;
 	private final WorldShellEntity entity;
-	private QuaternionD inverseRotation;
-	private Matrix3d matrix;
-	private Matrix3d inverseMatrix;
+	private final World physicsWorld;
+	private Quat inverseRotation;
+	private Mat3 matrix;
+	private Mat3 inverseMatrix;
 	// These are here to prevent some high volume functions from requiring as many allocations
 	// They're never given to anything outside this class and each function that takes them sets them beforehand
 	private final Vec3dM aabbMax = new Vec3dM();
@@ -33,10 +37,11 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 	public ShellCollisionHull(WorldShellEntity entity) {
 		super(0, 0, 0, 0, 0, 0);
 		this.entity = entity;
-		setRotation(QuaternionD.IDENTITY, Matrix3d.IDENTITY, Matrix3d.IDENTITY);
+		setRotation(RotationHelper.identityQuat(), RotationHelper.identityMat3(), RotationHelper.identityMat3());
+		physicsWorld = new World(null, RotationHelper.zeroVec3());
 	}
 
-	public void setRotation(QuaternionD inverseRot, Matrix3d rotationMatrix, Matrix3d inverseRotationMatrix) {
+	public void setRotation(Quat inverseRot, Mat3 rotationMatrix, Mat3 inverseRotationMatrix) {
 		inverseRotation = inverseRot;
 		matrix = rotationMatrix;
 		inverseMatrix = inverseRotationMatrix;
@@ -51,8 +56,8 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		float len = ed.length / 2F;
 		float width = ed.width / 2F;
 		Vec3d bo = entity.getBlockOffset();
-		Vec3d min = matrix.transform(-len - bo.x, -bo.y, -width - bo.z);
-		Vec3d max = matrix.transform(len - bo.x, ed.height - bo.y, width - bo.z);
+		Vec3d min = RotationHelper.rotatePositionMc(matrix, -len - bo.x, -bo.y, -width - bo.z);
+		Vec3d max = RotationHelper.rotatePositionMc(matrix, len - bo.x, ed.height - bo.y, width - bo.z);
 		calcNewAABB(min.x, min.y, min.z, max.x, max.y, max.z);
 		minX = aabbMin.x + entity.getX() + bo.x - PADDING;
 		minY = aabbMin.y + entity.getY() + bo.y - PADDING;
@@ -335,10 +340,10 @@ public class ShellCollisionHull extends Box implements SpecialBox {
 		@Override
 		public String toString() {
 			return "Vec3dM{" +
-					"x=" + x +
-					", y=" + y +
-					", z=" + z +
-					'}';
+				   "x=" + x +
+				   ", y=" + y +
+				   ", z=" + z +
+				   '}';
 		}
 	}
 }
