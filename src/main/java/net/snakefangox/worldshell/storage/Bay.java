@@ -76,8 +76,8 @@ public class Bay implements LocalSpace {
 
 	public void setLoadForChunks(MinecraftServer server, boolean load) {
 		ServerWorld world = WorldShell.getStorageDim(server);
-		ChunkPos.stream(new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.minX), ChunkSectionPos.getSectionCoord(bounds.minZ)),
-				new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.maxX), ChunkSectionPos.getSectionCoord(bounds.maxZ)))
+		ChunkPos.stream(new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.getMinX()), ChunkSectionPos.getSectionCoord(bounds.getMinZ())),
+				new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.getMaxX()), ChunkSectionPos.getSectionCoord(bounds.getMaxZ())))
 				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, load));
 	}
 
@@ -136,37 +136,17 @@ public class Bay implements LocalSpace {
 	}
 
 	public Vec3d getBoundsCenter() {
-		double x = bounds.minX + (((double) (bounds.maxX - bounds.minX)) / 2.0);
-		double y = bounds.minY + (((double) (bounds.maxY - bounds.minY)) / 2.0);
-		double z = bounds.minZ + (((double) (bounds.maxZ - bounds.minZ)) / 2.0);
+		double x = bounds.getMinX() + (((double) (bounds.getMaxX() - bounds.getMinX())) / 2.0);
+		double y = bounds.getMinY() + (((double) (bounds.getMaxY() - bounds.getMinY())) / 2.0);
+		double z = bounds.getMinZ() + (((double) (bounds.getMaxZ() - bounds.getMinZ())) / 2.0);
 		return new Vec3d(x, y, z);
 	}
 
 	public boolean updateBoxBounds(BlockPos pos) {
-		boolean hasChanged = false;
-		if (pos.getX() > bounds.maxX) {
-			bounds.maxX = pos.getX();
-			hasChanged = true;
-		} else if (pos.getX() < bounds.minX) {
-			bounds.minX = pos.getX();
-			hasChanged = true;
-		}
-		if (pos.getY() > bounds.maxY) {
-			bounds.maxY = pos.getY();
-			hasChanged = true;
-		} else if (pos.getY() < bounds.minY) {
-			bounds.minY = pos.getY();
-			hasChanged = true;
-		}
-		if (pos.getZ() > bounds.maxZ) {
-			bounds.maxZ = pos.getZ();
-			hasChanged = true;
-		} else if (pos.getZ() < bounds.minZ) {
-			bounds.minZ = pos.getZ();
-			hasChanged = true;
-		}
-		if (hasChanged) markDirty();
-		return hasChanged;
+		if (bounds.contains(pos)) return false;
+		bounds.encompass(pos);
+		markDirty();
+		return true;
 	}
 
 	@Override

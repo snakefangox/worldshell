@@ -96,7 +96,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		return serverWorld;
 	}
 
-	@Inject(method = "Lnet/minecraft/server/MinecraftServer;createWorlds(Lnet/minecraft/server/WorldGenerationProgressListener;)V", at = @At("TAIL"))
+	@Inject(method = "createWorlds(Lnet/minecraft/server/WorldGenerationProgressListener;)V", at = @At("TAIL"))
 	protected void createWorlds(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
 		CreateWorldsEvent.EVENT.invoker().event((MinecraftServer) (Object) this);
 	}

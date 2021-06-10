@@ -14,9 +14,7 @@ import net.snakefangox.worldshell.storage.Microcosm;
 import java.util.Optional;
 
 /**
- * A custom {@link Box} implementation that takes a worldshell and handles rotated collision.<p>
- * Some <s>slightly</s> <s><i><b>very<b/></i></s> <p> <h3>INCREDIBLY</h3> questionable decisions are made
- * to optimise the collision calculations, you peer inside at your own risk.
+ * A custom {@link Box} implementation that takes a worldshell and handles rotated collision.
  */
 public class ShellCollisionHull extends Box implements SpecialBox {
 

@@ -28,8 +28,8 @@ public class WorldShellPacketHelper {
 		BlockEntity blockEntity = world.getBlockEntity(pos);
 		if (blockEntity != null) {
 			BlockEntityUpdateS2CPacket packet = blockEntity.toUpdatePacket();
-			if (packet != null && packet.getCompoundTag() != null) {
-				buf.writeCompoundTag(overwritePos(packet.getCompoundTag(), pos));
+			if (packet != null && packet.getNbt() != null) {
+				buf.writeNbt(overwritePos(packet.getNbt(), pos));
 				return buf;
 			}
 		}
@@ -56,7 +56,7 @@ public class WorldShellPacketHelper {
 			BlockPos pos = local.toLocal(be.getPos());
 			buf.writeBlockPos(pos);
 			BlockEntityUpdateS2CPacket packet = be.toUpdatePacket();
-			buf.writeCompoundTag(overwritePos(packet.getCompoundTag(), pos));
+			buf.writeNbt(overwritePos(packet.getNbt(), pos));
 		}
 		return buf;
 	}
@@ -91,7 +91,7 @@ public class WorldShellPacketHelper {
 		int beCount = buf.readInt();
 		for (int i = 0; i < beCount; ++i) {
 			BlockPos bp = buf.readBlockPos();
-			NbtCompound nbt = buf.readCompoundTag();
+			NbtCompound nbt = buf.readNbt();
 			if (nbt != null && posBlockEntityMap.containsKey(bp)) {
 				posBlockEntityMap.get(bp).readNbt(nbt);
 			}

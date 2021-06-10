@@ -32,7 +32,7 @@ public class DynamicWorldRegister {
 	 * Registers a dimension while the server is running
 	 * Once a dimension has been registered this way you should re-register it everytime the server starts unless it is intended to be temporary.<p>
 	 * Some tips:<p>
-	 * Biomes used in {@link net.minecraft.world.biome.source.BiomeSource}s should come from {@link net.minecraft.server.MinecraftServer#registryManager}<p>
+	 * Biomes used in {@link net.minecraft.world.biome.source.BiomeSource}s should come from the servers registry<p>
 	 * If you want a void world {@link net.snakefangox.worldshell.storage.EmptyChunkGenerator} is provided<p>
 	 *
 	 * @param worldRegistryKey the key the world will be registered to

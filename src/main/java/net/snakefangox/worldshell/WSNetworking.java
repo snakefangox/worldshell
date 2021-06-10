@@ -140,7 +140,7 @@ public class WSNetworking {
 		int entityID = buf.readInt();
 		BlockPos pos = BlockPos.fromLong(buf.readLong());
 		BlockState state = Block.getStateFromRawId(buf.readInt());
-		NbtCompound tag = buf.readCompoundTag();
+		NbtCompound tag = buf.readNbt();
 
 		client.execute(() -> {
 			Entity entity = client.world.getEntityById(entityID);

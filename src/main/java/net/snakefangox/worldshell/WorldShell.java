@@ -30,7 +30,7 @@ public class WorldShell implements ModInitializer {
 	public static final String MODID = "worldshell";
 	public static final Logger LOGGER = LogManager.getLogger();
 
-	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.DIMENSION, new Identifier(MODID, "shell_storage"));
+	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.WORLD_KEY, new Identifier(MODID, "shell_storage"));
 
 	public static ServerWorld getStorageDim(MinecraftServer server) {
 		return server.getWorld(WorldShell.STORAGE_DIM);
@@ -41,9 +41,12 @@ public class WorldShell implements ModInitializer {
 		registerStorageDim();
 		WSNetworking.registerServerPackets();
 		CreateWorldsEvent.EVENT.register(this::registerShellStorageDimension);
+		ServerLifecycleEvents.SERVER_STARTED.register(ShellTransferHandler::serverStartTick);
 		ServerTickEvents.START_SERVER_TICK.register(ShellTransferHandler::serverStartTick);
 		ServerTickEvents.END_SERVER_TICK.register(ShellTransferHandler::serverEndTick);
 		ServerLifecycleEvents.SERVER_STOPPING.register(ShellTransferHandler::serverStopping);
+		LOGGER.info("Moving blocks and fudging collision!");
+		LOGGER.info("(Worldshell has started successfully)");
 	}
 
 	public void registerStorageDim() {
@@ -52,7 +55,7 @@ public class WorldShell implements ModInitializer {
 
 	public void registerShellStorageDimension(MinecraftServer server) {
 		Supplier<DimensionType> typeSupplier = () -> server.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY)
-				.get(RegistryKey.of(Registry.DIMENSION_TYPE_KEY, new Identifier(MODID, "empty_type")));
+				.get(RegistryKey.of(Registry.DIMENSION_TYPE_KEY, new Identifier(MODID, "shell_storage_type")));
 		ChunkGenerator chunkGenerator = new EmptyChunkGenerator(new FixedBiomeSource(server.getRegistryManager()
 				.get(Registry.BIOME_KEY).get(BiomeKeys.THE_VOID)));
 		DimensionOptions options = new DimensionOptions(typeSupplier, chunkGenerator);

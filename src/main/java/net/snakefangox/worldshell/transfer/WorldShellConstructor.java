@@ -114,18 +114,10 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 	@Override
 	public void performPass() {
 		switch (stage) {
-			case SETUP:
-				setup();
-				break;
-			case TRANSFER:
-				transfer();
-				break;
-			case SPAWN:
-				spawn();
-				break;
-			case CLEANUP:
-				cleanup();
-				break;
+			case SETUP -> setup();
+			case TRANSFER -> transfer();
+			case SPAWN -> spawn();
+			case CLEANUP -> cleanup();
 		}
 	}
 
@@ -148,14 +140,14 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 	private void spawn() {
 		T entity = entityType.create(getWorld());
 		if (entity == null)
-			throw new IllegalStateException(entityType.toString() + " constructor returned null, how did we get here?");
+			throw new IllegalStateException(entityType + " constructor returned null, how did we get here?");
 		//Set entity dimensions
 		BlockBox bayBounds = bay.getBounds();
 		EntityBounds bound = new EntityBounds(bayBounds.getBlockCountX(), bayBounds.getBlockCountY(), bayBounds.getBlockCountZ(), false);
 		entity.setDimensions(bound);
 		//Set position
 		Vec3d boundsCenter = bay.globalToGlobal(this, bay.getBoundsCenter());
-		double localBoundsY = bay.globalToGlobalY(this, boundsCenter.x, bayBounds.minY, boundsCenter.z);
+		double localBoundsY = bay.globalToGlobalY(this, boundsCenter.x, bayBounds.getMinY(), boundsCenter.z);
 		entity.setPosition(boundsCenter.x + 0.5, localBoundsY, boundsCenter.z + 0.5);
 		//Set offset
 		Vec3d blockOffset = new Vec3d((center.getX() - boundsCenter.x) - 0.5, center.getY() - localBoundsY, (center.getZ() - boundsCenter.z) - 0.5);

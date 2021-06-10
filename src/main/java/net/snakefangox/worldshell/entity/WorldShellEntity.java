@@ -49,7 +49,7 @@ import java.util.function.Consumer;
 /**
  * The basic entity that links to a shell, renders it's contents and handles interaction.
  * This will need to be extended by you and provided with a default constructor (i.e. {@link Entity#Entity(EntityType, World)}).
- * The settings object should be fixed although you can implement your own should you desire custom behavior.
+ * The settings object should always be the same for any two entities of the same class and EntityType.
  */
 public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
@@ -220,7 +220,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	@Override
 	public void remove(RemovalReason reason) {
 		super.remove(reason);
-		if (!world.isClient())
+		if (world.isClient()) return;
 			getBay().ifPresent(b -> b.setLoadForChunks(world.getServer(), false));
 		if (reason.shouldDestroy()) {
 			Consumer<WorldShellEntity> onDestroy = settings.onDestroy(this);

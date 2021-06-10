@@ -394,6 +394,11 @@ public class DelegateWorld extends World {
 	}
 
 	@Override
+	public String asString() {
+		return proxiedWorld.asString();
+	}
+
+	@Override
 	public void addBlockEntity(BlockEntity blockEntity) {
 		proxiedWorld.addBlockEntity(blockEntity);
 	}
@@ -1026,19 +1031,8 @@ public class DelegateWorld extends World {
 	}
 
 	@Override
-	@Environment(EnvType.CLIENT)
-	public boolean isBlockSpaceEmpty(@Nullable Entity entity, Box box, BiPredicate<BlockState, BlockPos> biPredicate) {
-		return proxiedWorld.isBlockSpaceEmpty(entity, box, biPredicate);
-	}
-
-	@Override
 	public Stream<VoxelShape> getBlockCollisions(@Nullable Entity entity, Box box, BiPredicate<BlockState, BlockPos> biPredicate) {
 		return proxiedWorld.getBlockCollisions(entity, box, biPredicate);
-	}
-
-	@Override
-	public Optional<Vec3d> method_33594(@Nullable Entity entity, VoxelShape voxelShape, Vec3d vec3d, double d, double e, double f) {
-		return proxiedWorld.method_33594(entity, voxelShape, vec3d, d, e, f);
 	}
 
 	@Override

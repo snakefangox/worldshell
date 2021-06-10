@@ -91,7 +91,7 @@ public interface LocalSpace {
         return Matrix3d.IDENTITY;
     }
 
-    /* -- Below this line lies only madness and a lot of matrix transforms -- */
+    /** -- Below this line lies only madness and a lot of matrix transforms -- **/
 
     default BlockPos toLocal(BlockPos pos) {
         double newX = pos.getX() - getLocalX();

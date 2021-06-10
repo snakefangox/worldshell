@@ -55,7 +55,7 @@ public class WorldShellRenderCache {
 				key.startDrawing();
 				entry.bind();
 				//TODO I'm not sure this is correct
-				entry.method_34427(matrices.peek().getModel(), matrices.peek().getModel(), GameRenderer.getBlockShader());
+				entry.setShader(matrices.peek().getModel(), matrices.peek().getModel(), GameRenderer.getBlockShader());
 				key.endDrawing();
 			}
 		});

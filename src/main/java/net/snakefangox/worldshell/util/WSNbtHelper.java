@@ -37,12 +37,12 @@ public class WSNbtHelper {
 
     public static NbtIntArray blockBoxToNbt(BlockBox bounds) {
 		int[] array = new int[6];
-		array[0] = bounds.minX;
-		array[1] = bounds.minY;
-		array[2] = bounds.minZ;
-		array[3] = bounds.maxX;
-		array[4] = bounds.maxY;
-		array[5] = bounds.maxZ;
+		array[0] = bounds.getMinX();
+		array[1] = bounds.getMinY();
+		array[2] = bounds.getMinZ();
+		array[3] = bounds.getMaxX();
+		array[4] = bounds.getMaxY();
+		array[5] = bounds.getMaxZ();
 
 		return new NbtIntArray(array);
     }

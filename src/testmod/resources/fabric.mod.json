@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "socrates_skyships",
+  "version": "${version}",
+  "name": "Socrates Skyships",
+  "description": "A basic airship mod to test worldshell.",
+  "authors": [
+    "Snakefangox"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/worldshell/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "net.snakefangox.socrates_skyships.client.SClient"
+    ],
+    "main": [
+      "net.snakefangox.socrates_skyships.SocratesSkyships"
+    ]
+  },
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=0.11.0",
+    "fabric": "*",
+    "minecraft": ">=1.17",
+    "worldshell": ">=0.1.0"
+  }
+}

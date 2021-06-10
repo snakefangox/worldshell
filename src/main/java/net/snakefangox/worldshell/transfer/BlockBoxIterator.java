@@ -22,24 +22,24 @@ public class BlockBoxIterator implements Iterator<BlockPos> {
 	private BlockBoxIterator(BlockBox box) {
 		currentPos = new BlockPos.Mutable();
 		this.box = box;
-		x = box.minX;
-		y = box.minY;
-		z = box.minZ;
+		x = box.getMinX();
+		y = box.getMinY();
+		z = box.getMinZ();
 	}
 
 	@Override
 	public boolean hasNext() {
-		return x < box.maxX || z < box.maxZ || y < box.maxY;
+		return x < box.getMaxX() || z < box.getMaxZ() || y < box.getMaxY();
 	}
 
 	@Override
 	public BlockPos next() {
-		if (x > box.maxX) {
-			x = box.minX;
+		if (x > box.getMaxX()) {
+			x = box.getMinX();
 			++y;
 		}
-		if (y > box.maxY) {
-			y = box.minY;
+		if (y > box.getMaxY()) {
+			y = box.getMinY();
 			++z;
 		}
 		return currentPos.set(x++, y, z);
