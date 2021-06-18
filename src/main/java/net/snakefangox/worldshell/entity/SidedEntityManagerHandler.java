@@ -10,8 +10,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.entity.EntityLike;
 import net.minecraft.world.entity.EntityTrackingSection;
-import net.snakefangox.worldshell.WorldShell;
-import net.snakefangox.worldshell.entity.WorldShellEntity;
+import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.mixin.entitytracking.ClientEntityManagerAccess;
 import net.snakefangox.worldshell.mixin.entitytracking.ClientWorldAccess;
 import net.snakefangox.worldshell.mixin.entitytracking.ServerEntityManagerAccess;
@@ -53,7 +52,7 @@ public class SidedEntityManagerHandler {
 		EntityTrackingSection<? extends EntityLike> section = ((ServerEntityManagerAccess) entityManager).getCache().getTrackingSection(pos);
 		boolean success = ((WorldShellEntityTracker) section).removeWorldShellEntity(entity);
 		((ServerEntityManagerAccess) entityManager).invokeEntityLeftSection(pos, section);
-		if (!success) WorldShell.LOGGER.warn("Worldshell {} wasn't found in section {}", entity, section);
+		if (!success) WorldShellMain.LOGGER.warn("Worldshell {} wasn't found in section {}", entity, section);
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -62,6 +61,6 @@ public class SidedEntityManagerHandler {
 		EntityTrackingSection<? extends EntityLike> section = ((ClientEntityManagerAccess) entityManager).getCache().getTrackingSection(pos);
 		boolean success = ((WorldShellEntityTracker) section).removeWorldShellEntity(entity);
 		((ClientEntityManagerAccess) entityManager).invokeRemoveIfEmpty(pos, section);
-		if (!success) WorldShell.LOGGER.warn("Worldshell {} wasn't found in section {}", entity, section);
+		if (!success) WorldShellMain.LOGGER.warn("Worldshell {} wasn't found in section {}", entity, section);
 	}
 }

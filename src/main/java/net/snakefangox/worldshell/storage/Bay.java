@@ -9,7 +9,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
-import net.snakefangox.worldshell.WorldShell;
+import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.transfer.BlockBoxIterator;
 import net.snakefangox.worldshell.util.WSNbtHelper;
@@ -36,9 +36,9 @@ public class Bay implements LocalSpace {
 	/** Calls on the {@link ShellStorageData} holding this */
 	Runnable markDirtyFunc = () -> {};
 
-	public Bay(BlockPos center, BlockBox bounds) {
+	public Bay(BlockPos center) {
 		this.center = center;
-		this.bounds = bounds;
+		this.bounds = new BlockBox(center);
 	}
 
 	public Bay(NbtCompound tag) {
@@ -52,7 +52,7 @@ public class Bay implements LocalSpace {
 	}
 
 	public PacketByteBuf createClientPacket(MinecraftServer server, PacketByteBuf buf) {
-		World world = WorldShell.getStorageDim(server);
+		World world = WorldShellMain.getStorageDim(server);
 		Map<BlockState, List<BlockPos>> stateListMap = new HashMap<>();
 		List<BlockEntity> blockEntities = new ArrayList<>();
 		BlockBoxIterator.of(bounds).forEachRemaining(bp -> {
@@ -75,7 +75,7 @@ public class Bay implements LocalSpace {
 	}
 
 	public void setLoadForChunks(MinecraftServer server, boolean load) {
-		ServerWorld world = WorldShell.getStorageDim(server);
+		ServerWorld world = WorldShellMain.getStorageDim(server);
 		ChunkPos.stream(new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.getMinX()), ChunkSectionPos.getSectionCoord(bounds.getMinZ())),
 				new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.getMaxX()), ChunkSectionPos.getSectionCoord(bounds.getMaxZ())))
 				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, load));
@@ -117,7 +117,7 @@ public class Bay implements LocalSpace {
 	}
 
 	private void fillServerWorldShell(WorldShellEntity entity) {
-		World world = WorldShell.getStorageDim(entity.world.getServer());
+		World world = WorldShellMain.getStorageDim(entity.world.getServer());
 		Map<BlockPos, BlockState> stateMap = new HashMap<>();
 		BlockBoxIterator.of(bounds).forEachRemaining(bp -> {
 			BlockState state = world.getBlockState(bp);

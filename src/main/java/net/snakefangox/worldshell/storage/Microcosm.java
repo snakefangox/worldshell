@@ -20,12 +20,13 @@ import net.minecraft.world.level.ColorResolver;
 import net.snakefangox.worldshell.client.WorldShellRenderCache;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.world.DelegateWorld;
+import net.snakefangox.worldshell.world.Worldshell;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 /** Stores all of the block information needed to render an accurate world in miniature */
-public class Microcosm implements BlockRenderView {
+public class Microcosm implements BlockRenderView, Worldshell {
 
 	private final WorldShellEntity parent;
 	private final DelegateWorld delegateWorld;

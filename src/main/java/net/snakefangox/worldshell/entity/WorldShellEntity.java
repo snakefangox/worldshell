@@ -28,7 +28,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.entity.EntityChangeListener;
 import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
-import net.snakefangox.worldshell.WorldShell;
+import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.collision.RotationHelper;
 import net.snakefangox.worldshell.collision.ShellCollisionHull;
@@ -37,6 +37,7 @@ import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.Microcosm;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.transfer.WorldShellDeconstructor;
+import net.snakefangox.worldshell.util.VectorPool;
 import net.snakefangox.worldshell.util.WSNbtHelper;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 import oimo.common.Mat3;
@@ -62,8 +63,8 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	private final Microcosm microcosm;
 	private final ShellCollisionHull hull = new ShellCollisionHull(this);
 
-	private Mat3 rotationMatrix = RotationHelper.identityMat3();
-	private Mat3 inverseRotationMatrix = RotationHelper.identityMat3();
+	private Mat3 rotationMatrix = VectorPool.mat3();
+	private Mat3 inverseRotationMatrix = VectorPool.mat3();
 	private int shellId = 0;
 
 	public WorldShellEntity(EntityType<?> type, World world, WorldShellSettings shellSettings) {
@@ -188,7 +189,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 			Quat inverseRotation = new Quat(-quaternion.x, -quaternion.y, -quaternion.z, quaternion.w);
 			rotationMatrix = quaternion.toMat3();
 			inverseRotationMatrix = inverseRotation.toMat3();
-			hull.setRotation(inverseRotation, rotationMatrix, inverseRotationMatrix);
+			hull.setRotation(rotationMatrix, inverseRotationMatrix);
 		}
 	}
 
@@ -262,7 +263,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		if (world.getServer() != null || !settings.passthroughExplosion(this, power, fire, type)) return;
 		getBay().ifPresent(bay -> {
 			Vec3d newExp = globalToGlobal(bay, x, y, z);
-			WorldShell.getStorageDim(world.getServer()).createExplosion(null, newExp.x, newExp.y, newExp.z, power, fire, type);
+			WorldShellMain.getStorageDim(world.getServer()).createExplosion(null, newExp.x, newExp.y, newExp.z, power, fire, type);
 		});
 	}
 

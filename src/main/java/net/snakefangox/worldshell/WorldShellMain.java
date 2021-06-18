@@ -25,7 +25,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.function.Supplier;
 
-public class WorldShell implements ModInitializer {
+public class WorldShellMain implements ModInitializer {
 
 	public static final String MODID = "worldshell";
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -33,7 +33,7 @@ public class WorldShell implements ModInitializer {
 	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.WORLD_KEY, new Identifier(MODID, "shell_storage"));
 
 	public static ServerWorld getStorageDim(MinecraftServer server) {
-		return server.getWorld(WorldShell.STORAGE_DIM);
+		return server.getWorld(WorldShellMain.STORAGE_DIM);
 	}
 
 	@Override

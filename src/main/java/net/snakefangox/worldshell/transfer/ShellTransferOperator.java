@@ -8,9 +8,12 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.collision.RotationHelper;
 import net.snakefangox.worldshell.mixinextras.NoOpPosWrapper;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
+import oimo.common.Mat3;
+import oimo.common.Vec3;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Stack;
@@ -61,17 +64,16 @@ public abstract class ShellTransferOperator implements Comparable<ShellTransferO
         return getTime() - o.getTime();
     }
 
-    protected BlockRotation getBlockRotation(Matrix3d rotation) {
-        double x = rotation.transformX(ROTATE_BACK, 0.0, ROTATE_BACK);
-        double z = rotation.transformZ(ROTATE_BACK, 0.0, ROTATE_BACK);
-        if (x > 0) {
-            if (z > 0) {
+    protected BlockRotation getBlockRotation(Mat3 rotation) {
+        Vec3 vec = new Vec3(ROTATE_BACK, 0.0, ROTATE_BACK).mulMat3Eq(rotation);
+        if (vec.x > 0) {
+            if (vec.z > 0) {
                 return BlockRotation.NONE;
             } else {
                 return BlockRotation.CLOCKWISE_90;
             }
         } else {
-            if (z > 0) {
+            if (vec.z > 0) {
                 return BlockRotation.COUNTERCLOCKWISE_90;
             } else {
                 return BlockRotation.CLOCKWISE_180;
@@ -80,11 +82,11 @@ public abstract class ShellTransferOperator implements Comparable<ShellTransferO
     }
 
     protected void transferBlock(World from, World to, BlockPos pos) {
-        transferBlock(from, to, pos, true, RotationSolver.ORIGINAL, Matrix3d.IDENTITY, BlockRotation.NONE, ConflictSolver.OVERWRITE);
+        transferBlock(from, to, pos, true, RotationSolver.ORIGINAL, RotationHelper.identityMat3(), BlockRotation.NONE, ConflictSolver.OVERWRITE);
     }
 
     protected void transferBlock(World from, World to, BlockPos pos, boolean cleanUpRequired,
-                                 RotationSolver rotationSolver, Matrix3d rotation, BlockRotation blockRotation, ConflictSolver conflictSolver) {
+                                 RotationSolver rotationSolver, Mat3 rotation, BlockRotation blockRotation, ConflictSolver conflictSolver) {
         BlockState state = from.getBlockState(pos);
         if (state.isAir()) return;
         posWrapper.set(pos);

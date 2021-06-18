@@ -1,6 +1,7 @@
 package net.snakefangox.socrates_skyships;
 
 import net.minecraft.entity.EntityType;
+import net.snakefangox.rapidregister.annotations.BlockMeta;
 import net.snakefangox.rapidregister.annotations.Exclude;
 import net.snakefangox.rapidregister.annotations.RegisterContents;
 import net.snakefangox.socrates_skyships.blocks.ShipsHelm;
@@ -9,7 +10,7 @@ import net.snakefangox.worldshell.entity.WorldShellEntityType;
 import net.snakefangox.worldshell.entity.WorldShellSettings;
 import net.snakefangox.worldshell.transfer.ConflictSolver;
 
-@RegisterContents
+@RegisterContents(defaultBlockMeta = @BlockMeta(blockItemGroup = "transportation"))
 public class SRegister {
 	public static final ShipsHelm SHIPS_HELM = new ShipsHelm();
 

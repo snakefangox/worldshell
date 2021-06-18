@@ -3,11 +3,12 @@ package net.snakefangox.worldshell.transfer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.world.World;
-import net.snakefangox.worldshell.WorldShell;
+import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.ShellStorageData;
+import oimo.common.Mat3;
 
 public final class WorldShellDeconstructor extends ShellTransferOperator {
 
@@ -15,7 +16,7 @@ public final class WorldShellDeconstructor extends ShellTransferOperator {
     private final RotationSolver rotationSolver;
     private final ConflictSolver conflictSolver;
     private final LocalSpace noRotLocalSpace;
-    private final Matrix3d rotation;
+    private final Mat3 rotation;
     private final BlockRotation blockRotation;
 
     private Stage stage = Stage.SETUP;
@@ -99,7 +100,7 @@ public final class WorldShellDeconstructor extends ShellTransferOperator {
     private void setup() {
         shellStorage = ShellStorageData.getOrCreate(getWorld().getServer());
         bay = shellStorage.getBay(shellId);
-        shellWorld = WorldShell.getStorageDim(getWorld().getServer());
+        shellWorld = WorldShellMain.getStorageDim(getWorld().getServer());
         iterator = BlockBoxIterator.of(bay.getBounds());
         stage = Stage.PLACE;
     }

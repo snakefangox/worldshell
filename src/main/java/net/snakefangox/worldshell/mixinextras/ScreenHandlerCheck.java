@@ -7,7 +7,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.snakefangox.worldshell.WorldShell;
+import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
@@ -24,7 +24,7 @@ public class ScreenHandlerCheck {
 		boolean canUse = screenHandler.canUse(player);
 		if (!player.world.isClient() && !canUse) {
 			MinecraftServer server = player.world.getServer();
-			World world = WorldShell.getStorageDim(server);
+			World world = WorldShellMain.getStorageDim(server);
 			return screenHandler.canUse(getOrCreateFakePlayer(world, player.getPos()));
 		}
 		return canUse;

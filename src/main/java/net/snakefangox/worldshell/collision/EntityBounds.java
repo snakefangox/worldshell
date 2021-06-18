@@ -47,9 +47,7 @@ public class EntityBounds extends EntityDimensions {
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
-		if (!(o instanceof EntityBounds)) return false;
-
-		EntityBounds that = (EntityBounds) o;
+		if (!(o instanceof EntityBounds that)) return false;
 
 		if (Float.compare(that.length, length) != 0) return false;
 		if (Float.compare(that.width, width) != 0) return false;

@@ -3,6 +3,10 @@ package net.snakefangox.worldshell.transfer;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
+import net.snakefangox.worldshell.collision.RotationHelper;
+import oimo.common.Mat3;
+import oimo.common.Quat;
+import oimo.common.Vec3;
 
 /**
  * When returning a worldshell to the world we cannot preserve rotation.
@@ -15,13 +19,13 @@ public interface RotationSolver {
 	/** Returns the worldshell in the exact orientation it was in originally */
 	RotationSolver ORIGINAL = RotationSolver::solveOriginalRotation;
 	/** Returns the worldshell rotated to the closest cardinal direction */
-	RotationSolver CARDINAL = RotationSolver::solveOriginalRotation;
+	RotationSolver CARDINAL = RotationSolver::solveCardinalRotation;
 	/** Returns the worldshell rotated exactly, note: probably bad, don't use without testing */
 	RotationSolver TRUE = RotationSolver::solveTrueRotation;
 
 	//TODO check this is correct
-	Matrix3d[] BLOCK_ROTATIONS = new Matrix3d[] {Matrix3d.IDENTITY, new Matrix3d(new QuaternionD(0, 90, 0, true)),
-			new Matrix3d(new QuaternionD(0, 180, 0, true)), new Matrix3d(new QuaternionD(0, -90, 0, true))};
+	Mat3[] BLOCK_ROTATIONS = new Mat3[] {RotationHelper.identityMat3(), RotationHelper.identityMat3().appendRotationEq(1.5708, 0, 1, 0),
+			RotationHelper.identityMat3().appendRotationEq(Math.PI, 0, 1, 0), RotationHelper.identityMat3().appendRotationEq(-1.5708, 0, 1, 0)};
 
 	/**
 	 * Given the position and state of a block determines where it should go and
@@ -33,26 +37,26 @@ public interface RotationSolver {
 	 * @param oldState      the current state of the block
 	 * @return the state the block should be in when placed
 	 */
-	BlockState solveRotation(Matrix3d rotation, BlockRotation blockRotation, BlockPos.Mutable pos, BlockState oldState);
+	BlockState solveRotation(Mat3 rotation, BlockRotation blockRotation, BlockPos.Mutable pos, BlockState oldState);
 
-	static BlockState solveOriginalRotation(Matrix3d rotation, BlockRotation blockRotation, BlockPos.Mutable pos, BlockState oldState) {
+	static BlockState solveOriginalRotation(Mat3 rotation, BlockRotation blockRotation, BlockPos.Mutable pos, BlockState oldState) {
 		return oldState;
 	}
 
-	static BlockState solveCardinalRotation(Matrix3d rotation, BlockRotation blockRotation, BlockPos.Mutable pos, BlockState oldState) {
+	static BlockState solveCardinalRotation(Mat3 rotation, BlockRotation blockRotation, BlockPos.Mutable pos, BlockState oldState) {
 		blockRotateBlockPos(blockRotation, pos);
 		return oldState.rotate(blockRotation);
 	}
 
-	static BlockState solveTrueRotation(Matrix3d rotation, BlockRotation blockRotation, BlockPos.Mutable pos, BlockState oldState) {
-		pos.set(rotation.transformX(pos.getX(), pos.getY(), pos.getZ()), rotation.transformY(pos.getX(), pos.getY(), pos.getZ()),
-				rotation.transformZ(pos.getX(), pos.getY(), pos.getZ()));
+	static BlockState solveTrueRotation(Mat3 rotation, BlockRotation blockRotation, BlockPos.Mutable pos, BlockState oldState) {
+		Vec3 vec = new Vec3((double) pos.getX(), (double) pos.getY(), (double) pos.getZ()).mulMat3Eq(rotation);
+		pos.set(vec.x, vec.y, vec.z);
 		return oldState.rotate(blockRotation);
 	}
 
 	static void blockRotateBlockPos(BlockRotation blockRotation, BlockPos.Mutable pos) {
-		Matrix3d m = BLOCK_ROTATIONS[blockRotation.ordinal()];
-		pos.set(m.transformX(pos.getX(), pos.getY(), pos.getZ()), m.transformY(pos.getX(), pos.getY(), pos.getZ()),
-				m.transformZ(pos.getX(), pos.getY(), pos.getZ()));
+		Mat3 m = BLOCK_ROTATIONS[blockRotation.ordinal()];
+		Vec3 vec = new Vec3((double) pos.getX(), (double) pos.getY(), (double) pos.getZ()).mulMat3Eq(m);
+		pos.set(vec.x, vec.y, vec.z);
 	}
 }

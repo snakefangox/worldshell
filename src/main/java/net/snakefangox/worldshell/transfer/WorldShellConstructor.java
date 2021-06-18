@@ -6,7 +6,7 @@ import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.snakefangox.worldshell.WorldShell;
+import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 /**
  * Handles the entire creation process for your {@link net.snakefangox.worldshell.entity.WorldShellEntity}
  * including moving blocks to storage, registering a bay if needed and spawning the entity.
- * Simply create a new one with  the needed data (including a pre-spawn callback if you want) and then call
+ * Simply create a new one with the needed data (including a pre-spawn callback if you want) and then call
  * {@link WorldShellConstructor#construct()} on it. This process can take several ticks to finish for large entities.
  * Should you need to do something after the entity is spawned you can provide a callback or hold onto the {@link Result}
  * and check to see if it is finished.
@@ -122,9 +122,9 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 	}
 
 	private void setup() {
-		shellWorld = WorldShell.getStorageDim(getWorld().getServer());
+		shellWorld = WorldShellMain.getStorageDim(getWorld().getServer());
 		shellStorage = ShellStorageData.getOrCreate(shellWorld.getServer());
-		bay = new Bay(shellStorage.getFreeBay(), BlockBox.empty());
+		bay = new Bay(shellStorage.getFreeBay());
 		stage = Stage.TRANSFER;
 	}
 

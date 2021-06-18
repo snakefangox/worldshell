@@ -1,3 +1,4 @@
 {
-  "block.socrates_skyships.ships_helm": "Ships Helm"
+  "block.socrates_skyships.ships_helm": "Ships Helm",
+  "entity.socrates_skyships.airship_type": "Airship Type"
 }

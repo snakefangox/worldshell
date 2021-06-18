@@ -34,10 +34,10 @@ import java.util.*;
 // TODO This is a mess and is next on my kill list
 public class WSNetworking {
 
-	public static final Identifier SHELL_DATA = new Identifier(WorldShell.MODID, "data");
-	public static final Identifier SHELL_UPDATE = new Identifier(WorldShell.MODID, "update");
-	public static final Identifier SHELL_INTERACT = new Identifier(WorldShell.MODID, "interact");
-	public static final Identifier SHELL_BLOCK_EVENT = new Identifier(WorldShell.MODID, "block_event");
+	public static final Identifier SHELL_DATA = new Identifier(WorldShellMain.MODID, "data");
+	public static final Identifier SHELL_UPDATE = new Identifier(WorldShellMain.MODID, "update");
+	public static final Identifier SHELL_INTERACT = new Identifier(WorldShellMain.MODID, "interact");
+	public static final Identifier SHELL_BLOCK_EVENT = new Identifier(WorldShellMain.MODID, "block_event");
 	public static final TrackedDataHandler<EntityBounds> BOUNDS = new TrackedDataHandler<EntityBounds>() {
 
 		@Override
@@ -180,7 +180,7 @@ public class WSNetworking {
 				if (player.distanceTo(entity) < dimensions.getRoughMaxDist() + 4.5) {
 					Optional<Bay> bay = ((WorldShellEntity) entity).getBay();
 					if (bay.isPresent()) {
-						World world = WorldShell.getStorageDim(server);
+						World world = WorldShellMain.getStorageDim(server);
 						BlockPos bp = bay.get().toGlobal(hit.getBlockPos());
 						if (!world.isChunkLoaded(bp)) return;
 						BlockHitResult gHit = new BlockHitResult(bay.get().toGlobal(hit.getPos()),

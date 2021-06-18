@@ -55,7 +55,7 @@ import java.util.UUID;
 import java.util.function.*;
 import java.util.stream.Stream;
 
-public class DelegateWorld extends World {
+public class DelegateWorld extends World implements Worldshell {
 
 	private final World proxiedWorld;
 	private final Microcosm proxiedShell;

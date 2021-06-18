@@ -1,7 +1,7 @@
 package net.snakefangox.worldshell.transfer;
 
 import net.minecraft.server.MinecraftServer;
-import net.snakefangox.worldshell.WorldShell;
+import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.mixinextras.GetShellTransferHandler;
 
 import java.util.PriorityQueue;
@@ -56,7 +56,7 @@ public class ShellTransferHandler {
 			process();
 		}
 		if (System.currentTimeMillis() - tickTime >= MAX_CLEANUP_TIME)
-			WorldShell.LOGGER.error("Clean up not finished in " + (MAX_CLEANUP_TIME / 1000) + "seconds. Data may be lost");
+			WorldShellMain.LOGGER.error("Clean up not finished in " + (MAX_CLEANUP_TIME / 1000) + "seconds. Data may be lost");
 	}
 
 	private void addOperator(ShellTransferOperator operator) {

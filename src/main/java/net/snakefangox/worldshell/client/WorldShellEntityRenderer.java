@@ -14,7 +14,7 @@ import net.snakefangox.worldshell.entity.WorldShellEntity;
 @Environment(EnvType.CLIENT)
 public class WorldShellEntityRenderer<T extends WorldShellEntity> extends EntityRenderer<T> {
 
-	protected WorldShellEntityRenderer(EntityRendererFactory.Context ctx) {
+	public WorldShellEntityRenderer(EntityRendererFactory.Context ctx) {
 		super(ctx);
 	}
 

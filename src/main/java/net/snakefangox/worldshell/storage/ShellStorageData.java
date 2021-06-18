@@ -5,7 +5,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
-import net.snakefangox.worldshell.WorldShell;
+import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.WorldShellConfig;
 import net.snakefangox.worldshell.transfer.WorldShellDeconstructor;
 
@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class ShellStorageData extends PersistentState {
 
-	private static final String ID = WorldShell.MODID + ":shell_storage";
+	private static final String ID = WorldShellMain.MODID + ":shell_storage";
 	private static final int WORLD_RADIUS = 30000000;
 	private final Map<Integer, Bay> bays = new HashMap<>();
 	private final List<Integer> emptyBays = new ArrayList<>();
@@ -24,7 +24,7 @@ public class ShellStorageData extends PersistentState {
 	private int freeIndex = 1;
 
 	public static ShellStorageData getOrCreate(MinecraftServer server) {
-		PersistentStateManager stateManager = WorldShell.getStorageDim(server).getPersistentStateManager();
+		PersistentStateManager stateManager = WorldShellMain.getStorageDim(server).getPersistentStateManager();
 		return stateManager.getOrCreate(ShellStorageData::fromNbt, ShellStorageData::new, ID);
 	}
 

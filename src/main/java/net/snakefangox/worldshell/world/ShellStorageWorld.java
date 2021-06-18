@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.function.Predicate;
 
-public class ShellStorageWorld extends ServerWorld {
+public class ShellStorageWorld extends ServerWorld implements Worldshell {
 
 	private ShellStorageData cachedBayData;
 

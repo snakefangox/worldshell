@@ -15,6 +15,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Quaternion;
+import net.snakefangox.worldshell.collision.RotationHelper;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Microcosm;
 
@@ -28,7 +29,7 @@ import java.util.Random;
 public class WorldShellRender {
 
     public static void renderMicrocosm(WorldShellEntity wsEntity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-        renderMicrocosm(wsEntity.getMicrocosm(), matrices, wsEntity.getRotation().toFloatQuat(), wsEntity.world.random, vertexConsumers, light);
+        renderMicrocosm(wsEntity.getMicrocosm(), matrices, RotationHelper.quatToMc(wsEntity.getRotation()), wsEntity.world.random, vertexConsumers, light);
     }
 
     public static void renderMicrocosm(Microcosm microcosm, MatrixStack matrices, Quaternion quaternion, Random random, VertexConsumerProvider vertexConsumers, int light) {
