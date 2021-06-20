@@ -1,120 +1,141 @@
 package net.snakefangox.worldshell.collision;
 
-import net.minecraft.util.CuboidBlockIterator;
+import com.jme3.bounding.BoundingBox;
+import com.jme3.bullet.CollisionSpace;
+import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.collision.PhysicsSweepTestResult;
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.collision.shapes.CompoundCollisionShape;
+import com.jme3.bullet.objects.PhysicsGhostObject;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Transform;
+import com.jme3.math.Vector3f;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.RaycastContext;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.LocalSpace;
-import net.snakefangox.worldshell.util.VectorPool;
-import oimo.collision.geometry.Aabb;
-import oimo.collision.geometry.BoxGeometry;
-import oimo.collision.geometry.RayCastHit;
-import oimo.common.Mat3;
-import oimo.common.Transform;
-import oimo.common.Vec3;
-import oimo.dynamics.World;
-import oimo.dynamics.callback.AabbTestCallback;
-import oimo.dynamics.callback.RayCastCallback;
-import oimo.dynamics.rigidbody.*;
+import net.snakefangox.worldshell.storage.Microcosm;
 
-import java.util.Optional;
+import java.util.*;
 
 /**
- * A custom {@link Box} implementation that takes a worldshell and handles rotated collision.
+ * A custom {@link Box} style implementation that takes a worldshell and handles rotated collision.
  */
-public class ShellCollisionHull extends Box implements SpecialBox, LocalSpace {
+public class ShellCollisionHull implements LocalSpace {
 
-	private static final RigidBodyConfig BODY_CONFIG = new RigidBodyConfig();
-	private static final float PADDING = 0.5F;
+	private static final double SMOL = 0.01;
+	private static final Map<Vector3f, BoxCollisionShape> SHAPE_CACHE = new HashMap<>();
 	private final WorldShellEntity entity;
-	private final World physicsWorld;
-	private final RigidBody hull;
-	private Mat3 matrix;
-	private Mat3 inverseMatrix;
+	private HullBoxDelegate dBox;
+	private final Vector3f localVector = new Vector3f(), localVector2 = new Vector3f(), localVector3 = new Vector3f();
+	private final Transform start = new Transform(), end = new Transform();
+	private final List<PhysicsSweepTestResult> sweepTestResults = new ArrayList<>();
+	private final BoxCollisionShape roughHullShape = new BoxCollisionShape(Vector3f.UNIT_XYZ);
+	private final CollisionSpace space;
+	private final PhysicsGhostObject shellBody;
+	private CompoundCollisionShape compoundHull;
+	private final Set<Long> loadedPositions = new HashSet<>();
+	private final BoxCollisionShape collider = new BoxCollisionShape(new Vector3f(0.5f, 0.5f, 0.5f));
+	private final PhysicsGhostObject colliderBody = new PhysicsGhostObject(collider);
 
 	public ShellCollisionHull(WorldShellEntity entity) {
-		super(0, 0, 0, 0, 0, 0);
 		this.entity = entity;
-		physicsWorld = new World(null, new Vec3(null, null, null));
-		hull = new RigidBody(BODY_CONFIG);
-		physicsWorld.addRigidBody(hull);
-		setRotation(RotationHelper.identityMat3(), RotationHelper.identityMat3());
-	}
-
-	public void setRotation(Mat3 rotationMatrix, Mat3 inverseRotationMatrix) {
-		matrix = rotationMatrix;
-		inverseMatrix = inverseRotationMatrix;
-		hull.setRotation(rotationMatrix);
-	}
-
-	public void sizeUpdate() {
-		calculateCrudeBounds();
+		space = new CollisionSpace(localVector.set(10000f, 10000f, 10000f),
+				localVector2.set(-10000f, -10000f, -10000f), PhysicsSpace.BroadphaseType.SIMPLE);
+		compoundHull = new CompoundCollisionShape();
+		shellBody = new PhysicsGhostObject(compoundHull);
+		space.add(shellBody);
+		space.add(colliderBody);
+		dBox = new HullBoxDelegate(new Box(BlockPos.ORIGIN), this);
 	}
 
 	public void calculateCrudeBounds() {
-		EntityBounds ed = entity.getDimensions();
-		double xBy2 = ed.length / 2.0;
-		double yBy2 = ed.height / 2.0;
-		double zBy2 = ed.width / 2.0;
-		Box aligned = new Box(-xBy2, -yBy2, -zBy2, xBy2, yBy2, zBy2).expand(PADDING);
-		Vec3 vec = VectorPool.vec3();
-		Box rotated = RotationHelper.transformBox(aligned, matrix, vec);
-		VectorPool.disposeVec3(vec);
-		minX = rotated.minX + entity.getX();
-		minY = rotated.minY + entity.getY();
-		minZ = rotated.minZ + entity.getZ();
-		maxX = rotated.maxX + entity.getX();
-		maxY = rotated.maxY + entity.getY();
-		maxZ = rotated.maxZ + entity.getZ();
+		EntityBounds bounds = entity.getDimensions();
+		float len = bounds.length / 2f;
+		float height = bounds.height / 2f;
+		float width = bounds.width / 2f;
+		Vec3d off = entity.getBlockOffset();
+		localVector.set(len, height, width);
+		roughHullShape.setScale(localVector);
+		localVector.set((float) off.x + (float) entity.getX() + len,
+				(float) off.y + (float) entity.getY(),
+				(float) off.z + (float) entity.getZ() + width);
+		BoundingBox box = new BoundingBox();
+		roughHullShape.boundingBox(localVector, getRotation(), box);
+		box.getMax(localVector);
+		double maxX = localVector.x;
+		double maxY = localVector.y;
+		double maxZ = localVector.z;
+		box.getMin(localVector);
+		dBox = new HullBoxDelegate(new Box(localVector.x, localVector.y, localVector.z, maxX, maxY, maxZ), this);
+		shellBody.setPhysicsRotation(getRotation());
 	}
 
-	@Override
-	public boolean intersects(Box box) {
-		return box.intersects(minX, minY, minZ, maxX, maxY, maxZ) && this.intersects(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+	public void onWorldshellUpdate() {
+		compoundHull = new CompoundCollisionShape(compoundHull.countChildren() == 0 ? 1 : compoundHull.countChildren());
+		shellBody.setCollisionShape(compoundHull);
+		loadedPositions.clear();
 	}
 
-	@Override
 	public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-		if (!super.intersects(minX, minY, minZ, maxX, maxY, maxZ)) return false;
-		Vec3 vecMin = toLocal(new Vec3(minX, minY, minZ));
-		Vec3 vecMax = toLocal(new Vec3(maxX, maxY, maxZ));
-		Aabb aabb = new Aabb();
-		aabb.setMax(vecMax);
-		aabb.setMin(vecMin);
-		AabbTest result = new AabbTest();
-		fillHull(aabb.getCenter(), new Box(vecMin.x, vecMin.y, vecMin.z, vecMax.x, vecMax.y, vecMax.z));
-		physicsWorld.aabbTest(aabb, result);
-		clearHull();
-		return result.hasCollided;
+		localVector2.set((float) (maxX - minX) / 2f, (float) (maxY - minY) / 2f, (float) (maxZ - minZ) / 2f);
+		localVector.set((float) minX + localVector2.x, (float) minY + localVector2.y, (float) minZ + localVector2.z);
+		lazyFillCollisionSpace(toLocal(localVector), localVector2);
+
+		collider.setScale(localVector2);
+		colliderBody.setPhysicsLocation(localVector);
+		return space.contactTest(colliderBody, null) > 0;
 	}
 
-	@Override
+	public double calculateMaxDistance(Direction.Axis axis, Box box, double maxDist) {
+		double absMax = Math.abs(maxDist);
+		if (absMax < SMOL) return 0;
+		int sign = (int) Math.signum(maxDist);
+		double sweepVal = (0.4 * sign);
+		double sweepMaxDist = maxDist + sweepVal;
+		float maxX = (float) Math.abs(axis.choose(sweepMaxDist, 0, 0));
+		float maxY = (float) Math.abs(axis.choose(0, sweepMaxDist, 0));
+		float maxZ = (float) Math.abs(axis.choose(0, 0, sweepMaxDist));
+
+		localVector2.set((float) (box.maxX - box.minX) / 2f, (float) (box.maxY - box.minY) / 2f, (float) (box.maxZ - box.minZ) / 2f);
+		localVector.set((float) (box.minX + localVector2.x), (float) (box.minY + localVector2.y), (float) (box.minZ + localVector2.z));
+		localVector2.addLocal(maxX, maxY, maxZ);
+		lazyFillCollisionSpace(toLocal(localVector), localVector2);
+		localVector2.subtractLocal(maxX, maxY, maxZ);
+
+		collider.setScale(localVector2);
+		start.setTranslation(localVector);
+		end.setTranslation(localVector.addLocal(maxX * sign, maxY * sign, maxZ * sign));
+		space.sweepTest(collider, start, end, sweepTestResults, (float) SMOL);
+
+		if (sweepTestResults.isEmpty()) return maxDist;
+		double result = sweepTestResults.get(0).getHitFraction() * sweepMaxDist;
+		double absResult = Math.abs(result);
+		if (absResult > absMax) return maxDist;
+		if (absResult < SMOL) return 0;
+		return result;
+	}
+
 	public boolean contains(double x, double y, double z) {
-		Vec3 vec = entity.toLocal(VectorPool.vec3().init(x, y, z)).mulMat3Eq(inverseMatrix);
-		BlockPos bp = new BlockPos(vec.x, vec.y, vec.z);
+		localVector.set((float) x, (float) y, (float) z);
+		toLocal(localVector);
+		BlockPos bp = new BlockPos(localVector.x, localVector.y, localVector.z);
 		VoxelShape shape = entity.getMicrocosm().getBlockState(bp).getCollisionShape(entity.getMicrocosm(), bp);
-		if (shape.isEmpty()) {
-			VectorPool.disposeVec3(vec);
-			return false;
-		} else {
-			boolean r = shape.getBoundingBox().contains(vec.x, vec.y, vec.z);
-			VectorPool.disposeVec3(vec);
-			return r;
-		}
+		if (shape.isEmpty()) return false;
+		return shape.getBoundingBox().contains(localVector.x, localVector.y, localVector.z);
 	}
 
-	@Override
 	public Optional<Vec3d> raycast(Vec3d min, Vec3d max) {
-		Vec3 nMin = entity.toLocal(RotationHelper.of(min)).mulMat3Eq(inverseMatrix);
-		Vec3 nMax = entity.toLocal(RotationHelper.of(max)).mulMat3Eq(inverseMatrix);
-		RaycastContext ctx = new RaycastContext(RotationHelper.of(nMin), RotationHelper.of(nMax),
-				RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity);
+		Vec3d nMin = toLocal(min);
+		Vec3d nMax = toLocal(max);
+		RaycastContext ctx = new RaycastContext(nMin, nMax, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity);
 		BlockHitResult hit = entity.getMicrocosm().raycast(ctx);
-		VectorPool.disposeVec3(nMin);
-		VectorPool.disposeVec3(nMax);
 		return hit.getType() == HitResult.Type.MISS ? Optional.empty() : Optional.of(entity.toGlobal(hit.getPos()));
 	}
 
@@ -122,66 +143,40 @@ public class ShellCollisionHull extends Box implements SpecialBox, LocalSpace {
 		return new HullVoxelDelegate(this);
 	}
 
-	public double calculateMaxDistance(Direction.Axis axis, Box box, double maxDist) {
-		Vec3d center = box.getCenter();
-		Vec3 vec = RotationHelper.of(center);
-		switch (axis) {
-			case X -> vec.x += maxDist;
-			case Y -> vec.y += maxDist;
-			case Z -> vec.z += maxDist;
-		}
-
-		DistTracker hit = castHullForCollision(box, vec);
-		VectorPool.disposeVec3(vec);
-		return MathHelper.lerp(hit.progress, 0, maxDist);
-	}
-
-	private DistTracker castHullForCollision(Box collidingBox, Vec3 end) {
-		Vec3d c = collidingBox.getCenter();
-		Vec3 vec3 = VectorPool.vec3().init(-entity.getLocalX(), -entity.getLocalY(), -entity.getLocalZ());
-		Box rot = RotationHelper.transformBox(collidingBox, inverseMatrix, vec3);
-		BoxGeometry collider = new BoxGeometry(vec3.init(rot.getXLength() / 2.0, rot.getYLength() / 2.0, rot.getZLength() / 2.0));
-		Transform collTransform = new Transform();
-		collTransform.setPosition(entity.toLocal(vec3.init(c.x, c.y, c.z)));
-
-		fillHull(vec3, rot);
-
-		DistTracker distTracker = new DistTracker();
-		physicsWorld.convexCast(collider, collTransform, end, distTracker);
-
-		clearHull();
-		return distTracker;
-	}
-
-	private void fillHull(Vec3 vec3, Box rot) {
-		CuboidBlockIterator bi = new CuboidBlockIterator((int) rot.minX, (int) rot.minY, (int) rot.minZ,
-				(int) rot.maxX, (int) rot.maxY, (int) rot.maxZ);
+	public void lazyFillCollisionSpace(Vector3f c, Vector3f ex) {
+		Microcosm microcosm = entity.getMicrocosm();
 		BlockPos.Mutable mBp = new BlockPos.Mutable();
-		while (bi.step()) {
-			mBp.set(bi.getX(), bi.getY(), bi.getZ());
-			VoxelShape vShape = entity.getMicrocosm().getBlockState(mBp).getCollisionShape(entity.getMicrocosm(), mBp);
-			vShape.forEachBox((minX1, minY1, minZ1, maxX1, maxY1, maxZ1) -> {
-				double hX = (maxX1 - minX1) / 2.0;
-				double hY = (maxY1 - minY1) / 2.0;
-				double hZ = (maxZ1 - minZ1) / 2.0;
-				BoxGeometry boxGeom = new BoxGeometry(vec3.init(hX, hY, hZ));
-				ShapeConfig config = new ShapeConfig();
-				config.geometry = boxGeom;
-				config.position.init(mBp.getX() + minX1 + hX, mBp.getY() + minY1 + hY, mBp.getZ() + minZ1 + hZ);
-				Shape shape = new Shape(config);
-				hull.addShape(shape);
-			});
+
+		for (int x = (int) (c.x - ex.x); x < Math.ceil(c.x + ex.x) + 1; ++x) {
+			for (int y = (int) (c.y - ex.y); y < Math.ceil(c.y + ex.y) + 1; ++y) {
+				for (int z = (int) (c.z - ex.z); z < Math.ceil(c.z + ex.z) + 1; ++z) {
+					mBp.set(x, y, z);
+					Long mBpL = mBp.asLong();
+					if (!loadedPositions.contains(mBpL) && microcosm.hasBlock(mBp)) {
+						microcosm.getBlockState(mBp).getCollisionShape(microcosm, mBp).forEachBox((minX, minY, minZ, maxX, maxY, maxZ) -> {
+							localVector3.set((float) (maxX - minX) / 2f, (float) (maxY - minY) / 2f, (float) (maxZ - minZ) / 2f);
+							compoundHull.addChildShape(getOrCacheShape(localVector3),
+									(float) minX + localVector3.x + mBp.getX(),
+									(float) minY + localVector3.y + mBp.getY(),
+									(float) minZ + localVector3.z + mBp.getZ());
+						});
+						loadedPositions.add(mBpL);
+					}
+				}
+			}
 		}
 	}
 
-	private void clearHull() {
-		hull._shapeList = null;
-		hull._shapeListLast = null;
-		hull._numShapes = 0;
+	public double getMin(Direction.Axis axis) {
+		return dBox.getMin(axis);
 	}
 
-	static {
-		BODY_CONFIG.type = RigidBodyType.STATIC;
+	public double getMax(Direction.Axis axis) {
+		return dBox.getMax(axis);
+	}
+
+	public Box getDelegateBox() {
+		return dBox;
 	}
 
 	@Override
@@ -199,23 +194,21 @@ public class ShellCollisionHull extends Box implements SpecialBox, LocalSpace {
 		return entity.getLocalZ();
 	}
 
-	private static class DistTracker extends RayCastCallback {
-		double progress;
-		boolean hasCollided;
-
-		@Override
-		public void process(Shape shape, RayCastHit hit) {
-			hasCollided = true;
-			if (hit.fraction > progress) progress = hit.fraction;
-		}
+	@Override
+	public Quaternion getRotation() {
+		return entity.getRotation();
 	}
 
-	private static class AabbTest extends AabbTestCallback {
-		boolean hasCollided;
+	@Override
+	public Quaternion getInverseRotation() {
+		return entity.getInverseRotation();
+	}
 
-		@Override
-		public void process(Shape shape) {
-			hasCollided = true;
-		}
+	private static BoxCollisionShape getOrCacheShape(Vector3f vec) {
+		if (SHAPE_CACHE.containsKey(vec)) return SHAPE_CACHE.get(vec);
+		Vector3f newVec = vec.clone();
+		BoxCollisionShape newShape = new BoxCollisionShape(newVec);
+		SHAPE_CACHE.put(newVec, newShape);
+		return newShape;
 	}
 }

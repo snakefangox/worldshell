@@ -13,9 +13,7 @@ import net.snakefangox.worldshell.transfer.ConflictSolver;
 @RegisterContents(defaultBlockMeta = @BlockMeta(blockItemGroup = "transportation"))
 public class SRegister {
 	public static final ShipsHelm SHIPS_HELM = new ShipsHelm();
-
-	public static final EntityType<AirShip> AIRSHIP_TYPE = new WorldShellEntityType<>(AirShip::new);
-
 	@Exclude
 	public static final WorldShellSettings AIRSHIP_SETTINGS = new WorldShellSettings.Builder(true).setConflictSolver(ConflictSolver.HARDNESS).build();
+	public static final EntityType<AirShip> AIRSHIP_TYPE = new WorldShellEntityType<>(AirShip::new);
 }

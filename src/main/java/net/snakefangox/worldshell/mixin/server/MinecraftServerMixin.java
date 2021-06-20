@@ -22,10 +22,10 @@ import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.level.ServerWorldProperties;
 import net.minecraft.world.level.UnmodifiableLevelProperties;
 import net.minecraft.world.level.storage.LevelStorage;
+import net.snakefangox.worldshell.mixinextras.DynamicWorldGen;
 import net.snakefangox.worldshell.mixinextras.GetShellTransferHandler;
 import net.snakefangox.worldshell.transfer.ShellTransferHandler;
 import net.snakefangox.worldshell.world.CreateWorldsEvent;
-import net.snakefangox.worldshell.mixinextras.DynamicWorldGen;
 import net.snakefangox.worldshell.world.ServerWorldSupplier;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -68,11 +68,17 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		super(string);
 	}
 
-	@Shadow
+	@Inject(method = "createWorlds(Lnet/minecraft/server/WorldGenerationProgressListener;)V", at = @At("TAIL"))
+	protected void createWorlds(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
+		CreateWorldsEvent.EVENT.invoker().event((MinecraftServer) (Object) this);
+	}	@Shadow
 	public @Nullable
 	abstract ServerWorld getWorld(RegistryKey<World> key);
 
 	@Override
+	public ShellTransferHandler worldshell$getShellTransferHandler() {
+		return shellTransferHandler;
+	}	@Override
 	public ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions) {
 		return worldshell$createDynamicWorld(worldRegistryKey, dimensionOptions, ServerWorld::new);
 	}
@@ -96,13 +102,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		return serverWorld;
 	}
 
-	@Inject(method = "createWorlds(Lnet/minecraft/server/WorldGenerationProgressListener;)V", at = @At("TAIL"))
-	protected void createWorlds(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
-		CreateWorldsEvent.EVENT.invoker().event((MinecraftServer) (Object) this);
-	}
 
-	@Override
-	public ShellTransferHandler worldshell$getShellTransferHandler() {
-		return shellTransferHandler;
-	}
+
+
 }

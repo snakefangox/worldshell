@@ -5,8 +5,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
-import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.WorldShellConfig;
+import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.transfer.WorldShellDeconstructor;
 
 import java.util.ArrayList;
@@ -81,7 +81,8 @@ public class ShellStorageData extends PersistentState {
 	public void freeBay(int id, WorldShellDeconstructor deconstructor) {
 		if (!bays.containsKey(id) || !deconstructor.isRemoving()) return;
 		Bay bay = bays.remove(id);
-		bay.markDirtyFunc = () -> {};
+		bay.markDirtyFunc = () -> {
+		};
 		emptyBays.add(id);
 		markDirty();
 	}

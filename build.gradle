@@ -11,6 +11,7 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
+    mavenCentral()
     flatDir {
         dirs 'libs'
     }
@@ -53,9 +54,8 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // Physics
-    implementation name: 'oimophysics-1.2.2'
-    include name: 'oimophysics-1.2.2'
+    // Physics, needed for collision and nice matrices (Minecraft's ones are a bit painful)
+    modImplementation "com.github.stephengold:Libbulletjme:${project.libbulletjme_version}"
 
     // Needed for the test mod
     testmodImplementation sourceSets.main.output
@@ -94,7 +94,7 @@ java {
 
 jar {
     from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}"}
+        rename { "${it}_${project.archivesBaseName}" }
     }
 }
 

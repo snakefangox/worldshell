@@ -1,8 +1,11 @@
 package net.snakefangox.worldshell;
 
+import com.jme3.math.Quaternion;
+import com.jme3.system.NativeLibraryLoader;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
@@ -23,7 +26,11 @@ import net.snakefangox.worldshell.world.ShellStorageWorld;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class WorldShellMain implements ModInitializer {
 
@@ -38,6 +45,7 @@ public class WorldShellMain implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		extractAndLoadNativeLibs();
 		registerStorageDim();
 		WSNetworking.registerServerPackets();
 		CreateWorldsEvent.EVENT.register(this::registerShellStorageDimension);
@@ -61,5 +69,26 @@ public class WorldShellMain implements ModInitializer {
 		DimensionOptions options = new DimensionOptions(typeSupplier, chunkGenerator);
 		ShellStorageWorld world = (ShellStorageWorld) DynamicWorldRegister.createDynamicWorld(server, STORAGE_DIM, options, ShellStorageWorld::new);
 		world.setCachedBayData(ShellStorageData.getOrCreate(server));
+	}
+
+	public void extractAndLoadNativeLibs() {
+		Path nativesDir = FabricLoader.getInstance().getGameDir().normalize().resolve("natives").resolve("bullet-10.4.0");
+
+		try {
+			if (!Files.exists(nativesDir))
+				Files.createDirectories(nativesDir);
+
+			Path libs = FabricLoader.getInstance().getModContainer(MODID).get().getRootPath().resolve("assets").resolve("worldshell").resolve("natives");
+			for (Path p : Files.walk(libs).filter(p -> !Files.isDirectory(p)).collect(Collectors.toList())) {
+				Path dest = nativesDir.resolve(p.getFileName());
+				if (!Files.exists(dest))
+					Files.copy(p, dest);
+			}
+
+		} catch (IOException e) {
+			throw new RuntimeException("Worldshell failed to load native libraries:", e);
+		}
+
+		NativeLibraryLoader.loadLibbulletjme(true, nativesDir.toFile(), "Release", "Sp");
 	}
 }

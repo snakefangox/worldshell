@@ -24,8 +24,8 @@ public class DynamicWorldRegister {
 	 * @return the world that was created
 	 */
 	public static ServerWorld createDynamicWorld(MinecraftServer server, RegistryKey<World> worldRegistryKey,
-											   RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator) {
-		return ((DynamicWorldGen)server).worldshell$createDynamicWorld(worldRegistryKey, dimensionTypeKey, chunkGenerator);
+												 RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator) {
+		return ((DynamicWorldGen) server).worldshell$createDynamicWorld(worldRegistryKey, dimensionTypeKey, chunkGenerator);
 	}
 
 	/**
@@ -40,7 +40,7 @@ public class DynamicWorldRegister {
 	 * @return the world that was created
 	 */
 	public static ServerWorld createDynamicWorld(MinecraftServer server, RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions) {
-		return ((DynamicWorldGen)server).worldshell$createDynamicWorld(worldRegistryKey, dimensionOptions);
+		return ((DynamicWorldGen) server).worldshell$createDynamicWorld(worldRegistryKey, dimensionOptions);
 	}
 
 	/**
@@ -54,7 +54,7 @@ public class DynamicWorldRegister {
 	 * @return the world that was created
 	 */
 	public static ServerWorld createDynamicWorld(MinecraftServer server, RegistryKey<World> worldRegistryKey,
-											   DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier) {
-		return ((DynamicWorldGen)server).worldshell$createDynamicWorld(worldRegistryKey, dimensionOptions, worldSupplier);
+												 DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier) {
+		return ((DynamicWorldGen) server).worldshell$createDynamicWorld(worldRegistryKey, dimensionOptions, worldSupplier);
 	}
 }

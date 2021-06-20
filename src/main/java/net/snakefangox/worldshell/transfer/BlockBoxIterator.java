@@ -15,16 +15,16 @@ public class BlockBoxIterator implements Iterator<BlockPos> {
 	private final BlockPos.Mutable currentPos;
 	private int x, y, z;
 
-	public static BlockBoxIterator of(BlockBox box) {
-		return new BlockBoxIterator(box);
-	}
-
 	private BlockBoxIterator(BlockBox box) {
 		currentPos = new BlockPos.Mutable();
 		this.box = box;
 		x = box.getMinX();
 		y = box.getMinY();
 		z = box.getMinZ();
+	}
+
+	public static BlockBoxIterator of(BlockBox box) {
+		return new BlockBoxIterator(box);
 	}
 
 	@Override

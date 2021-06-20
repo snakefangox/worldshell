@@ -24,17 +24,15 @@ import java.util.*;
  */
 public class Bay implements LocalSpace {
 
+	/** Calls on the {@link ShellStorageData} holding this */
+	Runnable markDirtyFunc = () -> {
+	};
 	/** The center of the shell */
 	private BlockPos center;
-
 	/** Defines the box the shell fits within */
 	private BlockBox bounds;
-
 	/** The entity changes to this shell should propagate to */
 	private WorldShellEntity linkedEntity = null;
-
-	/** Calls on the {@link ShellStorageData} holding this */
-	Runnable markDirtyFunc = () -> {};
 
 	public Bay(BlockPos center) {
 		this.center = center;
@@ -74,13 +72,6 @@ public class Bay implements LocalSpace {
 		return WorldShellPacketHelper.writeBlocks(buf, stateListMap, blockEntities, this);
 	}
 
-	public void setLoadForChunks(MinecraftServer server, boolean load) {
-		ServerWorld world = WorldShellMain.getStorageDim(server);
-		ChunkPos.stream(new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.getMinX()), ChunkSectionPos.getSectionCoord(bounds.getMinZ())),
-				new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.getMaxX()), ChunkSectionPos.getSectionCoord(bounds.getMaxZ())))
-				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, load));
-	}
-
 	public Vec3d toEntityGlobalSpace(Vec3d vec) {
 		return globalToGlobal(linkedEntity, vec);
 	}
@@ -100,10 +91,6 @@ public class Bay implements LocalSpace {
 		return tag;
 	}
 
-	public void markDirty() {
-		markDirtyFunc.run();
-	}
-
 	public BlockBox getBounds() {
 		return bounds;
 	}
@@ -114,6 +101,13 @@ public class Bay implements LocalSpace {
 		if (worldShellEntity.getMicrocosm().isEmpty()) {
 			fillServerWorldShell(worldShellEntity);
 		}
+	}
+
+	public void setLoadForChunks(MinecraftServer server, boolean load) {
+		ServerWorld world = WorldShellMain.getStorageDim(server);
+		ChunkPos.stream(new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.getMinX()), ChunkSectionPos.getSectionCoord(bounds.getMinZ())),
+				new ChunkPos(ChunkSectionPos.getSectionCoord(bounds.getMaxX()), ChunkSectionPos.getSectionCoord(bounds.getMaxZ())))
+				.forEach(chunkPos -> world.setChunkForced(chunkPos.x, chunkPos.z, load));
 	}
 
 	private void fillServerWorldShell(WorldShellEntity entity) {
@@ -147,6 +141,10 @@ public class Bay implements LocalSpace {
 		bounds.encompass(pos);
 		markDirty();
 		return true;
+	}
+
+	public void markDirty() {
+		markDirtyFunc.run();
 	}
 
 	@Override

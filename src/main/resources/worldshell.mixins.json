@@ -18,8 +18,8 @@
   ],
   "client": [
     "entitytracking.ClientEntityManagerAccess",
-    "rendering.GameRendererAccess",
-    "entitytracking.ClientWorldAccess"
+    "entitytracking.ClientWorldAccess",
+    "rendering.GameRendererAccess"
   ],
   "server": [
   ],

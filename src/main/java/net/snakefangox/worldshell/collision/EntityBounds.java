@@ -28,11 +28,11 @@ public class EntityBounds extends EntityDimensions {
 	@Override
 	public String toString() {
 		return "EntityBounds{" +
-				"length=" + length +
-				", width=" + width +
-				", height=" + height +
-				", fixed=" + fixed +
-				'}';
+			   "length=" + length +
+			   ", width=" + width +
+			   ", height=" + height +
+			   ", fixed=" + fixed +
+			   '}';
 	}
 
 	@Override

@@ -14,6 +14,7 @@ import java.util.Optional;
 public class HullBoxDelegate extends Box implements SpecialBox {
 
 	private final ShellCollisionHull hull;
+	private boolean recurseGuard;
 
 	public HullBoxDelegate(Box box, ShellCollisionHull hull) {
 		super(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
@@ -56,8 +57,18 @@ public class HullBoxDelegate extends Box implements SpecialBox {
 	}
 
 	@Override
+	public boolean intersects(Box box) {
+		if (recurseGuard) return true;
+		recurseGuard = true;
+		boolean result = box.intersects(minX, minY, minZ, maxX, maxY, maxZ) &&
+						 this.intersects(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+		recurseGuard = false;
+		return result;
+	}
+
+	@Override
 	public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-		return hull.intersects(minX, minY, minZ, maxX, maxY, maxZ);
+		return super.intersects(minX, minY, minZ, maxX, maxY, maxZ) && hull.intersects(minX, minY, minZ, maxX, maxY, maxZ);
 	}
 
 	@Override

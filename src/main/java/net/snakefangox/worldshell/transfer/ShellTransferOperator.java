@@ -1,5 +1,7 @@
 package net.snakefangox.worldshell.transfer;
 
+import com.jme3.math.Quaternion;
+import com.jme3.math.Vector3f;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
@@ -8,12 +10,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.snakefangox.worldshell.collision.RotationHelper;
 import net.snakefangox.worldshell.mixinextras.NoOpPosWrapper;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
-import oimo.common.Mat3;
-import oimo.common.Vec3;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Stack;
@@ -24,113 +23,111 @@ import java.util.Stack;
  */
 public abstract class ShellTransferOperator implements Comparable<ShellTransferOperator> {
 
-    protected static final int MAX_OPS = 200;
-    protected static final int FLAGS = 2 | 16 | 32 | 64;
-    protected static final int UPDATE_DEPTH = 3;
-    private static final double ROTATE_BACK = 0.7071067;
-    protected static final BlockState CLEAR_STATE = Blocks.AIR.getDefaultState();
+	protected static final int MAX_OPS = 200;
+	protected static final int FLAGS = 2 | 16 | 32 | 64;
+	protected static final int UPDATE_DEPTH = 3;
+	protected static final BlockState CLEAR_STATE = Blocks.AIR.getDefaultState();
+	private static final float ROTATE_BACK = 0.7071067f;
+	private final ServerWorld world;
+	private final NoOpPosWrapper posWrapper = new NoOpPosWrapper();
+	private final Stack<Long> cleanUpPositions = new Stack<>();
+	private int timeSpent = 0;
 
-    private final ServerWorld world;
-    private int timeSpent = 0;
+	public ShellTransferOperator(ServerWorld world) {
+		this.world = world;
+	}
 
-    private final NoOpPosWrapper posWrapper = new NoOpPosWrapper();
-    private final Stack<Long> cleanUpPositions = new Stack<>();
+	void addTime(long amount) {
+		timeSpent += amount;
+	}
 
-    public ShellTransferOperator(ServerWorld world) {
-        this.world = world;
-    }
+	ServerWorld getWorld() {
+		return world;
+	}
 
-    int getTime() {
-        return timeSpent;
-    }
+	abstract boolean isFinished();
 
-    void addTime(long amount) {
-        timeSpent += amount;
-    }
+	abstract void performPass();
 
-    ServerWorld getWorld() {
-        return world;
-    }
+	public int compareTo(@NotNull ShellTransferOperator o) {
+		return getTime() - o.getTime();
+	}
 
-    abstract boolean isFinished();
+	int getTime() {
+		return timeSpent;
+	}
 
-    abstract void performPass();
+	protected BlockRotation getBlockRotation(Quaternion rotation) {
+		Vector3f vec = rotation.multLocal(new Vector3f(ROTATE_BACK, 0f, ROTATE_BACK));
+		if (vec.x > 0) {
+			if (vec.z > 0) {
+				return BlockRotation.NONE;
+			} else {
+				return BlockRotation.CLOCKWISE_90;
+			}
+		} else {
+			if (vec.z > 0) {
+				return BlockRotation.COUNTERCLOCKWISE_90;
+			} else {
+				return BlockRotation.CLOCKWISE_180;
+			}
+		}
+	}
 
-    protected abstract LocalSpace getLocalSpace();
+	protected void transferBlock(World from, World to, BlockPos pos) {
+		transferBlock(from, to, pos, true, RotationSolver.ORIGINAL, Quaternion.IDENTITY, BlockRotation.NONE, ConflictSolver.OVERWRITE);
+	}
 
-    protected abstract LocalSpace getRemoteSpace();
+	protected void transferBlock(World from, World to, BlockPos pos, boolean cleanUpRequired,
+								 RotationSolver rotationSolver, Quaternion rotation, BlockRotation blockRotation, ConflictSolver conflictSolver) {
+		BlockState state = from.getBlockState(pos);
+		if (state.isAir()) return;
+		posWrapper.set(pos);
+		getLocalSpace().globalToGlobal(getRemoteSpace(), posWrapper);
+		state = rotationSolver.solveRotation(rotation, blockRotation, posWrapper, state);
+		BlockState currentState = to.getBlockState(posWrapper);
+		if (!currentState.getMaterial().isReplaceable())
+			state = conflictSolver.solveConflict(to, posWrapper, state, currentState);
+		to.setBlockState(posWrapper, state, FLAGS, 0);
+		if (getRemoteSpace() instanceof Bay) ((Bay) getRemoteSpace()).updateBoxBounds(posWrapper);
+		if (state.hasBlockEntity()) {
+			BlockEntity blockEntity = from.getBlockEntity(pos);
+			if (blockEntity != null) transferBlockEntity(from, to, pos, posWrapper.toImmutable(), blockEntity, state);
+		}
+		posWrapper.set(pos);
+		from.setBlockState(posWrapper, CLEAR_STATE, FLAGS, 0);
+		if (cleanUpRequired) cleanUpPositions.push(posWrapper.asLong());
+	}
 
-    public int compareTo(@NotNull ShellTransferOperator o) {
-        return getTime() - o.getTime();
-    }
+	protected abstract LocalSpace getLocalSpace();
 
-    protected BlockRotation getBlockRotation(Mat3 rotation) {
-        Vec3 vec = new Vec3(ROTATE_BACK, 0.0, ROTATE_BACK).mulMat3Eq(rotation);
-        if (vec.x > 0) {
-            if (vec.z > 0) {
-                return BlockRotation.NONE;
-            } else {
-                return BlockRotation.CLOCKWISE_90;
-            }
-        } else {
-            if (vec.z > 0) {
-                return BlockRotation.COUNTERCLOCKWISE_90;
-            } else {
-                return BlockRotation.CLOCKWISE_180;
-            }
-        }
-    }
+	protected abstract LocalSpace getRemoteSpace();
 
-    protected void transferBlock(World from, World to, BlockPos pos) {
-        transferBlock(from, to, pos, true, RotationSolver.ORIGINAL, RotationHelper.identityMat3(), BlockRotation.NONE, ConflictSolver.OVERWRITE);
-    }
+	protected void transferBlockEntity(World from, World to, BlockPos oldPos, BlockPos newPos, BlockEntity blockEntity, BlockState state) {
+		NbtCompound nbt = new NbtCompound();
+		blockEntity.writeNbt(nbt);
+		from.removeBlockEntity(oldPos);
+		nbt.putInt("x", newPos.getX());
+		nbt.putInt("y", newPos.getY());
+		nbt.putInt("z", newPos.getZ());
+		BlockEntity newBlockEntity = to.getBlockEntity(newPos);
+		if (newBlockEntity != null) {
+			newBlockEntity.readNbt(nbt);
+		} else {
+			newBlockEntity = BlockEntity.createFromNbt(newPos, state, nbt);
+			if (newBlockEntity != null) {
+				newBlockEntity.readNbt(nbt);
+				to.addBlockEntity(newBlockEntity);
+			}
+		}
+	}
 
-    protected void transferBlock(World from, World to, BlockPos pos, boolean cleanUpRequired,
-                                 RotationSolver rotationSolver, Mat3 rotation, BlockRotation blockRotation, ConflictSolver conflictSolver) {
-        BlockState state = from.getBlockState(pos);
-        if (state.isAir()) return;
-        posWrapper.set(pos);
-        getLocalSpace().globalToGlobal(getRemoteSpace(), posWrapper);
-        state = rotationSolver.solveRotation(rotation, blockRotation, posWrapper, state);
-        BlockState currentState = to.getBlockState(posWrapper);
-        if (!currentState.getMaterial().isReplaceable())
-            state = conflictSolver.solveConflict(to, posWrapper, state, currentState);
-        to.setBlockState(posWrapper, state, FLAGS, 0);
-        if (getRemoteSpace() instanceof Bay) ((Bay) getRemoteSpace()).updateBoxBounds(posWrapper);
-        if (state.hasBlockEntity()) {
-            BlockEntity blockEntity = from.getBlockEntity(pos);
-            if (blockEntity != null) transferBlockEntity(from, to, pos, posWrapper.toImmutable(), blockEntity, state);
-        }
-        posWrapper.set(pos);
-        from.setBlockState(posWrapper, CLEAR_STATE, FLAGS, 0);
-        if (cleanUpRequired) cleanUpPositions.push(posWrapper.asLong());
-    }
+	protected boolean cleanUpRemaining() {
+		return !cleanUpPositions.isEmpty();
+	}
 
-    protected void transferBlockEntity(World from, World to, BlockPos oldPos, BlockPos newPos, BlockEntity blockEntity, BlockState state) {
-        NbtCompound nbt = new NbtCompound();
-        blockEntity.writeNbt(nbt);
-        from.removeBlockEntity(oldPos);
-        nbt.putInt("x", newPos.getX());
-        nbt.putInt("y", newPos.getY());
-        nbt.putInt("z", newPos.getZ());
-        BlockEntity newBlockEntity = to.getBlockEntity(newPos);
-        if (newBlockEntity != null) {
-            newBlockEntity.readNbt(nbt);
-        } else {
-            newBlockEntity = BlockEntity.createFromNbt(newPos, state, nbt);
-            if (newBlockEntity != null) {
-                newBlockEntity.readNbt(nbt);
-                to.addBlockEntity(newBlockEntity);
-            }
-        }
-    }
-
-    protected boolean cleanUpRemaining() {
-        return !cleanUpPositions.isEmpty();
-    }
-
-    protected void cleanUpStepUpdate(World toClean) {
-        toClean.getBlockState(posWrapper.set(cleanUpPositions.pop())).updateNeighbors(world, posWrapper, FLAGS, UPDATE_DEPTH);
-    }
+	protected void cleanUpStepUpdate(World toClean) {
+		toClean.getBlockState(posWrapper.set(cleanUpPositions.pop())).updateNeighbors(world, posWrapper, FLAGS, UPDATE_DEPTH);
+	}
 
 }

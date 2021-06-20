@@ -1,5 +1,6 @@
 package net.snakefangox.worldshell.entity;
 
+import com.jme3.math.Quaternion;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -22,6 +23,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
@@ -29,19 +31,14 @@ import net.minecraft.world.entity.EntityChangeListener;
 import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.WorldShellMain;
-import net.snakefangox.worldshell.collision.EntityBounds;
-import net.snakefangox.worldshell.collision.RotationHelper;
-import net.snakefangox.worldshell.collision.ShellCollisionHull;
+import net.snakefangox.worldshell.collision.*;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.Microcosm;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.transfer.WorldShellDeconstructor;
-import net.snakefangox.worldshell.util.VectorPool;
 import net.snakefangox.worldshell.util.WSNbtHelper;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
-import oimo.common.Mat3;
-import oimo.common.Quat;
 
 import java.util.List;
 import java.util.Map;
@@ -57,15 +54,14 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
 	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldShellEntity.class, WSNetworking.BOUNDS);
 	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldShellEntity.class, WSNetworking.VEC3D);
-	private static final TrackedData<Quat> ROTATION = DataTracker.registerData(WorldShellEntity.class, WSNetworking.QUATERNION);
+	private static final TrackedData<Quaternion> ROTATION = DataTracker.registerData(WorldShellEntity.class, WSNetworking.QUATERNION);
 
 	private final WorldShellSettings settings;
 	private final Microcosm microcosm;
 	private final ShellCollisionHull hull = new ShellCollisionHull(this);
 
-	private Mat3 rotationMatrix = VectorPool.mat3();
-	private Mat3 inverseRotationMatrix = VectorPool.mat3();
 	private int shellId = 0;
+	private Quaternion inverseRotation = Quaternion.IDENTITY;
 
 	public WorldShellEntity(EntityType<?> type, World world, WorldShellSettings shellSettings) {
 		super(type, world);
@@ -75,17 +71,34 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
 	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<Microcosm.ShellTickInvoker> tickers) {
 		microcosm.setWorld(stateMap, entityMap, tickers);
+		hull.onWorldshellUpdate();
 	}
 
 	public void updateWorldShell(BlockPos pos, BlockState state, NbtCompound tag) {
 		microcosm.setBlock(pos, state, tag);
+		hull.onWorldshellUpdate();
 	}
 
 	@Override
 	protected void initDataTracker() {
 		getDataTracker().startTracking(ENTITY_BOUNDS, new EntityBounds(1, 1, 1, false));
 		getDataTracker().startTracking(BLOCK_OFFSET, new Vec3d(0, 0, 0));
-		getDataTracker().startTracking(ROTATION, RotationHelper.identityQuat());
+		getDataTracker().startTracking(ROTATION, new Quaternion());
+	}
+
+	@Override
+	public void remove(RemovalReason reason) {
+		super.remove(reason);
+		if (world.isClient()) return;
+		getBay().ifPresent(b -> b.setLoadForChunks(world.getServer(), false));
+		if (reason.shouldDestroy()) {
+			Consumer<WorldShellEntity> onDestroy = settings.onDestroy(this);
+			if (onDestroy != null) {
+				onDestroy.accept(this);
+			} else {
+				WorldShellDeconstructor.create(this, settings.getRotationSolver(this), settings.getConflictSolver(this)).deconstruct();
+			}
+		}
 	}
 
 	@Override
@@ -94,20 +107,6 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		if (world.isClient) {
 			microcosm.tick();
 		}
-	}
-
-	@Override
-	public final void setPos(double x, double y, double z) {
-		super.setPos(x, y, z);
-		if (hull != null) hull.calculateCrudeBounds();
-	}
-
-	public Quat getRotation() {
-		return getDataTracker().get(ROTATION);
-	}
-
-	protected void setRotation(Quat quaternion) {
-		getDataTracker().set(ROTATION, quaternion);
 	}
 
 	@Override
@@ -136,17 +135,26 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		WSNbtHelper.putQuaternion(tag, "rotation", getRotation());
 	}
 
-	@Override
-	public void setListener(EntityChangeListener listener) {
-		super.setListener(new EntityTrackingDelegate(this, listener));
-	}
-
 	public Vec3d getBlockOffset() {
 		return getDataTracker().get(BLOCK_OFFSET);
 	}
 
 	public EntityBounds getDimensions() {
 		return getDataTracker().get(ENTITY_BOUNDS);
+	}
+
+	public Quaternion getRotation() {
+		return getDataTracker().get(ROTATION);
+	}
+
+	@Override
+	public Quaternion getInverseRotation() {
+		return inverseRotation;
+	}
+
+	protected void setRotation(Quaternion quaternion) {
+		getDataTracker().set(ROTATION, quaternion);
+		inverseRotation = quaternion.inverse();
 	}
 
 	public void setDimensions(EntityBounds entityBounds) {
@@ -183,19 +191,16 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	public void onTrackedDataSet(TrackedData<?> data) {
 		if (ENTITY_BOUNDS.equals(data)) {
 			dimensions = getDataTracker().get(ENTITY_BOUNDS);
-			hull.sizeUpdate();
+			hull.calculateCrudeBounds();
 		} else if (ROTATION.equals(data)) {
-			Quat quaternion = getDataTracker().get(ROTATION);
-			Quat inverseRotation = new Quat(-quaternion.x, -quaternion.y, -quaternion.z, quaternion.w);
-			rotationMatrix = quaternion.toMat3();
-			inverseRotationMatrix = inverseRotation.toMat3();
-			hull.setRotation(rotationMatrix, inverseRotationMatrix);
+			inverseRotation = getDataTracker().get(ROTATION).inverse();
+			if (hull != null) hull.calculateCrudeBounds();
 		}
 	}
 
 	@Override
-	public ShellCollisionHull getBoundingBox() {
-		return hull;
+	public Box getBoundingBox() {
+		return hull.getDelegateBox();
 	}
 
 	@Override
@@ -220,18 +225,14 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	}
 
 	@Override
-	public void remove(RemovalReason reason) {
-		super.remove(reason);
-		if (world.isClient()) return;
-			getBay().ifPresent(b -> b.setLoadForChunks(world.getServer(), false));
-		if (reason.shouldDestroy()) {
-			Consumer<WorldShellEntity> onDestroy = settings.onDestroy(this);
-			if (onDestroy != null){
-				onDestroy.accept(this);
-			}else {
-				WorldShellDeconstructor.create(this, settings.getRotationSolver(this), settings.getConflictSolver(this)).deconstruct();
-			}
-		}
+	public final void setPos(double x, double y, double z) {
+		super.setPos(x, y, z);
+		if (hull != null) hull.calculateCrudeBounds();
+	}
+
+	@Override
+	public void setListener(EntityChangeListener listener) {
+		super.setListener(new EntityTrackingDelegate(this, listener));
 	}
 
 	protected ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean interact) {
@@ -259,6 +260,10 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		return microcosm.raycast(rayCtx);
 	}
 
+	public Optional<Bay> getBay() {
+		return Optional.ofNullable(ShellStorageData.getOrCreate(world.getServer()).getBay(shellId));
+	}
+
 	public void passThroughExplosion(double x, double y, double z, float power, boolean fire, Explosion.DestructionType type) {
 		if (world.getServer() != null || !settings.passthroughExplosion(this, power, fire, type)) return;
 		getBay().ifPresent(bay -> {
@@ -278,10 +283,6 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		}
 	}
 
-	public Optional<Bay> getBay() {
-		return Optional.ofNullable(ShellStorageData.getOrCreate(world.getServer()).getBay(shellId));
-	}
-
 	public Microcosm getMicrocosm() {
 		return microcosm;
 	}
@@ -299,15 +300,5 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	@Override
 	public double getLocalZ() {
 		return getZ() + getBlockOffset().z;
-	}
-
-	@Override
-	public Mat3 getRotationMatrix() {
-		return rotationMatrix;
-	}
-
-	@Override
-	public Mat3 getInverseRotationMatrix() {
-		return inverseRotationMatrix;
 	}
 }

@@ -95,6 +95,14 @@ public class ShellStorageWorld extends ServerWorld implements Worldshell {
 		}));
 	}
 
+	private <T> T passCallToEntity(BlockPos pos, T defaultVal, EntityPassthroughFunction<T> consumer) {
+		Bay bay = cachedBayData.getBay(cachedBayData.getBayIdFromPos(pos));
+		if (bay != null && bay.getLinkedEntity().isPresent()) {
+			return consumer.passthrough(bay.getLinkedEntity().get(), bay);
+		}
+		return defaultVal;
+	}
+
 	private void passCallToEntity(BlockPos pos, EntityPassthroughConsumer consumer) {
 		Bay bay = cachedBayData.getBay(cachedBayData.getBayIdFromPos(pos));
 		if (bay != null && bay.getLinkedEntity().isPresent()) {
@@ -166,14 +174,6 @@ public class ShellStorageWorld extends ServerWorld implements Worldshell {
 			Vec3d newPos = bay.toEntityGlobalSpace(x, y, z);
 			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(viewer, particle, force, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
 		});
-	}
-
-	private <T> T passCallToEntity(BlockPos pos, T defaultVal, EntityPassthroughFunction<T> consumer) {
-		Bay bay = cachedBayData.getBay(cachedBayData.getBayIdFromPos(pos));
-		if (bay != null && bay.getLinkedEntity().isPresent()) {
-			return consumer.passthrough(bay.getLinkedEntity().get(), bay);
-		}
-		return defaultVal;
 	}
 
 	@Override

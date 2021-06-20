@@ -30,17 +30,6 @@ public interface ConflictSolver {
 	/** Just explodes and places neither :tiny_potato: */
 	ConflictSolver EXPLOSION = ConflictSolver::solveConflictExplosion;
 
-	/**
-	 * Solves a block overlap during deconstruction
-	 *
-	 * @param world         the world being deconstructed into
-	 * @param pos           the position the conflict took place
-	 * @param shellState    the state the worldshell would like to be there
-	 * @param existingState the block that already exists
-	 * @return the state that should be place there
-	 */
-	BlockState solveConflict(World world, BlockPos pos, BlockState shellState, BlockState existingState);
-
 	static BlockState solveConflictOverwrite(World world, BlockPos pos, BlockState shellState, BlockState existingState) {
 		return shellState;
 	}
@@ -61,4 +50,15 @@ public interface ConflictSolver {
 		world.createExplosion(null, pos.getX(), pos.getY(), pos.getZ(), 3, Explosion.DestructionType.BREAK);
 		return Blocks.AIR.getDefaultState();
 	}
+
+	/**
+	 * Solves a block overlap during deconstruction
+	 *
+	 * @param world         the world being deconstructed into
+	 * @param pos           the position the conflict took place
+	 * @param shellState    the state the worldshell would like to be there
+	 * @param existingState the block that already exists
+	 * @return the state that should be place there
+	 */
+	BlockState solveConflict(World world, BlockPos pos, BlockState shellState, BlockState existingState);
 }

@@ -66,34 +66,17 @@ public class DelegateWorld extends World implements Worldshell {
 		this.proxiedShell = proxiedShell;
 	}
 
-	@Override
-	public @Nullable BlockEntity getBlockEntity(BlockPos pos) {
-		return proxiedShell.getBlockEntity(pos);
+	public static <T, C> T raycast(Vec3d start, Vec3d end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
+		return BlockView.raycast(start, end, context, blockHitFactory, missFactory);
 	}
 
-	@Override
-	public BlockState getBlockState(BlockPos pos) {
-		return proxiedShell.getBlockState(pos);
-	}
-
-	@Override
-	public FluidState getFluidState(BlockPos pos) {
-		return proxiedShell.getFluidState(pos);
+	public static boolean isValid(BlockPos pos) {
+		return World.isValid(pos);
 	}
 
 	@Override
 	public float getBrightness(Direction direction, boolean shaded) {
 		return proxiedShell.getBrightness(direction, shaded);
-	}
-
-	@Override
-	public LightingProvider getLightingProvider() {
-		return proxiedShell.getLightingProvider();
-	}
-
-	@Override
-	public int getColor(BlockPos pos, ColorResolver colorResolver) {
-		return proxiedShell.getColor(pos, colorResolver);
 	}
 
 	@Override
@@ -109,16 +92,6 @@ public class DelegateWorld extends World implements Worldshell {
 	@Override
 	public boolean isSkyVisible(BlockPos pos) {
 		return proxiedShell.isSkyVisible(pos);
-	}
-
-	@Override
-	public int getHeight() {
-		return proxiedShell.getHeight();
-	}
-
-	@Override
-	public int getBottomY() {
-		return proxiedShell.getBottomY();
 	}
 
 	@Override
@@ -160,10 +133,6 @@ public class DelegateWorld extends World implements Worldshell {
 	@Override
 	public double getDismountHeight(BlockPos pos) {
 		return proxiedShell.getDismountHeight(pos);
-	}
-
-	public static <T, C> T raycast(Vec3d start, Vec3d end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
-		return BlockView.raycast(start, end, context, blockHitFactory, missFactory);
 	}
 
 	@Override
@@ -225,10 +194,6 @@ public class DelegateWorld extends World implements Worldshell {
 	@Override
 	public boolean isInBuildLimit(BlockPos pos) {
 		return proxiedWorld.isInBuildLimit(pos);
-	}
-
-	public static boolean isValid(BlockPos pos) {
-		return World.isValid(pos);
 	}
 
 	@Override
@@ -310,6 +275,21 @@ public class DelegateWorld extends World implements Worldshell {
 	@Override
 	public int getTopY(Heightmap.Type heightmap, int x, int z) {
 		return proxiedWorld.getTopY(heightmap, x, z);
+	}
+
+	@Override
+	public LightingProvider getLightingProvider() {
+		return proxiedShell.getLightingProvider();
+	}
+
+	@Override
+	public BlockState getBlockState(BlockPos pos) {
+		return proxiedShell.getBlockState(pos);
+	}
+
+	@Override
+	public FluidState getFluidState(BlockPos pos) {
+		return proxiedShell.getFluidState(pos);
 	}
 
 	@Override
@@ -396,6 +376,11 @@ public class DelegateWorld extends World implements Worldshell {
 	@Override
 	public String asString() {
 		return proxiedWorld.asString();
+	}
+
+	@Override
+	public @Nullable BlockEntity getBlockEntity(BlockPos pos) {
+		return proxiedShell.getBlockEntity(pos);
 	}
 
 	@Override
@@ -900,6 +885,11 @@ public class DelegateWorld extends World implements Worldshell {
 	}
 
 	@Override
+	public int getColor(BlockPos pos, ColorResolver colorResolver) {
+		return proxiedShell.getColor(pos, colorResolver);
+	}
+
+	@Override
 	public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
 		return proxiedWorld.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
 	}
@@ -907,6 +897,16 @@ public class DelegateWorld extends World implements Worldshell {
 	@Override
 	public Biome getGeneratorStoredBiome(int biomeX, int biomeY, int biomeZ) {
 		return proxiedWorld.getGeneratorStoredBiome(biomeX, biomeY, biomeZ);
+	}
+
+	@Override
+	public int getBottomY() {
+		return proxiedShell.getBottomY();
+	}
+
+	@Override
+	public int getHeight() {
+		return proxiedShell.getHeight();
 	}
 
 	@Override

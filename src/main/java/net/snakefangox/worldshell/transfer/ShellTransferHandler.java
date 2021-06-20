@@ -24,8 +24,24 @@ public class ShellTransferHandler {
 	private long tickTime = 0;
 	private long avgTickTime = IDEAL_MILLIS;
 
+	public static void queueOperator(ShellTransferOperator operator) {
+		((GetShellTransferHandler) operator.getWorld().getServer()).worldshell$getShellTransferHandler().addOperator(operator);
+	}
+
+	private void addOperator(ShellTransferOperator operator) {
+		queue.add(operator);
+	}
+
+	public static void serverStartTick(MinecraftServer server) {
+		((GetShellTransferHandler) server).worldshell$getShellTransferHandler().onStartTick();
+	}
+
 	private void onStartTick() {
 		tickTime = System.currentTimeMillis();
+	}
+
+	public static void serverEndTick(MinecraftServer server) {
+		((GetShellTransferHandler) server).worldshell$getShellTransferHandler().onEndTick();
 	}
 
 	private void onEndTick() {
@@ -49,6 +65,10 @@ public class ShellTransferHandler {
 		}
 	}
 
+	public static void serverStopping(MinecraftServer server) {
+		((GetShellTransferHandler) server).worldshell$getShellTransferHandler().onStopping();
+	}
+
 	private void onStopping() {
 		if (queue.isEmpty()) return;
 		tickTime = System.currentTimeMillis();
@@ -57,25 +77,5 @@ public class ShellTransferHandler {
 		}
 		if (System.currentTimeMillis() - tickTime >= MAX_CLEANUP_TIME)
 			WorldShellMain.LOGGER.error("Clean up not finished in " + (MAX_CLEANUP_TIME / 1000) + "seconds. Data may be lost");
-	}
-
-	private void addOperator(ShellTransferOperator operator) {
-		queue.add(operator);
-	}
-
-	public static void queueOperator(ShellTransferOperator operator) {
-		((GetShellTransferHandler) operator.getWorld().getServer()).worldshell$getShellTransferHandler().addOperator(operator);
-	}
-
-	public static void serverStartTick(MinecraftServer server) {
-		((GetShellTransferHandler) server).worldshell$getShellTransferHandler().onStartTick();
-	}
-
-	public static void serverEndTick(MinecraftServer server) {
-		((GetShellTransferHandler) server).worldshell$getShellTransferHandler().onEndTick();
-	}
-
-	public static void serverStopping(MinecraftServer server) {
-		((GetShellTransferHandler) server).worldshell$getShellTransferHandler().onStopping();
 	}
 }

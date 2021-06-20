@@ -23,12 +23,12 @@ public abstract class AbstractBlockStateMixin extends State<Block, BlockState> {
 	}
 
 	@Inject(method = "onStateReplaced", at = @At("HEAD"), cancellable = true)
-	private void onStateReplaced(World world, BlockPos pos, BlockState state, boolean moved, CallbackInfo ci){
+	private void onStateReplaced(World world, BlockPos pos, BlockState state, boolean moved, CallbackInfo ci) {
 		if (pos instanceof NoOpPosWrapper) ci.cancel();
 	}
 
 	@Inject(method = "onBlockAdded", at = @At("HEAD"), cancellable = true)
-	private void onBlockAdded(World world, BlockPos pos, BlockState state, boolean moved, CallbackInfo ci){
+	private void onBlockAdded(World world, BlockPos pos, BlockState state, boolean moved, CallbackInfo ci) {
 		if (pos instanceof NoOpPosWrapper) ci.cancel();
 	}
 }

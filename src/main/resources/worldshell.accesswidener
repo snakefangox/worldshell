@@ -6,13 +6,5 @@ mutable field net/minecraft/entity/Entity dimensions Lnet/minecraft/entity/Entit
 extendable method net/minecraft/entity/Entity getBoundingBox ()Lnet/minecraft/util/math/Box;
 extendable method net/minecraft/entity/Entity setPos (DDD)V
 
-# Makes Box values mutable
-mutable field net/minecraft/util/math/Box minX D
-mutable field net/minecraft/util/math/Box minY D
-mutable field net/minecraft/util/math/Box minZ D
-mutable field net/minecraft/util/math/Box maxX D
-mutable field net/minecraft/util/math/Box maxY D
-mutable field net/minecraft/util/math/Box maxZ D
-
 # We want a custom VoxelShape, for that we need access to the constructor
 accessible method net/minecraft/util/shape/VoxelShape <init> (Lnet/minecraft/util/shape/VoxelSet;)V

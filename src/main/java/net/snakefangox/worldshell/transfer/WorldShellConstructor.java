@@ -53,6 +53,14 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 	private ShellStorageData shellStorage;
 	private Bay bay;
 
+	private WorldShellConstructor(ServerWorld world, EntityType<T> entityType, BlockPos center, Iterator<BlockPos> iterator, Consumer<T> preSpawnCallback) {
+		super(world);
+		this.entityType = entityType;
+		this.center = center;
+		this.iterator = iterator;
+		this.preSpawnCallback = preSpawnCallback;
+	}
+
 	public static <U extends WorldShellEntity> WorldShellConstructor<U> create(ServerWorld world, EntityType<U> entityType, BlockPos center, Iterator<BlockPos> iterator) {
 		return new WorldShellConstructor<>(world, entityType, center, iterator, null);
 	}
@@ -62,12 +70,13 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 		return new WorldShellConstructor<>(world, entityType, center, iterator, preSpawnCallback);
 	}
 
-	private WorldShellConstructor(ServerWorld world, EntityType<T> entityType, BlockPos center, Iterator<BlockPos> iterator, Consumer<T> preSpawnCallback) {
-		super(world);
-		this.entityType = entityType;
-		this.center = center;
-		this.iterator = iterator;
-		this.preSpawnCallback = preSpawnCallback;
+	/**
+	 * Begins constructing the entity
+	 *
+	 * @return a result object that will contain the entity after it is spawned
+	 */
+	public Result<T> construct() {
+		return construct(null);
 	}
 
 	/**
@@ -82,33 +91,9 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 		return result;
 	}
 
-	/**
-	 * Begins constructing the entity
-	 *
-	 * @return a result object that will contain the entity after it is spawned
-	 */
-	public Result<T> construct() {
-		return construct(null);
-	}
-
 	@Override
 	public boolean isFinished() {
 		return stage == Stage.FINISHED;
-	}
-
-	@Override
-	protected LocalSpace getLocalSpace() {
-		return this;
-	}
-
-	@Override
-	protected LocalSpace getRemoteSpace() {
-		return bay;
-	}
-
-	private void preSpawnCallback(T entity) {
-		if (preSpawnCallback != null)
-			preSpawnCallback.accept(entity);
 	}
 
 	@Override
@@ -119,6 +104,16 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 			case SPAWN -> spawn();
 			case CLEANUP -> cleanup();
 		}
+	}
+
+	@Override
+	protected LocalSpace getLocalSpace() {
+		return this;
+	}
+
+	@Override
+	protected LocalSpace getRemoteSpace() {
+		return bay;
 	}
 
 	private void setup() {
@@ -170,6 +165,11 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 		if (!cleanUpRemaining()) stage = Stage.FINISHED;
 	}
 
+	private void preSpawnCallback(T entity) {
+		if (preSpawnCallback != null)
+			preSpawnCallback.accept(entity);
+	}
+
 	@Override
 	public double getLocalX() {
 		return center.getX();
@@ -185,10 +185,14 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 		return center.getZ();
 	}
 
+	private enum Stage {
+		SETUP, TRANSFER, SPAWN, CLEANUP, FINISHED
+	}
+
 	/** Returned from the construct method, will contain the entity after it is spawned */
 	public static class Result<T extends WorldShellEntity> {
-		private T result;
 		private final Consumer<Result<T>> postSpawnCallback;
+		private T result;
 
 		public Result(Consumer<Result<T>> postSpawnCallback) {
 			this.postSpawnCallback = postSpawnCallback;
@@ -208,9 +212,5 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 			if (postSpawnCallback != null)
 				postSpawnCallback.accept(this);
 		}
-	}
-
-	private enum Stage {
-		SETUP, TRANSFER, SPAWN, CLEANUP, FINISHED
 	}
 }

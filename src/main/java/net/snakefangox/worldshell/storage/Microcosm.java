@@ -2,6 +2,7 @@ package net.snakefangox.worldshell.storage;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -97,6 +98,10 @@ public class Microcosm implements BlockRenderView, Worldshell {
 		return blockEntityMap.entrySet();
 	}
 
+	public boolean hasBlock(BlockPos pos) {
+		return blockStateMap.containsKey(pos);
+	}
+
 	public void setBlock(BlockPos pos, BlockState state, NbtCompound tag) {
 		blockStateMap.put(pos, state);
 		if (state.hasBlockEntity()) {
@@ -143,14 +148,14 @@ public class Microcosm implements BlockRenderView, Worldshell {
 		return getLightingProvider().getLight(toWorldPos(pos), ambientDarkness);
 	}
 
-	private BlockPos toWorldPos(BlockPos pos) {
-		Vec3d offset = parent.getBlockOffset();
-		return reusablePos.set(pos).add(offset.x, offset.y, offset.z).add(parent.getBlockPos());
-	}
-
 	@Override
 	public boolean isSkyVisible(BlockPos pos) {
 		return getLightLevel(LightType.SKY, toWorldPos(pos)) >= this.getMaxLightLevel();
+	}
+
+	private BlockPos toWorldPos(BlockPos pos) {
+		Vec3d offset = parent.getBlockOffset();
+		return reusablePos.set(pos).add(offset.x, offset.y, offset.z).add(parent.getBlockPos());
 	}
 
 	public void tick() {

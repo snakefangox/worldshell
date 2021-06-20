@@ -13,28 +13,14 @@ public class EntityTrackingDelegate implements EntityChangeListener {
 
 	private final EntityChangeListener proxiedListener;
 	private final WorldShellEntity entity;
+	private final Set<Long> currentlyTracked = new HashSet<>();
 	/** This pos is handled for us by the proxied listener */
 	private long noopPos;
-	private final Set<Long> currentlyTracked = new HashSet<>();
 
 	public EntityTrackingDelegate(WorldShellEntity entity, EntityChangeListener proxiedListener) {
 		this.entity = entity;
 		this.proxiedListener = proxiedListener;
 		updateExtendedTracking();
-	}
-
-	@Override
-	public void updateEntityPosition() {
-		updateExtendedTracking();
-		proxiedListener.updateEntityPosition();
-	}
-
-	@Override
-	public void remove(Entity.RemovalReason reason) {
-		currentlyTracked.forEach(l -> {
-			if (l != noopPos) SidedEntityManagerHandler.removeWorldShellEntity(entity.world, entity, l);
-		});
-		proxiedListener.remove(reason);
 	}
 
 	private void updateExtendedTracking() {
@@ -71,5 +57,19 @@ public class EntityTrackingDelegate implements EntityChangeListener {
 			}
 		}
 		return occupied;
+	}
+
+	@Override
+	public void updateEntityPosition() {
+		updateExtendedTracking();
+		proxiedListener.updateEntityPosition();
+	}
+
+	@Override
+	public void remove(Entity.RemovalReason reason) {
+		currentlyTracked.forEach(l -> {
+			if (l != noopPos) SidedEntityManagerHandler.removeWorldShellEntity(entity.world, entity, l);
+		});
+		proxiedListener.remove(reason);
 	}
 }

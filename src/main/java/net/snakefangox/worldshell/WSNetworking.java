@@ -1,5 +1,6 @@
 package net.snakefangox.worldshell;
 
+import com.jme3.math.Quaternion;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -27,7 +28,6 @@ import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.Microcosm;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
-import oimo.common.Quat;
 
 import java.util.*;
 
@@ -84,27 +84,28 @@ public class WSNetworking {
 			return object;
 		}
 	};
-	public static final TrackedDataHandler<Quat> QUATERNION = new TrackedDataHandler<Quat>() {
+
+	public static final TrackedDataHandler<Quaternion> QUATERNION = new TrackedDataHandler<>() {
 
 		@Override
-		public void write(PacketByteBuf data, Quat object) {
-			data.writeDouble(object.x);
-			data.writeDouble(object.y);
-			data.writeDouble(object.z);
-			data.writeDouble(object.w);
+		public void write(PacketByteBuf data, Quaternion object) {
+			data.writeFloat(object.getX());
+			data.writeFloat(object.getY());
+			data.writeFloat(object.getZ());
+			data.writeFloat(object.getW());
 		}
 
 		@Override
-		public Quat read(PacketByteBuf buf) {
-			double x = buf.readDouble();
-			double y = buf.readDouble();
-			double z = buf.readDouble();
-			double w = buf.readDouble();
-			return new Quat(x, y, z, w);
+		public Quaternion read(PacketByteBuf buf) {
+			float x = buf.readFloat();
+			float y = buf.readFloat();
+			float z = buf.readFloat();
+			float w = buf.readFloat();
+			return new Quaternion(x, y, z, w);
 		}
 
 		@Override
-		public Quat copy(Quat object) {
+		public Quaternion copy(Quaternion object) {
 			return object.clone();
 		}
 	};
