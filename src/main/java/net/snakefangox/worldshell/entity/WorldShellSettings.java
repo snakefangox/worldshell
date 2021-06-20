@@ -31,6 +31,14 @@ public interface WorldShellSettings {
 	boolean isComplex();
 
 	/**
+	 * If the worldshell will use the aligned collision hull or the rotated one.
+	 * Rotated collisions are much nicer but they take *much* longer to calculate.
+	 * If you don't think much will be bumping into your worldshell while it's rotated
+	 * then best to have this return false.
+	 */
+	boolean handleRotatedCollision();
+
+	/**
 	 * The number of frames a cached render of this worldshell is valid for.
 	 * Cached renders can still move and will be updated but the outside world won't affect them.
 	 * Lighting, Biome colour, etc won't change until the cache is refreshed.
@@ -73,6 +81,7 @@ public interface WorldShellSettings {
 
 	class Builder {
 		private final boolean isComplex;
+		private final boolean handleRotatedCollision;
 		private int updateFrames = 120;
 		private boolean doCollision = true;
 		@Nullable
@@ -84,8 +93,9 @@ public interface WorldShellSettings {
 		private ConflictSolver conflictSolver = ConflictSolver.OVERWRITE;
 		private boolean built = false;
 
-		public Builder(boolean isComplex) {
+		public Builder(boolean isComplex, boolean handleRotatedCollision) {
 			this.isComplex = isComplex;
+			this.handleRotatedCollision = handleRotatedCollision;
 		}
 
 		public Builder setUpdateFrames(int updateFrames) {
@@ -147,6 +157,11 @@ public interface WorldShellSettings {
 				@Override
 				public boolean isComplex() {
 					return isComplex;
+				}
+
+				@Override
+				public boolean handleRotatedCollision() {
+					return handleRotatedCollision;
 				}
 
 				@Override

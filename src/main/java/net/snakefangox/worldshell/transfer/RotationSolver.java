@@ -1,11 +1,10 @@
 package net.snakefangox.worldshell.transfer;
 
-import com.jme3.math.Matrix3f;
-import com.jme3.math.Quaternion;
-import com.jme3.math.Vector3f;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
+import net.snakefangox.worldshell.math.Quaternion;
+import net.snakefangox.worldshell.math.Vector3d;
 
 /**
  * When returning a worldshell to the world we cannot preserve rotation.
@@ -23,8 +22,8 @@ public interface RotationSolver {
 	RotationSolver TRUE = RotationSolver::solveTrueRotation;
 
 	//TODO check this is correct
-	Quaternion[] BLOCK_ROTATIONS = new Quaternion[] {Quaternion.IDENTITY, new Quaternion().fromAngles(0, (float) (Math.PI / 2f), 0),
-			new Quaternion().fromAngles(0, (float) (Math.PI), 0), new Quaternion().fromAngles(0, (float) (-Math.PI / 2f), 0)};
+	Quaternion[] BLOCK_ROTATIONS = new Quaternion[] {Quaternion.IDENTITY, new Quaternion().fromAngles(0, (Math.PI / 2f), 0),
+			new Quaternion().fromAngles(0, (Math.PI), 0), new Quaternion().fromAngles(0, (-Math.PI / 2f), 0)};
 
 	/**
 	 * Given the position and state of a block determines where it should go and
@@ -48,7 +47,7 @@ public interface RotationSolver {
 	}
 
 	static BlockState solveTrueRotation(Quaternion rotation, BlockRotation blockRotation, BlockPos.Mutable pos, BlockState oldState) {
-		Vector3f vec = new Vector3f(pos.getX(), pos.getY(), pos.getZ());
+		Vector3d vec = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
 		rotation.multLocal(vec);
 		pos.set(vec.x, vec.y, vec.z);
 		return oldState.rotate(blockRotation);
@@ -56,7 +55,7 @@ public interface RotationSolver {
 
 	static void blockRotateBlockPos(BlockRotation blockRotation, BlockPos.Mutable pos) {
 		Quaternion m = BLOCK_ROTATIONS[blockRotation.ordinal()];
-		Vector3f vec = new Vector3f(pos.getX(), pos.getY(), pos.getZ());
+		Vector3d vec = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
 		m.multLocal(vec);
 		pos.set(vec.x, vec.y, vec.z);
 	}

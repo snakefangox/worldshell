@@ -1,6 +1,5 @@
 package net.snakefangox.worldshell;
 
-import com.jme3.math.Quaternion;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -25,6 +24,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.collision.EntityBounds;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
+import net.snakefangox.worldshell.math.Quaternion;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.Microcosm;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
@@ -89,18 +89,18 @@ public class WSNetworking {
 
 		@Override
 		public void write(PacketByteBuf data, Quaternion object) {
-			data.writeFloat(object.getX());
-			data.writeFloat(object.getY());
-			data.writeFloat(object.getZ());
-			data.writeFloat(object.getW());
+			data.writeDouble(object.getX());
+			data.writeDouble(object.getY());
+			data.writeDouble(object.getZ());
+			data.writeDouble(object.getW());
 		}
 
 		@Override
 		public Quaternion read(PacketByteBuf buf) {
-			float x = buf.readFloat();
-			float y = buf.readFloat();
-			float z = buf.readFloat();
-			float w = buf.readFloat();
+			double x = buf.readDouble();
+			double y = buf.readDouble();
+			double z = buf.readDouble();
+			double w = buf.readDouble();
 			return new Quaternion(x, y, z, w);
 		}
 

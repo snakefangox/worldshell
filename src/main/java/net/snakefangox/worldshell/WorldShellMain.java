@@ -1,7 +1,5 @@
 package net.snakefangox.worldshell;
 
-import com.jme3.math.Quaternion;
-import com.jme3.system.NativeLibraryLoader;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -45,7 +43,6 @@ public class WorldShellMain implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		extractAndLoadNativeLibs();
 		registerStorageDim();
 		WSNetworking.registerServerPackets();
 		CreateWorldsEvent.EVENT.register(this::registerShellStorageDimension);
@@ -69,26 +66,5 @@ public class WorldShellMain implements ModInitializer {
 		DimensionOptions options = new DimensionOptions(typeSupplier, chunkGenerator);
 		ShellStorageWorld world = (ShellStorageWorld) DynamicWorldRegister.createDynamicWorld(server, STORAGE_DIM, options, ShellStorageWorld::new);
 		world.setCachedBayData(ShellStorageData.getOrCreate(server));
-	}
-
-	public void extractAndLoadNativeLibs() {
-		Path nativesDir = FabricLoader.getInstance().getGameDir().normalize().resolve("natives").resolve("bullet-10.4.0");
-
-		try {
-			if (!Files.exists(nativesDir))
-				Files.createDirectories(nativesDir);
-
-			Path libs = FabricLoader.getInstance().getModContainer(MODID).get().getRootPath().resolve("assets").resolve("worldshell").resolve("natives");
-			for (Path p : Files.walk(libs).filter(p -> !Files.isDirectory(p)).collect(Collectors.toList())) {
-				Path dest = nativesDir.resolve(p.getFileName());
-				if (!Files.exists(dest))
-					Files.copy(p, dest);
-			}
-
-		} catch (IOException e) {
-			throw new RuntimeException("Worldshell failed to load native libraries:", e);
-		}
-
-		NativeLibraryLoader.loadLibbulletjme(true, nativesDir.toFile(), "Release", "Sp");
 	}
 }

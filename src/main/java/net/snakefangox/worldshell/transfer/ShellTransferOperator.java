@@ -1,7 +1,5 @@
 package net.snakefangox.worldshell.transfer;
 
-import com.jme3.math.Quaternion;
-import com.jme3.math.Vector3f;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
@@ -10,6 +8,8 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.snakefangox.worldshell.math.Quaternion;
+import net.snakefangox.worldshell.math.Vector3d;
 import net.snakefangox.worldshell.mixinextras.NoOpPosWrapper;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
@@ -58,7 +58,7 @@ public abstract class ShellTransferOperator implements Comparable<ShellTransferO
 	}
 
 	protected BlockRotation getBlockRotation(Quaternion rotation) {
-		Vector3f vec = rotation.multLocal(new Vector3f(ROTATE_BACK, 0f, ROTATE_BACK));
+		Vector3d vec = rotation.multLocal(new Vector3d(ROTATE_BACK, 0f, ROTATE_BACK));
 		if (vec.x > 0) {
 			if (vec.z > 0) {
 				return BlockRotation.NONE;

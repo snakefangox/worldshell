@@ -1,9 +1,9 @@
 package net.snakefangox.worldshell.util;
 
-import com.jme3.math.Quaternion;
 import net.minecraft.nbt.*;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.Vec3d;
+import net.snakefangox.worldshell.math.Quaternion;
 
 /** A common place for implementations of NBT serialization */
 public class WSNbtHelper {
@@ -23,16 +23,16 @@ public class WSNbtHelper {
 
 	public static void putQuaternion(NbtCompound tag, String name, Quaternion rotation) {
 		NbtList list = new NbtList();
-		list.add(NbtFloat.of(rotation.getX()));
-		list.add(NbtFloat.of(rotation.getY()));
-		list.add(NbtFloat.of(rotation.getZ()));
-		list.add(NbtFloat.of(rotation.getW()));
+		list.add(NbtDouble.of(rotation.getX()));
+		list.add(NbtDouble.of(rotation.getY()));
+		list.add(NbtDouble.of(rotation.getZ()));
+		list.add(NbtDouble.of(rotation.getW()));
 		tag.put(name, list);
 	}
 
 	public static Quaternion getQuaternion(NbtCompound tag, String name) {
-		NbtList list = tag.getList(name, NbtElement.FLOAT_TYPE);
-		return new Quaternion(list.getFloat(0), list.getFloat(1), list.getFloat(2), list.getFloat(3));
+		NbtList list = tag.getList(name, NbtElement.DOUBLE_TYPE);
+		return new Quaternion(list.getDouble(0), list.getDouble(1), list.getDouble(2), list.getDouble(3));
 	}
 
 	public static NbtIntArray blockBoxToNbt(BlockBox bounds) {

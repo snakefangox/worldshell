@@ -8,7 +8,7 @@ import net.minecraft.util.shape.VoxelSet;
 import net.minecraft.util.shape.VoxelShape;
 
 /**
- * Vanilla thinks our collision shape is a cube. That's cute but it won't work.
+ * Vanilla thinks our collision shape is cuboid. That's cute but it won't work.
  * This exists to pass collision calls back to our correctly shaped hull.
  */
 public class HullVoxelDelegate extends VoxelShape {
@@ -16,7 +16,7 @@ public class HullVoxelDelegate extends VoxelShape {
 	private final ShellCollisionHull hull;
 
 	public HullVoxelDelegate(ShellCollisionHull hull) {
-		super(new VoxelSetDelegate(hull));
+		super(new VoxelSetDelegate());
 		this.hull = hull;
 	}
 
@@ -31,21 +31,19 @@ public class HullVoxelDelegate extends VoxelShape {
 	}
 
 	static class VoxelSetDelegate extends VoxelSet {
-		private final ShellCollisionHull hull;
 
-		protected VoxelSetDelegate(ShellCollisionHull hull) {
+		protected VoxelSetDelegate() {
 			super(1, 1, 1);
-			this.hull = hull;
 		}
 
 		@Override
 		public boolean contains(int x, int y, int z) {
-			return hull.contains(x, y, z);
+			return x >= 0 && x < sizeX && y >= 0 && y < sizeY && z >= 0 && z < sizeZ;
 		}
 
 		@Override
 		public void set(int x, int y, int z) {
-			//No
+			// No
 		}
 
 		@Override

@@ -1,6 +1,5 @@
 package net.snakefangox.worldshell.entity;
 
-import com.jme3.math.Quaternion;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -31,7 +30,9 @@ import net.minecraft.world.entity.EntityChangeListener;
 import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.WorldShellMain;
-import net.snakefangox.worldshell.collision.*;
+import net.snakefangox.worldshell.collision.EntityBounds;
+import net.snakefangox.worldshell.collision.ShellCollisionHull;
+import net.snakefangox.worldshell.math.Quaternion;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.Microcosm;
@@ -143,6 +144,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		return getDataTracker().get(ENTITY_BOUNDS);
 	}
 
+	@Override
 	public Quaternion getRotation() {
 		return getDataTracker().get(ROTATION);
 	}

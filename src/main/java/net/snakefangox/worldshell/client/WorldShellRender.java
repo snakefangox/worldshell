@@ -28,8 +28,8 @@ import java.util.Random;
 public class WorldShellRender {
 
 	public static void renderMicrocosm(WorldShellEntity wsEntity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-		com.jme3.math.Quaternion entRot = wsEntity.getRotation();
-		renderMicrocosm(wsEntity.getMicrocosm(), matrices, new Quaternion(entRot.getX(), entRot.getY(), entRot.getZ(), entRot.getW()),
+		net.snakefangox.worldshell.math.Quaternion entRot = wsEntity.getRotation();
+		renderMicrocosm(wsEntity.getMicrocosm(), matrices, new Quaternion((float) entRot.getX(), (float) entRot.getY(), (float) entRot.getZ(), (float) entRot.getW()),
 				wsEntity.world.random, vertexConsumers, light);
 	}
 

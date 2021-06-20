@@ -1,11 +1,11 @@
 package net.snakefangox.worldshell.transfer;
 
-import com.jme3.math.Quaternion;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.world.World;
 import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
+import net.snakefangox.worldshell.math.Quaternion;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.ShellStorageData;
