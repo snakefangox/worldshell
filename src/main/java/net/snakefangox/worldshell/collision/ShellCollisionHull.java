@@ -1,14 +1,10 @@
 package net.snakefangox.worldshell.collision;
 
 
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.RaycastContext;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.math.Matrix3d;
 import net.snakefangox.worldshell.math.Quaternion;
@@ -16,8 +12,15 @@ import net.snakefangox.worldshell.math.Vector3d;
 import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.Microcosm;
 
-import java.util.Arrays;
-import java.util.Optional;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.RaycastContext;
 
 /**
  * A custom {@link Box} style implementation that takes a worldshell and handles complex collision.
@@ -50,14 +53,24 @@ public class ShellCollisionHull implements LocalSpace {
 	public void onWorldshellUpdate() {
 	}
 
+
 	public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-		return true;
+		localVector.set(minX, minY, minZ);
+		localVector2.set(maxX, maxY, maxZ);
+		localVector3.set(-getLocalX(), -getLocalY(), -getLocalZ());
+		Box lBox = transformBox(localVector, localVector2, getInverseRotation(), localVector3);
+		return entity.getMicrocosm().hasBlockCollision(null, lBox, (blockState, blockPos) -> true);
 	}
 
 	public double calculateMaxDistance(Direction.Axis axis, Box box, double maxDist) {
-		double absMax = Math.abs(maxDist);
-		if (absMax < SMOL) return 0;
-		return maxDist;
+		localVector.set(box.minX, box.minY, box.minZ);
+		localVector2.set(box.maxX, box.maxY, box.maxZ);
+		localVector3.set(-getLocalX(), -getLocalY(), -getLocalZ());
+		Box lBox = transformBox(localVector, localVector2, getInverseRotation(), localVector3);
+		Stream<VoxelShape> shapeStream = entity.getMicrocosm().getBlockCollisions(null, lBox);
+		double nMaxDist = VoxelShapes.calculateMaxOffset(axis, lBox, shapeStream, maxDist);
+		if (!entity.world.isClient) System.out.println(nMaxDist);
+		return nMaxDist;
 	}
 
 	public boolean contains(double x, double y, double z) {
@@ -77,24 +90,11 @@ public class ShellCollisionHull implements LocalSpace {
 		return hit.getType() == HitResult.Type.MISS ? Optional.empty() : Optional.of(entity.toGlobal(hit.getPos()));
 	}
 
-	private void streamVoxelShapes(Vector3d min, Vector3d max) {
-		Microcosm microcosm = entity.getMicrocosm();
-
-		for (int x = (int) min.x; x < Math.ceil(max.x) + 1; ++x) {
-			for (int y = (int) min.y; y < Math.ceil(max.y) + 1; ++y) {
-				for (int z = (int) min.z; z < Math.ceil(max.z) + 1; ++z) {
-					localBp.set(x, y, z);
-
-				}
-			}
-		}
-	}
-
 	public Box transformBox(Vector3d min, Vector3d max, Quaternion rot, Vector3d trans) {
 		rot.toRotationMatrix(localMatrix);
-		double[] oMin = new double[]{min.x, min.y, min.z};
-		double[] oMax = new double[]{max.x, max.y, max.z};
-		double[] nMin = new double[]{trans.x, trans.y, trans.z};
+		double[] oMin = new double[] {min.x, min.y, min.z};
+		double[] oMax = new double[] {max.x, max.y, max.z};
+		double[] nMin = new double[] {trans.x, trans.y, trans.z};
 		double[] nMax = Arrays.copyOf(nMin, nMin.length);
 
 		for (int i = 0; i < 3; ++i) {

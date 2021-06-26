@@ -8,14 +8,20 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
+import net.minecraft.entity.Entity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockRenderView;
+import net.minecraft.world.BlockView;
+import net.minecraft.world.CollisionView;
 import net.minecraft.world.LightType;
+import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.level.ColorResolver;
 import net.snakefangox.worldshell.client.WorldShellRenderCache;
@@ -25,10 +31,13 @@ import net.snakefangox.worldshell.world.Worldshell;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /** Stores all of the block information needed to render an accurate world in miniature */
-public class Microcosm implements BlockRenderView, Worldshell {
+public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 
+	private static final WorldBorder SHELL_BORDER = new WorldBorder();
 	private final WorldShellEntity parent;
 	private final DelegateWorld delegateWorld;
 	private final Map<BlockPos, BlockState> blockStateMap = new LinkedHashMap<>();
@@ -170,6 +179,22 @@ public class Microcosm implements BlockRenderView, Worldshell {
 	@Override
 	public int getBottomY() {
 		return parent.getEntityWorld().getBottomY();
+	}
+
+	@Override
+	public WorldBorder getWorldBorder() {
+		return SHELL_BORDER;
+	}
+
+	@Nullable
+	@Override
+	public BlockView getChunkAsView(int chunkX, int chunkZ) {
+		return this;
+	}
+
+	@Override
+	public Stream<VoxelShape> getEntityCollisions(@Nullable Entity entity, Box box, Predicate<Entity> predicate) {
+		return Stream.empty();
 	}
 
 	public void tickCache() {
