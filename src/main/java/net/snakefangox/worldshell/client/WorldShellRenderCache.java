@@ -1,11 +1,10 @@
 package net.snakefangox.worldshell.client;
 
-import net.minecraft.client.MinecraftClient;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix4f;
-import net.snakefangox.worldshell.mixin.rendering.GameRendererAccess;
 
 import java.util.*;
 
@@ -52,16 +51,13 @@ public class WorldShellRenderCache {
 	}
 
 	public void draw(MatrixStack matrices) {
-		GameRenderer gameRenderer = MinecraftClient.getInstance().gameRenderer;
-		float tickDelta = MinecraftClient.getInstance().getTickDelta();
-		double fov = ((GameRendererAccess) gameRenderer).invokeGetFov(gameRenderer.getCamera(), tickDelta, true);
-		Matrix4f proj = gameRenderer.getBasicProjectionMatrix(fov);
+		Matrix4f proj = RenderSystem.getProjectionMatrix();
 		renderLayers.forEach((key) -> {
 			if (bufferFilled.contains(key)) {
 				VertexBuffer entry = bufferStorage.get(key);
 				key.startDrawing();
 				entry.bind();
-				entry.setShader(matrices.peek().getModel(), proj, GameRenderer.getBlockShader());
+				entry.setShader(matrices.peek().getModel(), proj, RenderSystem.getShader());
 				key.endDrawing();
 			}
 		});

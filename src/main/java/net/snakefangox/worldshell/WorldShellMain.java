@@ -11,6 +11,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeKeys;
+import net.minecraft.world.biome.source.DirectBiomeAccessType;
 import net.minecraft.world.biome.source.FixedBiomeSource;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
@@ -27,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.OptionalLong;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -36,6 +38,11 @@ public class WorldShellMain implements ModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger();
 
 	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.WORLD_KEY, new Identifier(MODID, "shell_storage"));
+
+	public static final DimensionType STORAGE_DIM_TYPE = DimensionType.create(OptionalLong.of(6000), true, false, false,
+			false, 1, false, false, false, false, false,
+			-256, 512, 512, DirectBiomeAccessType.INSTANCE,
+			new Identifier("minecraft", "infiniburn_overworld"), new Identifier("minecraft", "overworld"), 0.1f);
 
 	public static ServerWorld getStorageDim(MinecraftServer server) {
 		return server.getWorld(WorldShellMain.STORAGE_DIM);
@@ -59,8 +66,7 @@ public class WorldShellMain implements ModInitializer {
 	}
 
 	public void registerShellStorageDimension(MinecraftServer server) {
-		Supplier<DimensionType> typeSupplier = () -> server.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY)
-				.get(RegistryKey.of(Registry.DIMENSION_TYPE_KEY, new Identifier(MODID, "shell_storage_type")));
+		Supplier<DimensionType> typeSupplier = () -> STORAGE_DIM_TYPE;
 		ChunkGenerator chunkGenerator = new EmptyChunkGenerator(new FixedBiomeSource(server.getRegistryManager()
 				.get(Registry.BIOME_KEY).get(BiomeKeys.THE_VOID)));
 		DimensionOptions options = new DimensionOptions(typeSupplier, chunkGenerator);

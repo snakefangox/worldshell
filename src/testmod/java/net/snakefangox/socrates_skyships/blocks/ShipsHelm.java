@@ -17,6 +17,7 @@ import net.minecraft.world.World;
 import net.snakefangox.socrates_skyships.BlockScan;
 import net.snakefangox.socrates_skyships.SRegister;
 import net.snakefangox.socrates_skyships.entities.AirShip;
+import net.snakefangox.worldshell.math.Quaternion;
 import net.snakefangox.worldshell.transfer.WorldShellConstructor;
 import net.snakefangox.worldshell.world.Worldshell;
 import org.jetbrains.annotations.Nullable;
@@ -36,7 +37,7 @@ public class ShipsHelm extends Block {
 
 		WorldShellConstructor<AirShip> airshipConstructor = WorldShellConstructor.create((ServerWorld) world, SRegister.AIRSHIP_TYPE, pos, new BlockScan(pos, world));
 		world.setBlockState(pos, state.with(CONSTRUCTING, true));
-		airshipConstructor.construct();
+		airshipConstructor.construct(airShipResult -> airShipResult.get().setRotation(new Quaternion().fromAngles(Math.PI / 4, 0, 0)));
 		return ActionResult.SUCCESS;
 	}
 

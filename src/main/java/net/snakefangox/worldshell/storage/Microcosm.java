@@ -149,22 +149,21 @@ public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 
 	@Override
 	public int getLightLevel(LightType type, BlockPos pos) {
-		return getLightingProvider().get(type).getLightLevel(toWorldPos(pos));
+		return parent.getEntityWorld().getLightLevel(type, toWorldPos(pos));
 	}
 
 	@Override
 	public int getBaseLightLevel(BlockPos pos, int ambientDarkness) {
-		return getLightingProvider().getLight(toWorldPos(pos), ambientDarkness);
+		return parent.getEntityWorld().getBaseLightLevel(toWorldPos(pos), ambientDarkness);
 	}
 
 	@Override
 	public boolean isSkyVisible(BlockPos pos) {
-		return getLightLevel(LightType.SKY, toWorldPos(pos)) >= this.getMaxLightLevel();
+		return parent.getEntityWorld().isSkyVisible(toWorldPos(pos));
 	}
 
 	private BlockPos toWorldPos(BlockPos pos) {
-		Vec3d offset = parent.getBlockOffset();
-		return reusablePos.set(pos).add(offset.x, offset.y, offset.z).add(parent.getBlockPos());
+		return parent.toGlobal(pos);
 	}
 
 	public void tick() {

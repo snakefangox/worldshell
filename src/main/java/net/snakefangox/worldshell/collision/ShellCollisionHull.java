@@ -16,7 +16,6 @@ import net.snakefangox.worldshell.math.Quaternion;
 import net.snakefangox.worldshell.math.Vector3d;
 import net.snakefangox.worldshell.storage.LocalSpace;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -25,46 +24,33 @@ import java.util.stream.Stream;
  */
 public class ShellCollisionHull implements LocalSpace {
 
-	private static final double SMOL = 1.0E-7D;
-	private final WorldShellEntity entity;
-	private HullBoxDelegate dBox;
-	private final Vector3d localVector = new Vector3d(), localVector2 = new Vector3d(), localVector3 = new Vector3d();
-	private final Matrix3d localMatrix = new Matrix3d();
-	private final BlockPos.Mutable localBp = new BlockPos.Mutable();
+	protected static final double SMOL = 1.0E-7D;
+	protected final WorldShellEntity entity;
+	protected HullBoxDelegate dBox;
+	protected final Vector3d localVector = new Vector3d(), localVector2 = new Vector3d(), localVector3 = new Vector3d();
+	protected final Matrix3d localMatrix = new Matrix3d();
+	protected final BlockPos.Mutable localBp = new BlockPos.Mutable();
 
 	public ShellCollisionHull(WorldShellEntity entity) {
 		this.entity = entity;
 		dBox = new HullBoxDelegate(new Box(BlockPos.ORIGIN), this);
 	}
 
-	public void calculateCrudeBounds() {
-		EntityBounds bounds = entity.getDimensions();
-		double len = bounds.length / 2.0;
-		double height = bounds.height / 2.0;
-		double width = bounds.width / 2.0;
-		localVector.set(-len, -height, -width);
-		localVector2.set(len, height, width);
-		localVector3.set(entity.getX(), entity.getY() + height, entity.getZ());
-		dBox = new HullBoxDelegate(transformBox(localVector, localVector2, getRotation(), localVector3), this);
+	public void onWorldshellRotate() {
+		calculateCrudeBounds();
 	}
 
 	public void onWorldshellUpdate() {
+		calculateCrudeBounds();
 	}
 
-
 	public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-		localVector.set(minX, minY, minZ);
-		localVector2.set(maxX, maxY, maxZ);
-		localVector3.set(-getLocalX(), -getLocalY(), -getLocalZ());
-		Box lBox = transformBox(localVector, localVector2, getInverseRotation(), localVector3);
+		Box lBox = boxToLocal(minX, minY, minZ, maxX, maxY, maxZ);
 		return entity.getMicrocosm().hasBlockCollision(null, lBox, (blockState, blockPos) -> true);
 	}
 
 	public double calculateMaxDistance(Direction.Axis axis, Box box, double maxDist) {
-		localVector.set(box.minX, box.minY, box.minZ);
-		localVector2.set(box.maxX, box.maxY, box.maxZ);
-		localVector3.set(-getLocalX(), -getLocalY(), -getLocalZ());
-		Box lBox = transformBox(localVector, localVector2, getInverseRotation(), localVector3);
+		Box lBox = boxToLocal(box);
 		Stream<VoxelShape> shapeStream = entity.getMicrocosm().getBlockCollisions(null,
 				lBox.stretch(axis.choose(maxDist, 0, 0), axis.choose(0, maxDist, 0), axis.choose(0, 0, maxDist)));
 		return VoxelShapes.calculateMaxOffset(axis, lBox, shapeStream, maxDist);
@@ -87,7 +73,7 @@ public class ShellCollisionHull implements LocalSpace {
 		return hit.getType() == HitResult.Type.MISS ? Optional.empty() : Optional.of(entity.toGlobal(hit.getPos()));
 	}
 
-	public Box transformBox(Vector3d min, Vector3d max, Quaternion rot, Vector3d trans) {
+	protected Box transformBox(Vector3d min, Vector3d max, Quaternion rot, Vector3d trans) {
 		rot.toRotationMatrix(localMatrix);
 		double[] oMin = new double[]{min.x, min.y, min.z};
 		double[] oMax = new double[]{max.x, max.y, max.z};
@@ -96,8 +82,8 @@ public class ShellCollisionHull implements LocalSpace {
 
 		for (int i = 0; i < 3; ++i) {
 			for (int j = 0; j < 3; ++j) {
-				double a = localMatrix.get(i, j) * oMin[j];
-				double b = localMatrix.get(i, j) * oMax[j];
+				double a = localMatrix.get(j, i) * oMin[j];
+				double b = localMatrix.get(j, i) * oMax[j];
 
 				nMin[i] += Math.min(a, b);
 				nMax[i] += Math.max(a, b);
@@ -105,6 +91,30 @@ public class ShellCollisionHull implements LocalSpace {
 		}
 
 		return new Box(nMin[0], nMin[1], nMin[2], nMax[0], nMax[1], nMax[2]);
+	}
+
+	protected Box boxToLocal(Box box) {
+		return boxToLocal(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+	}
+
+	protected Box boxToLocal(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		localVector.set(minX - getLocalX(), minY - getLocalY(), minZ - getLocalZ());
+		localVector2.set(maxX - getLocalX(), maxY - getLocalY(), maxZ - getLocalZ());
+		localVector3.set(0, 0, 0);
+		return transformBox(localVector, localVector2, getRotation(), localVector3);
+	}
+
+	protected void calculateCrudeBounds() {
+		EntityBounds bounds = entity.getDimensions();
+		double len = bounds.length / 2.0;
+		double height = bounds.height;
+		double width = bounds.width / 2.0;
+		Vec3d off = entity.getBlockOffset();
+
+		localVector.set(-len - off.x, -off.y, -width - off.z);
+		localVector2.set(len - off.x, height - off.y, width - off.z);
+		localVector3.set(getLocalX(), getLocalY(), getLocalZ());
+		dBox = new HullBoxDelegate(transformBox(localVector, localVector2, getInverseRotation(), localVector3), this);
 	}
 
 	public VoxelShape toVoxelShape() {

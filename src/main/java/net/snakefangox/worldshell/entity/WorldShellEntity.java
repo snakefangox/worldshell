@@ -31,6 +31,7 @@ import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.collision.EntityBounds;
+import net.snakefangox.worldshell.collision.RotatingShellCollisionHull;
 import net.snakefangox.worldshell.collision.ShellCollisionHull;
 import net.snakefangox.worldshell.math.Quaternion;
 import net.snakefangox.worldshell.storage.Bay;
@@ -59,7 +60,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
 	private final WorldShellSettings settings;
 	private final Microcosm microcosm;
-	private final ShellCollisionHull hull = new ShellCollisionHull(this);
+	private final ShellCollisionHull hull;
 
 	private int shellId = 0;
 	private Quaternion inverseRotation = Quaternion.IDENTITY;
@@ -68,6 +69,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		super(type, world);
 		this.settings = shellSettings;
 		microcosm = world.isClient() ? new Microcosm(this, settings.updateFrames()) : new Microcosm(this);
+		hull = settings.handleRotatedCollision() ? new RotatingShellCollisionHull(this) : new ShellCollisionHull(this);
 	}
 
 	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<Microcosm.ShellTickInvoker> tickers) {
@@ -154,9 +156,10 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		return inverseRotation;
 	}
 
-	protected void setRotation(Quaternion quaternion) {
+	public void setRotation(Quaternion quaternion) {
 		getDataTracker().set(ROTATION, quaternion);
 		inverseRotation = quaternion.inverse();
+		if (hull != null) hull.onWorldshellRotate();
 	}
 
 	public void setDimensions(EntityBounds entityBounds) {
@@ -193,10 +196,10 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	public void onTrackedDataSet(TrackedData<?> data) {
 		if (ENTITY_BOUNDS.equals(data)) {
 			dimensions = getDataTracker().get(ENTITY_BOUNDS);
-			hull.calculateCrudeBounds();
+			hull.onWorldshellUpdate();
 		} else if (ROTATION.equals(data)) {
 			inverseRotation = getDataTracker().get(ROTATION).inverse();
-			if (hull != null) hull.calculateCrudeBounds();
+			if (hull != null) hull.onWorldshellRotate();
 		}
 	}
 
@@ -229,7 +232,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	@Override
 	public final void setPos(double x, double y, double z) {
 		super.setPos(x, y, z);
-		if (hull != null) hull.calculateCrudeBounds();
+		if (hull != null) hull.onWorldshellUpdate();
 	}
 
 	@Override
