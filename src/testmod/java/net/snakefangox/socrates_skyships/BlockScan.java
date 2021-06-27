@@ -12,6 +12,7 @@ public class BlockScan implements Iterator<BlockPos> {
 	private final World world;
 	private final Queue<BlockPos> toCheck = new ArrayDeque<>();
 	private final Set<BlockPos> added = new HashSet<>();
+	private int counter = 0;
 
 	public BlockScan(BlockPos start, World world) {
 		this.world = world;
@@ -20,6 +21,8 @@ public class BlockScan implements Iterator<BlockPos> {
 
 	@Override
 	public boolean hasNext() {
+		if (counter > 1000)
+			return false;
 		return !toCheck.isEmpty();
 	}
 
@@ -35,6 +38,7 @@ public class BlockScan implements Iterator<BlockPos> {
 			toCheck.add(offPos);
 			added.add(offPos);
 		}
+		counter++;
 		return blockPos;
 	}
 }
