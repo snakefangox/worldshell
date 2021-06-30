@@ -85,12 +85,12 @@ public final class WorldShellDeconstructor extends ShellTransferOperator {
 
 	@Override
 	protected LocalSpace getLocalSpace() {
-		return noRotLocalSpace;
+		return bay;
 	}
 
 	@Override
 	protected LocalSpace getRemoteSpace() {
-		return bay;
+		return noRotLocalSpace;
 	}
 
 	private void setup() {

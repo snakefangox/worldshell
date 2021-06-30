@@ -71,11 +71,15 @@ public class ShellTransferHandler {
 
 	private void onStopping() {
 		if (queue.isEmpty()) return;
+
+		int cleanupSeconds = (MAX_CLEANUP_TIME / 1000);
+		WorldShellMain.LOGGER.warn("Worldshell tasks remain in queue. Delaying shutdown for at most " + cleanupSeconds + " seconds");
+
 		tickTime = System.currentTimeMillis();
-		while (System.currentTimeMillis() - tickTime < MAX_CLEANUP_TIME) {
+		while (System.currentTimeMillis() - tickTime < MAX_CLEANUP_TIME && !queue.isEmpty()) {
 			process();
 		}
 		if (System.currentTimeMillis() - tickTime >= MAX_CLEANUP_TIME)
-			WorldShellMain.LOGGER.error("Clean up not finished in " + (MAX_CLEANUP_TIME / 1000) + "seconds. Data may be lost");
+			WorldShellMain.LOGGER.error("Clean up not finished in " + cleanupSeconds + " seconds. Data may be lost");
 	}
 }

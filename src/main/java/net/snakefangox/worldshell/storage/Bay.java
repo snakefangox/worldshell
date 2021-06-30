@@ -49,7 +49,7 @@ public class Bay implements LocalSpace {
 		bounds = WSNbtHelper.blockBoxFromNbt(dims);
 	}
 
-	public PacketByteBuf createClientPacket(MinecraftServer server, PacketByteBuf buf) {
+	public void createClientPacket(MinecraftServer server, PacketByteBuf buf) {
 		World world = WorldShellMain.getStorageDim(server);
 		Map<BlockState, List<BlockPos>> stateListMap = new HashMap<>();
 		List<BlockEntity> blockEntities = new ArrayList<>();
@@ -69,7 +69,7 @@ public class Bay implements LocalSpace {
 				}
 			}
 		});
-		return WorldShellPacketHelper.writeBlocks(buf, stateListMap, blockEntities, this);
+		WorldShellPacketHelper.writeBlocks(buf, stateListMap, blockEntities, this);
 	}
 
 	public Vec3d toEntityGlobalSpace(Vec3d vec) {
