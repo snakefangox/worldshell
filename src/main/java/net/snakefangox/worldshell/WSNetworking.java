@@ -27,6 +27,7 @@ import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.math.Quaternion;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.Microcosm;
+import net.snakefangox.worldshell.storage.ShellAwareBlock;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
 
 import java.util.*;
@@ -187,7 +188,10 @@ public class WSNetworking {
 						BlockHitResult gHit = new BlockHitResult(bay.get().toGlobal(hit.getPos()),
 								hit.getSide(), bp, hit.isInsideBlock());
 						if (interact) {
-							world.getBlockState(gHit.getBlockPos()).onUse(world, player, hand, gHit);
+							BlockState state = world.getBlockState(gHit.getBlockPos());
+							if (state.getBlock() instanceof ShellAwareBlock)
+								((ShellAwareBlock) state.getBlock()).onUseInShell(world, (WorldShellEntity) entity, player, hand, gHit);
+								state.onUse(world, player, hand, gHit);
 						} else {
 							world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
 						}

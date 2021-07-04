@@ -11,16 +11,11 @@ import java.util.Iterator;
  */
 public class BlockBoxIterator implements Iterator<BlockPos> {
 
-	private final BlockBox box;
-	private final BlockPos.Mutable currentPos;
-	private int x, y, z;
+	private final Iterator<BlockPos> iterator;
 
 	private BlockBoxIterator(BlockBox box) {
-		currentPos = new BlockPos.Mutable();
-		this.box = box;
-		x = box.getMinX();
-		y = box.getMinY();
-		z = box.getMinZ();
+		iterator = BlockPos.iterate(box.getMinX(), box.getMinY(), box.getMinZ(),
+				box.getMaxX(), box.getMaxY(), box.getMaxZ()).iterator();
 	}
 
 	public static BlockBoxIterator of(BlockBox box) {
@@ -29,19 +24,11 @@ public class BlockBoxIterator implements Iterator<BlockPos> {
 
 	@Override
 	public boolean hasNext() {
-		return x < box.getMaxX() || z < box.getMaxZ() || y < box.getMaxY();
+		return iterator.hasNext();
 	}
 
 	@Override
 	public BlockPos next() {
-		if (x > box.getMaxX()) {
-			x = box.getMinX();
-			++y;
-		}
-		if (y > box.getMaxY()) {
-			y = box.getMinY();
-			++z;
-		}
-		return currentPos.set(x++, y, z);
+		return iterator.next();
 	}
 }
