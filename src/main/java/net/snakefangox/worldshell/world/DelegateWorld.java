@@ -22,7 +22,6 @@ import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.tag.TagManager;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
@@ -30,6 +29,8 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.*;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.DynamicRegistryManager;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.*;
@@ -44,12 +45,12 @@ import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.explosion.Explosion;
 import net.minecraft.world.explosion.ExplosionBehavior;
 import net.minecraft.world.level.ColorResolver;
+import net.minecraft.world.tick.QueryableTickScheduler;
 import net.snakefangox.worldshell.storage.Microcosm;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.*;
@@ -60,8 +61,14 @@ public class DelegateWorld extends World implements Worldshell {
 	private final World proxiedWorld;
 	private final Microcosm proxiedShell;
 
-	public DelegateWorld(World proxiedWorld, Microcosm proxiedShell) {
-		super(null, null, proxiedWorld.getDimension(), null, proxiedWorld.isClient, false, 0);
+	public DelegateWorld(World proxiedWorld, Microcosm proxiedShell, DynamicRegistryManager registryManager) {
+		super(
+				null, null,
+				registryManager.get(Registry.DIMENSION_TYPE_KEY).getEntry(
+						registryManager.get(Registry.DIMENSION_TYPE_KEY).getKey(proxiedWorld.getDimension()).get()
+				).get(),
+				null, proxiedWorld.isClient, false, 0
+		);
 		this.proxiedWorld = proxiedWorld;
 		this.proxiedShell = proxiedShell;
 	}
@@ -661,11 +668,6 @@ public class DelegateWorld extends World implements Worldshell {
 	}
 
 	@Override
-	public TagManager getTagManager() {
-		return proxiedWorld.getTagManager();
-	}
-
-	@Override
 	public BlockPos getRandomPosInChunk(int x, int y, int z, int i) {
 		return proxiedWorld.getRandomPosInChunk(x, y, z, i);
 	}
@@ -701,12 +703,12 @@ public class DelegateWorld extends World implements Worldshell {
 	}
 
 	@Override
-	public TickScheduler<Block> getBlockTickScheduler() {
+	public QueryableTickScheduler<Block> getBlockTickScheduler() {
 		return proxiedWorld.getBlockTickScheduler();
 	}
 
 	@Override
-	public TickScheduler<Fluid> getFluidTickScheduler() {
+	public QueryableTickScheduler<Fluid> getFluidTickScheduler() {
 		return proxiedWorld.getFluidTickScheduler();
 	}
 
@@ -761,13 +763,13 @@ public class DelegateWorld extends World implements Worldshell {
 	}
 
 	@Override
-	public Stream<VoxelShape> getEntityCollisions(@Nullable Entity entity, Box box, Predicate<Entity> predicate) {
-		return proxiedWorld.getEntityCollisions(entity, box, predicate);
+	public List<VoxelShape> getEntityCollisions(@Nullable Entity entity, Box box) {
+		return proxiedWorld.getEntityCollisions(entity, box);
 	}
 
 	@Override
-	public boolean intersectsEntities(@Nullable Entity except, VoxelShape shape) {
-		return proxiedWorld.intersectsEntities(except, shape);
+	public boolean doesNotIntersectEntities(@Nullable Entity except, VoxelShape shape) {
+		return proxiedWorld.doesNotIntersectEntities(except, shape);
 	}
 
 	@Override
@@ -778,11 +780,6 @@ public class DelegateWorld extends World implements Worldshell {
 	@Override
 	public DynamicRegistryManager getRegistryManager() {
 		return proxiedWorld.getRegistryManager();
-	}
-
-	@Override
-	public Optional<RegistryKey<Biome>> getBiomeKey(BlockPos pos) {
-		return proxiedWorld.getBiomeKey(pos);
 	}
 
 	@Override
@@ -875,7 +872,7 @@ public class DelegateWorld extends World implements Worldshell {
 	}
 
 	@Override
-	public Biome getBiome(BlockPos pos) {
+	public RegistryEntry<Biome> getBiome(BlockPos pos) {
 		return proxiedWorld.getBiome(pos);
 	}
 
@@ -890,12 +887,12 @@ public class DelegateWorld extends World implements Worldshell {
 	}
 
 	@Override
-	public Biome getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
+	public RegistryEntry<Biome> getBiomeForNoiseGen(int biomeX, int biomeY, int biomeZ) {
 		return proxiedWorld.getBiomeForNoiseGen(biomeX, biomeY, biomeZ);
 	}
 
 	@Override
-	public Biome getGeneratorStoredBiome(int biomeX, int biomeY, int biomeZ) {
+	public RegistryEntry<Biome> getGeneratorStoredBiome(int biomeX, int biomeY, int biomeZ) {
 		return proxiedWorld.getGeneratorStoredBiome(biomeX, biomeY, biomeZ);
 	}
 
@@ -996,8 +993,8 @@ public class DelegateWorld extends World implements Worldshell {
 	}
 
 	@Override
-	public boolean intersectsEntities(Entity entity) {
-		return proxiedWorld.intersectsEntities(entity);
+	public boolean doesNotIntersectEntities(Entity entity) {
+		return proxiedWorld.doesNotIntersectEntities(entity);
 	}
 
 	@Override
@@ -1016,28 +1013,13 @@ public class DelegateWorld extends World implements Worldshell {
 	}
 
 	@Override
-	public boolean isSpaceEmpty(@Nullable Entity entity, Box box, Predicate<Entity> predicate) {
-		return proxiedWorld.isSpaceEmpty(entity, box, predicate);
+	public Iterable<VoxelShape> getCollisions(@Nullable Entity entity, Box box) {
+		return proxiedWorld.getCollisions(entity, box);
 	}
 
 	@Override
-	public Stream<VoxelShape> getCollisions(@Nullable Entity entity, Box box, Predicate<Entity> predicate) {
-		return proxiedWorld.getCollisions(entity, box, predicate);
-	}
-
-	@Override
-	public Stream<VoxelShape> getBlockCollisions(@Nullable Entity entity, Box box) {
+	public Iterable<VoxelShape> getBlockCollisions(@Nullable Entity entity, Box box) {
 		return proxiedWorld.getBlockCollisions(entity, box);
-	}
-
-	@Override
-	public Stream<VoxelShape> getBlockCollisions(@Nullable Entity entity, Box box, BiPredicate<BlockState, BlockPos> biPredicate) {
-		return proxiedWorld.getBlockCollisions(entity, box, biPredicate);
-	}
-
-	@Override
-	public Biome getBiomeForNoiseGen(ChunkPos chunkPos) {
-		return proxiedWorld.getBiomeForNoiseGen(chunkPos);
 	}
 
 	@Override

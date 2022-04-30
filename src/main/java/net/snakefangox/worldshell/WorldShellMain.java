@@ -3,7 +3,6 @@ package net.snakefangox.worldshell;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
@@ -11,7 +10,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeKeys;
-import net.minecraft.world.biome.source.DirectBiomeAccessType;
 import net.minecraft.world.biome.source.FixedBiomeSource;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
@@ -25,12 +23,6 @@ import net.snakefangox.worldshell.world.ShellStorageWorld;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.OptionalLong;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class WorldShellMain implements ModInitializer {
 
@@ -39,10 +31,7 @@ public class WorldShellMain implements ModInitializer {
 
 	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.WORLD_KEY, new Identifier(MODID, "shell_storage"));
 
-	public static final DimensionType STORAGE_DIM_TYPE = DimensionType.create(OptionalLong.of(6000), true, false, false,
-			false, 1, false, false, false, false, false,
-			-256, 512, 512, DirectBiomeAccessType.INSTANCE,
-			new Identifier("minecraft", "infiniburn_overworld"), new Identifier("minecraft", "overworld"), 0.1f);
+	public static final RegistryKey<DimensionType> STORAGE_DIM_TYPE = RegistryKey.of(Registry.DIMENSION_TYPE_KEY, new Identifier(MODID, "shell_storage_type"));
 
 	public static ServerWorld getStorageDim(MinecraftServer server) {
 		return server.getWorld(WorldShellMain.STORAGE_DIM);
@@ -66,10 +55,12 @@ public class WorldShellMain implements ModInitializer {
 	}
 
 	public void registerShellStorageDimension(MinecraftServer server) {
-		Supplier<DimensionType> typeSupplier = () -> STORAGE_DIM_TYPE;
-		ChunkGenerator chunkGenerator = new EmptyChunkGenerator(new FixedBiomeSource(server.getRegistryManager()
-				.get(Registry.BIOME_KEY).get(BiomeKeys.THE_VOID)));
-		DimensionOptions options = new DimensionOptions(typeSupplier, chunkGenerator);
+		ChunkGenerator chunkGenerator = new EmptyChunkGenerator(server.getRegistryManager().get(Registry.STRUCTURE_SET_KEY), new FixedBiomeSource(server.getRegistryManager()
+				.get(Registry.BIOME_KEY).getOrCreateEntry(BiomeKeys.THE_VOID)));
+		DimensionOptions options = new DimensionOptions(
+				server.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY).getOrCreateEntry(STORAGE_DIM_TYPE),
+				chunkGenerator
+		);
 		ShellStorageWorld world = (ShellStorageWorld) DynamicWorldRegister.createDynamicWorld(server, STORAGE_DIM, options, ShellStorageWorld::new);
 		world.setCachedBayData(ShellStorageData.getOrCreate(server));
 	}

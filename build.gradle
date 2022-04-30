@@ -1,10 +1,10 @@
 plugins {
-    id 'fabric-loom' version '0.8-SNAPSHOT'
+    id 'fabric-loom' version '0.11-SNAPSHOT'
     id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -54,11 +54,11 @@ dependencies {
 
     // Needed for the test mod
     testmodImplementation sourceSets.main.output
-    testmodImplementation 'com.github.Snakefangox:rapid-register:Tag'
+    //testmodImplementation 'com.github.Snakefangox:rapid-register:2.2'
 }
 
-minecraft {
-    accessWidener "src/main/resources/worldshell.accesswidener"
+loom {
+    accessWidenerPath =  file("src/main/resources/worldshell.accesswidener")
 }
 
 processResources {

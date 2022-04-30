@@ -236,8 +236,8 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	}
 
 	@Override
-	public void setListener(EntityChangeListener listener) {
-		super.setListener(new EntityTrackingDelegate(this, listener));
+	public void setChangeListener(EntityChangeListener listener) {
+		super.setChangeListener(new EntityTrackingDelegate(this, listener));
 	}
 
 	protected ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean interact) {

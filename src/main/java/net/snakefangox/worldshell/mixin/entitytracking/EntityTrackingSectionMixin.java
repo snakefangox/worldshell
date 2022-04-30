@@ -3,6 +3,7 @@ package net.snakefangox.worldshell.mixin.entitytracking;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.collection.TypeFilterableList;
+import net.minecraft.util.math.Box;
 import net.minecraft.world.entity.EntityLike;
 import net.minecraft.world.entity.EntityTrackingSection;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
@@ -23,18 +24,18 @@ public abstract class EntityTrackingSectionMixin implements WorldShellEntityTrac
 	@Unique
 	private final TypeFilterableList<Entity> worldShellEntities = new TypeFilterableList<>(Entity.class);
 
-	@Inject(method = "forEach(Ljava/util/function/Predicate;Ljava/util/function/Consumer;)V", at = @At("TAIL"))
-	private void forEach(Predicate<? super EntityLike> predicate, Consumer<? super EntityLike> action, CallbackInfo ci) {
+	@Inject(method = "forEach(Lnet/minecraft/util/math/Box;Ljava/util/function/Consumer;)V", at = @At("TAIL"))
+	private void forEach(Box box, Consumer action, CallbackInfo ci) {
 		for (Entity entity : worldShellEntities) {
-			if (predicate.test(entity)) action.accept(entity);
+			if (entity.getBoundingBox().intersects(box)) action.accept(entity);
 		}
 	}
 
-	@Inject(method = "forEach(Lnet/minecraft/util/TypeFilter;Ljava/util/function/Predicate;Ljava/util/function/Consumer;)V", at = @At("TAIL"))
-	private <T, U extends T> void forEach(TypeFilter<T, U> type, Predicate<? super U> filter, Consumer<? super U> action, CallbackInfo ci) {
+	@Inject(method = "forEach(Lnet/minecraft/util/TypeFilter;Lnet/minecraft/util/math/Box;Ljava/util/function/Consumer;)V", at = @At("TAIL"))
+	private <T extends EntityLike, U extends T> void forEach(TypeFilter<T, U> type, Box box, Consumer<? super U> action, CallbackInfo ci) {
 		for (T object : worldShellEntities.getAllOfType(type.getBaseClass())) {
 			U downCast = type.downcast(object);
-			if (downCast != null && filter.test(downCast)) action.accept(downCast);
+			if (downCast != null && !downCast.getBoundingBox().intersects(box)) action.accept(downCast);
 		}
 	}
 

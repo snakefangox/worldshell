@@ -8,3 +8,5 @@ extendable method net/minecraft/entity/Entity setPos (DDD)V
 
 # We want a custom VoxelShape, for that we need access to the constructor
 accessible method net/minecraft/util/shape/VoxelShape <init> (Lnet/minecraft/util/shape/VoxelSet;)V
+
+accessible method net/minecraft/block/entity/BlockEntity writeNbt (Lnet/minecraft/nbt/NbtCompound;)V

@@ -2,13 +2,13 @@ package net.snakefangox.worldshell.collision;
 
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.shape.VoxelShape;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.math.Quaternion;
 import net.snakefangox.worldshell.math.Vector3d;
 
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * A {@link ShellCollisionHull} that handles rotated collisions correctly but is quote a bit slower.
@@ -43,8 +43,8 @@ public class RotatingShellCollisionHull extends ShellCollisionHull {
 	public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		Box lBox = boxToLocal(minX, minY, minZ, maxX, maxY, maxZ);
 		setOrientedBoxVars(minX, minY, minZ, maxX, maxY, maxZ);
-		Stream<VoxelShape> shapeStream = entity.getMicrocosm().getBlockCollisions(null, lBox);
-		return shapeStream.anyMatch(this::oBoxIntersects);
+		Iterable<VoxelShape> shapeStream = entity.getMicrocosm().getBlockCollisions(null, lBox);
+		return StreamSupport.stream(shapeStream.spliterator(), false).anyMatch(this::oBoxIntersects);
 	}
 
 	private boolean oBoxIntersects(VoxelShape shape) {
@@ -71,7 +71,7 @@ public class RotatingShellCollisionHull extends ShellCollisionHull {
 		double distSign = Math.signum(maxDist);
 		setOrientedBoxVars(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
 		Box lBox = boxToLocal(box);
-		Stream<VoxelShape> shapeStream = entity.getMicrocosm().getBlockCollisions(null, lBox.stretch(x, y, z));
+		Stream<VoxelShape> shapeStream = StreamSupport.stream(entity.getMicrocosm().getBlockCollisions(null, lBox.stretch(x, y, z)).spliterator(), false);
 		Stream<Double> distStream = shapeStream.map(vs -> distanceFromOBoxToShape(vs, f, s, u, distSign));
 		double nDist = Math.min(absMaxDist, distStream.min(Double::compareTo).orElse(absMaxDist)) * distSign;
 		return nDist;
