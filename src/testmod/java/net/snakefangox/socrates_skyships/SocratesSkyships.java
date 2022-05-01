@@ -1,7 +1,8 @@
 package net.snakefangox.socrates_skyships;
 
 import net.fabricmc.api.ModInitializer;
-import net.snakefangox.rapidregister.RapidRegister;
+import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
+import net.minecraft.client.render.RenderLayer;
 
 public class SocratesSkyships implements ModInitializer {
 
@@ -9,6 +10,7 @@ public class SocratesSkyships implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		RapidRegister.register(MODID, SRegister.class);
+		SRegister.register();
+		BlockRenderLayerMap.INSTANCE.putBlock(SRegister.SHIPS_HELM, RenderLayer.getCutout());
 	}
 }

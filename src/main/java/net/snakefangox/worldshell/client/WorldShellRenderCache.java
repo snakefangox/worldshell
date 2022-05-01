@@ -57,7 +57,7 @@ public class WorldShellRenderCache {
 				VertexBuffer entry = bufferStorage.get(key);
 				key.startDrawing();
 				entry.bind();
-				entry.setShader(matrices.peek().getModel(), proj, RenderSystem.getShader());
+				entry.setShader(matrices.peek().getPositionMatrix(), proj, RenderSystem.getShader());
 				key.endDrawing();
 			}
 		});

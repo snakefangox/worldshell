@@ -10,7 +10,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
-import net.minecraft.util.snooper.SnooperListener;
 import net.minecraft.util.thread.ReentrantThreadExecutor;
 import net.minecraft.world.SaveProperties;
 import net.minecraft.world.World;
@@ -40,7 +39,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 @Mixin(MinecraftServer.class)
-public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<ServerTask> implements SnooperListener, CommandOutput, AutoCloseable, DynamicWorldGen, GetShellTransferHandler {
+public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<ServerTask> implements CommandOutput, AutoCloseable, DynamicWorldGen, GetShellTransferHandler {
 
 	@Unique
 	private final ShellTransferHandler shellTransferHandler = new ShellTransferHandler();
@@ -50,7 +49,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	protected SaveProperties saveProperties;
 	@Final
 	@Shadow
-	protected DynamicRegistryManager.Impl registryManager;
+	private DynamicRegistryManager.Immutable registryManager;
 	@Final
 	@Shadow
 	protected LevelStorage.Session session;
@@ -85,7 +84,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 
 	@Override
 	public ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey, RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator) {
-		return worldshell$createDynamicWorld(worldRegistryKey, new DimensionOptions(() -> registryManager.get(Registry.DIMENSION_TYPE_KEY).get(dimensionTypeKey), chunkGenerator));
+		return worldshell$createDynamicWorld(worldRegistryKey, new DimensionOptions(registryManager.get(Registry.DIMENSION_TYPE_KEY).getOrCreateEntry(dimensionTypeKey), chunkGenerator));
 	}
 
 	@Override
@@ -93,10 +92,10 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		boolean isDebug = saveProperties.getGeneratorOptions().isDebugWorld();
 		long seed = BiomeAccess.hashSeed(saveProperties.getGeneratorOptions().getSeed());
 		ServerWorldProperties serverWorldProperties = saveProperties.getMainWorldProperties();
-		DimensionType dimensionType = dimensionOptions.getDimensionType();
+		DimensionType dimensionType = dimensionOptions.getDimensionTypeSupplier().value();
 		ChunkGenerator chunkGenerator = dimensionOptions.getChunkGenerator();
 		UnmodifiableLevelProperties unmodifiableLevelProperties = new UnmodifiableLevelProperties(saveProperties, serverWorldProperties);
-		ServerWorld serverWorld = worldSupplier.create((MinecraftServer) (Object) this, workerExecutor, session, unmodifiableLevelProperties, worldRegistryKey, dimensionType, worldGenerationProgressListenerFactory.create(0), chunkGenerator, isDebug, seed, ImmutableList.of(), false);
+		ServerWorld serverWorld = worldSupplier.create((MinecraftServer) (Object) this, workerExecutor, session, unmodifiableLevelProperties, worldRegistryKey, dimensionOptions.getDimensionTypeSupplier(), worldGenerationProgressListenerFactory.create(0), chunkGenerator, isDebug, seed, ImmutableList.of(), false);
 		getWorld(World.OVERWORLD).getWorldBorder().addListener(new WorldBorderListener.WorldBorderSyncer(serverWorld.getWorldBorder()));
 		worlds.put(worldRegistryKey, serverWorld);
 		return serverWorld;

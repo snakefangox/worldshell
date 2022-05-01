@@ -2,7 +2,6 @@ package net.snakefangox.worldshell.storage;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -15,7 +14,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockRenderView;
 import net.minecraft.world.BlockView;
@@ -31,8 +29,6 @@ import net.snakefangox.worldshell.world.Worldshell;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 /** Stores all of the block information needed to render an accurate world in miniature */
 public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
@@ -54,7 +50,7 @@ public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 		this.parent = parent;
 		cache = null;
 		cacheValidTime = 0;
-		delegateWorld = new DelegateWorld(parent.getEntityWorld(), this);
+		delegateWorld = new DelegateWorld(parent.getEntityWorld(), this, parent.getEntityWorld().getRegistryManager());
 	}
 
 	/** Creates a client sided microcosm, with the render cache */
@@ -62,7 +58,7 @@ public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 		this.parent = parent;
 		cache = new WorldShellRenderCache();
 		this.cacheValidTime = cacheValidTime;
-		delegateWorld = new DelegateWorld(parent.getEntityWorld(), this);
+		delegateWorld = new DelegateWorld(parent.getEntityWorld(), this, parent.getEntityWorld().getRegistryManager());
 	}
 
 	@Override
@@ -192,8 +188,8 @@ public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 	}
 
 	@Override
-	public Stream<VoxelShape> getEntityCollisions(@Nullable Entity entity, Box box, Predicate<Entity> predicate) {
-		return Stream.empty();
+	public List<VoxelShape> getEntityCollisions(@Nullable Entity entity, Box box) {
+		return Collections.EMPTY_LIST;
 	}
 
 	public void tickCache() {

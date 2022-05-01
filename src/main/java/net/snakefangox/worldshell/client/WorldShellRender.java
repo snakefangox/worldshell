@@ -68,7 +68,7 @@ public class WorldShellRender {
 			if (!fs.isEmpty()) {
 				matrices.push();
 				matrices.translate(-(bp.getX() & 15), -(bp.getY() & 15), -(bp.getZ() & 15));
-				renderManager.renderFluid(bp, microcosm, renderCache.get(RenderLayers.getFluidLayer(fs)), fs);
+				renderManager.renderFluid(bp, microcosm, renderCache.get(RenderLayers.getFluidLayer(fs)), bs, fs);
 				matrices.pop();
 			}
 			if (bs.getRenderType() != BlockRenderType.INVISIBLE) {

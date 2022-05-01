@@ -17,7 +17,7 @@ import net.snakefangox.worldshell.math.Vector3d;
 import net.snakefangox.worldshell.storage.LocalSpace;
 
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * A custom {@link Box} style implementation that takes a worldshell and handles complex collision.
@@ -46,12 +46,12 @@ public class ShellCollisionHull implements LocalSpace {
 
 	public boolean intersects(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		Box lBox = boxToLocal(minX, minY, minZ, maxX, maxY, maxZ);
-		return entity.getMicrocosm().hasBlockCollision(null, lBox, (blockState, blockPos) -> true);
+		return StreamSupport.stream(entity.getMicrocosm().getBlockCollisions(null, lBox).spliterator(), false).anyMatch(VoxelShape::isEmpty);
 	}
 
 	public double calculateMaxDistance(Direction.Axis axis, Box box, double maxDist) {
 		Box lBox = boxToLocal(box);
-		Stream<VoxelShape> shapeStream = entity.getMicrocosm().getBlockCollisions(null,
+		Iterable<VoxelShape> shapeStream = entity.getMicrocosm().getBlockCollisions(null,
 				lBox.stretch(axis.choose(maxDist, 0, 0), axis.choose(0, maxDist, 0), axis.choose(0, 0, maxDist)));
 		return VoxelShapes.calculateMaxOffset(axis, lBox, shapeStream, maxDist);
 	}

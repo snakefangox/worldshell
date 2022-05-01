@@ -27,7 +27,7 @@ public class WorldShellPacketHelper {
 		buf.writeInt(Block.getRawIdFromState(world.getBlockState(pos)));
 		BlockEntity blockEntity = world.getBlockEntity(pos);
 		if (blockEntity != null) {
-			BlockEntityUpdateS2CPacket packet = blockEntity.toUpdatePacket();
+			BlockEntityUpdateS2CPacket packet = (BlockEntityUpdateS2CPacket) blockEntity.toUpdatePacket();
 			if (packet != null && packet.getNbt() != null) {
 				buf.writeNbt(overwritePos(packet.getNbt(), pos));
 				return buf;
@@ -55,7 +55,7 @@ public class WorldShellPacketHelper {
 		for (BlockEntity be : blockEntities) {
 			BlockPos pos = local.toLocal(be.getPos());
 			buf.writeBlockPos(pos);
-			BlockEntityUpdateS2CPacket packet = be.toUpdatePacket();
+			BlockEntityUpdateS2CPacket packet = (BlockEntityUpdateS2CPacket) be.toUpdatePacket();
 			buf.writeNbt(overwritePos(packet.getNbt(), pos));
 		}
 		return buf;
