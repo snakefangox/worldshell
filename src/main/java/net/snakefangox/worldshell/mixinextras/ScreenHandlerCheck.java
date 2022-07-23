@@ -41,7 +41,7 @@ public class ScreenHandlerCheck {
 	private static class FakePlayerEntity extends PlayerEntity {
 
 		public FakePlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile) {
-			super(world, pos, yaw, profile);
+			super(world, pos, yaw, profile, null);
 		}
 
 		@Override

@@ -27,6 +27,7 @@ import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.*;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
@@ -51,7 +52,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 import java.util.function.*;
 import java.util.stream.Stream;
@@ -67,7 +67,8 @@ public class DelegateWorld extends World implements Worldshell {
 				registryManager.get(Registry.DIMENSION_TYPE_KEY).getEntry(
 						registryManager.get(Registry.DIMENSION_TYPE_KEY).getKey(proxiedWorld.getDimension()).get()
 				).get(),
-				null, proxiedWorld.isClient, false, 0
+				null, proxiedWorld.isClient, false, 0,
+				1000000
 		);
 		this.proxiedWorld = proxiedWorld;
 		this.proxiedShell = proxiedShell;
@@ -308,12 +309,32 @@ public class DelegateWorld extends World implements Worldshell {
 	public boolean isNight() {
 		return proxiedWorld.isNight();
 	}
-
+	
+	@Override
+	public void playSoundFromEntity(
+			@Nullable PlayerEntity except, Entity entity, SoundEvent sound, SoundCategory category, float volume, float pitch, long seed) {
+		proxiedWorld.playSoundFromEntity(except, entity, sound, category, volume, pitch, seed);
+	}
+	
 	@Override
 	public void playSound(@Nullable PlayerEntity player, BlockPos pos, SoundEvent sound, SoundCategory category, float volume, float pitch) {
 		proxiedWorld.playSound(player, pos, sound, category, volume, pitch);
 	}
-
+	
+	@Override
+	public void playSound(
+			@Nullable PlayerEntity except,
+			double x,
+			double y,
+			double z,
+			SoundEvent sound,
+			SoundCategory category,
+			float volume,
+			float pitch,
+			long seed) {
+		proxiedWorld.playSound(except, x, y, z, sound, category, volume, pitch, seed);
+	}
+	
 	@Override
 	public void playSound(@Nullable PlayerEntity player, double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch) {
 		proxiedWorld.playSound(player, x, y, z, sound, category, volume, pitch);
@@ -748,20 +769,20 @@ public class DelegateWorld extends World implements Worldshell {
 	}
 
 	@Override
-	public void emitGameEvent(GameEvent event, BlockPos pos) {
-		proxiedWorld.emitGameEvent(event, pos);
+	public void emitGameEvent(@Nullable Entity entity, GameEvent event, Vec3d pos) {
+		proxiedWorld.emitGameEvent(entity, event, pos);
 	}
-
+	
 	@Override
-	public void emitGameEvent(GameEvent event, Entity emitter) {
-		proxiedWorld.emitGameEvent(event, emitter);
+	public void emitGameEvent(GameEvent event, BlockPos pos, GameEvent.Emitter emitter) {
+		proxiedWorld.emitGameEvent(event, pos, emitter);
 	}
-
+	
 	@Override
-	public void emitGameEvent(@Nullable Entity entity, GameEvent event, Entity emitter) {
-		proxiedWorld.emitGameEvent(entity, event, emitter);
+	public void emitGameEvent(GameEvent event, Vec3d emitterPos, GameEvent.Emitter emitter) {
+		proxiedWorld.emitGameEvent(event, emitterPos, emitter);
 	}
-
+	
 	@Override
 	public List<VoxelShape> getEntityCollisions(@Nullable Entity entity, Box box) {
 		return proxiedWorld.getEntityCollisions(entity, box);

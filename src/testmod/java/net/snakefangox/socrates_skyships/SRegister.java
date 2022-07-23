@@ -15,7 +15,11 @@ import net.snakefangox.worldshell.transfer.ConflictSolver;
 
 public class SRegister {
 	public static final ShipsHelm SHIPS_HELM = register("ships_helm", new ShipsHelm());
-	public static final WorldShellSettings AIRSHIP_SETTINGS = new WorldShellSettings.Builder(true, true).setConflictSolver(ConflictSolver.HARDNESS).build();
+	public static final WorldShellSettings AIRSHIP_SETTINGS = new WorldShellSettings.Builder(true, true)
+			.setConflictSolver(ConflictSolver.HARDNESS)
+			.setPassThroughInteract(false)
+			.setPassThroughAttack(false)
+			.build();
 	public static final EntityType<AirShip> AIRSHIP_TYPE = register("airship_type", new WorldShellEntityType<>(AirShip::new));
 
 	private static <T extends Block> T register(String path, T block) {

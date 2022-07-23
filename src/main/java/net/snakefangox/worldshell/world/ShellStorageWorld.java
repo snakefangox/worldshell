@@ -22,6 +22,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
+import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.level.ServerWorldProperties;
@@ -43,8 +44,8 @@ public class ShellStorageWorld extends ServerWorld implements Worldshell {
 
 	private ShellStorageData cachedBayData;
 
-	public ShellStorageWorld(MinecraftServer server, Executor workerExecutor, LevelStorage.Session session, ServerWorldProperties properties, RegistryKey<World> registryKey, RegistryEntry<DimensionType> dimensionType, WorldGenerationProgressListener worldGenerationProgressListener, ChunkGenerator chunkGenerator, boolean debugWorld, long l, List<Spawner> spawners, boolean shouldTickTime) {
-		super(server, workerExecutor, session, properties, registryKey, dimensionType, worldGenerationProgressListener, chunkGenerator, debugWorld, l, spawners, shouldTickTime);
+	public ShellStorageWorld(MinecraftServer server, Executor workerExecutor, LevelStorage.Session session, ServerWorldProperties properties, RegistryKey<World> registryKey, DimensionOptions dimensionType, WorldGenerationProgressListener worldGenerationProgressListener, boolean debugWorld, long l, List<Spawner> spawners, boolean shouldTickTime) {
+		super(server, workerExecutor, session, properties, registryKey, dimensionType, worldGenerationProgressListener, debugWorld, l, spawners, shouldTickTime);
 	}
 
 	@Override

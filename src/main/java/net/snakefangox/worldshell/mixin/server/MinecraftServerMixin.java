@@ -92,10 +92,8 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		boolean isDebug = saveProperties.getGeneratorOptions().isDebugWorld();
 		long seed = BiomeAccess.hashSeed(saveProperties.getGeneratorOptions().getSeed());
 		ServerWorldProperties serverWorldProperties = saveProperties.getMainWorldProperties();
-		DimensionType dimensionType = dimensionOptions.getDimensionTypeSupplier().value();
-		ChunkGenerator chunkGenerator = dimensionOptions.getChunkGenerator();
 		UnmodifiableLevelProperties unmodifiableLevelProperties = new UnmodifiableLevelProperties(saveProperties, serverWorldProperties);
-		ServerWorld serverWorld = worldSupplier.create((MinecraftServer) (Object) this, workerExecutor, session, unmodifiableLevelProperties, worldRegistryKey, dimensionOptions.getDimensionTypeSupplier(), worldGenerationProgressListenerFactory.create(0), chunkGenerator, isDebug, seed, ImmutableList.of(), false);
+		ServerWorld serverWorld = worldSupplier.create((MinecraftServer) (Object) this, workerExecutor, session, unmodifiableLevelProperties, worldRegistryKey, dimensionOptions, worldGenerationProgressListenerFactory.create(0), isDebug, seed, ImmutableList.of(), false);
 		getWorld(World.OVERWORLD).getWorldBorder().addListener(new WorldBorderListener.WorldBorderSyncer(serverWorld.getWorldBorder()));
 		worlds.put(worldRegistryKey, serverWorld);
 		return serverWorld;
