@@ -22,7 +22,7 @@ public class ShellTransferHandler {
 
 	private final Queue<ShellTransferOperator> queue = new PriorityQueue<>();
 	private long tickTime = 0;
-	private long avgTickTime = IDEAL_MILLIS;
+	private double avgTickTime = IDEAL_MILLIS;
 
 	public static void queueOperator(ShellTransferOperator operator) {
 		((GetShellTransferHandler) operator.getWorld().getServer()).worldshell$getShellTransferHandler().addOperator(operator);
@@ -46,9 +46,9 @@ public class ShellTransferHandler {
 
 	private void onEndTick() {
 		tickTime = System.currentTimeMillis() - tickTime;
-		avgTickTime = (avgTickTime + tickTime) / 2;
+		avgTickTime = (avgTickTime + tickTime) / 2d;
 		if (queue.isEmpty()) return;
-		long maxTaskTime = (long) (avgTickTime * TICK_PERCENT);
+		double maxTaskTime = avgTickTime * TICK_PERCENT;
 		while (tickTime < MAX_MILLIS && tickTime < maxTaskTime) {
 			process();
 			tickTime += System.currentTimeMillis() - tickTime;

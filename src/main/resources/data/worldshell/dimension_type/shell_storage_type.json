@@ -13,5 +13,7 @@
   "piglin_safe": false,
   "fixed_time": 6000,
   "height": 512,
-  "min_y": -256
+  "min_y": -256,
+  "monster_spawn_block_light_limit": 15,
+  "monster_spawn_light_level": 15
 }

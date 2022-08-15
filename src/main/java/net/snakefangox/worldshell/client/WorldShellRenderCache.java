@@ -44,23 +44,24 @@ public class WorldShellRenderCache {
 	}
 
 	public void upload() {
-		buffers.forEach((key, entry) -> {
-			entry.end();
-			bufferStorage.get(key).upload(entry);
-		});
+		for(RenderLayer layer : bufferFilled) {
+			BufferBuilder builder = buffers.get(layer);
+			VertexBuffer buffer = bufferStorage.get(layer);
+			buffer.bind();
+			buffer.upload(builder.end());
+		}
 	}
 
 	public void draw(MatrixStack matrices) {
 		Matrix4f proj = RenderSystem.getProjectionMatrix();
-		renderLayers.forEach((key) -> {
-			if (bufferFilled.contains(key)) {
-				VertexBuffer entry = bufferStorage.get(key);
-				key.startDrawing();
-				entry.bind();
-				entry.setShader(matrices.peek().getPositionMatrix(), proj, RenderSystem.getShader());
-				key.endDrawing();
-			}
-		});
+		for(RenderLayer renderLayer : bufferFilled) {
+			VertexBuffer entry = bufferStorage.get(renderLayer);
+			renderLayer.startDrawing();
+			entry.bind();
+			entry.draw(matrices.peek().getPositionMatrix(), proj, RenderSystem.getShader());
+			renderLayer.endDrawing();
+			VertexBuffer.unbind();
+		}
 	}
 
 	public void reset() {
@@ -68,6 +69,7 @@ public class WorldShellRenderCache {
 		bufferStorage.forEach((key, entry) -> entry.close());
 		buffers.clear();
 		bufferStorage.clear();
+		bufferFilled.clear();
 		fillBuffers();
 	}
 }

@@ -37,7 +37,7 @@ public class ShipsHelm extends Block {
 
 		WorldShellConstructor<AirShip> airshipConstructor = WorldShellConstructor.create((ServerWorld) world, SRegister.AIRSHIP_TYPE, pos, new BlockScan(pos, world));
 		world.setBlockState(pos, state.with(CONSTRUCTING, true));
-		airshipConstructor.construct(airShipResult -> airShipResult.get().setRotation(new Quaternion().fromAngles(Math.PI / 4, 0, 0)));
+		airshipConstructor.construct(result -> {});
 		return ActionResult.SUCCESS;
 	}
 

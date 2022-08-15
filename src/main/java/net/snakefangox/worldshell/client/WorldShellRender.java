@@ -15,12 +15,12 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Quaternion;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.LightType;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Microcosm;
 
 import java.util.Map;
-import java.util.Random;
 
 /**
  * Static helper methods to render a {@link Microcosm} in different contexts.
