@@ -31,7 +31,6 @@ import net.minecraft.world.explosion.Explosion;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.WorldShellMain;
 import net.snakefangox.worldshell.collision.EntityBounds;
-import net.snakefangox.worldshell.collision.RotatingShellCollisionHull;
 import net.snakefangox.worldshell.collision.ShellCollisionHull;
 import net.snakefangox.worldshell.math.Quaternion;
 import net.snakefangox.worldshell.storage.Bay;
@@ -69,7 +68,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		super(type, world);
 		this.settings = shellSettings;
 		microcosm = world.isClient() ? new Microcosm(this, settings.updateFrames()) : new Microcosm(this);
-		hull = settings.handleRotatedCollision() ? new RotatingShellCollisionHull(this) : new ShellCollisionHull(this);
+		hull = new ShellCollisionHull(this);
 	}
 
 	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<Microcosm.ShellTickInvoker> tickers) {

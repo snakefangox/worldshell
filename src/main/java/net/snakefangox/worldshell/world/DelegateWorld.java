@@ -56,6 +56,10 @@ import java.util.UUID;
 import java.util.function.*;
 import java.util.stream.Stream;
 
+/**
+ * This monster of a class extends the client world to give blocks on a worldshell
+ * the context they need to render.
+ */
 public class DelegateWorld extends World implements Worldshell {
 
 	private final World proxiedWorld;

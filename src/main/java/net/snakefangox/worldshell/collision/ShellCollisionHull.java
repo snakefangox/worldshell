@@ -26,14 +26,15 @@ public class ShellCollisionHull implements LocalSpace {
 
 	protected static final double SMOL = 1.0E-7D;
 	protected final WorldShellEntity entity;
-	protected HullBoxDelegate dBox;
+	protected HullBoxDelegate delegateBox;
+	protected WorldshellCollisionHandler collisionHandler = new WorldshellCollisionHandler();
 	protected final Vector3d localVector = new Vector3d(), localVector2 = new Vector3d(), localVector3 = new Vector3d();
 	protected final Matrix3d localMatrix = new Matrix3d();
 	protected final BlockPos.Mutable localBp = new BlockPos.Mutable();
 
 	public ShellCollisionHull(WorldShellEntity entity) {
 		this.entity = entity;
-		dBox = new HullBoxDelegate(new Box(BlockPos.ORIGIN), this);
+		delegateBox = new HullBoxDelegate(new Box(BlockPos.ORIGIN), this);
 	}
 
 	public void onWorldshellRotate() {
@@ -114,7 +115,7 @@ public class ShellCollisionHull implements LocalSpace {
 		localVector.set(-len - off.x, -off.y, -width - off.z);
 		localVector2.set(len - off.x, height - off.y, width - off.z);
 		localVector3.set(getLocalX(), getLocalY(), getLocalZ());
-		dBox = new HullBoxDelegate(transformBox(localVector, localVector2, getInverseRotation(), localVector3), this);
+		delegateBox = new HullBoxDelegate(transformBox(localVector, localVector2, getInverseRotation(), localVector3), this);
 	}
 
 	public VoxelShape toVoxelShape() {
@@ -122,15 +123,15 @@ public class ShellCollisionHull implements LocalSpace {
 	}
 
 	public double getMin(Direction.Axis axis) {
-		return dBox.getMin(axis);
+		return delegateBox.getMin(axis);
 	}
 
 	public double getMax(Direction.Axis axis) {
-		return dBox.getMax(axis);
+		return delegateBox.getMax(axis);
 	}
 
 	public Box getDelegateBox() {
-		return dBox;
+		return delegateBox;
 	}
 
 	@Override

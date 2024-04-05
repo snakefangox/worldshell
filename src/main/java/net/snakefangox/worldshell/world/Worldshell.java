@@ -5,6 +5,8 @@ package net.snakefangox.worldshell.world;
  * <p>
  * This is an empty interface implemented by all the custom world classes worldshell adds.
  * The upshot of this is that you can do (world instanceof Worldshell) to check if you're in one.
+ * <p>
+ * This is funny.
  */
 public interface Worldshell {
 }

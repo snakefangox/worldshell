@@ -15,7 +15,7 @@ import net.snakefangox.worldshell.transfer.ConflictSolver;
 
 public class SRegister {
 	public static final ShipsHelm SHIPS_HELM = register("ships_helm", new ShipsHelm());
-	public static final WorldShellSettings AIRSHIP_SETTINGS = new WorldShellSettings.Builder(true, true)
+	public static final WorldShellSettings AIRSHIP_SETTINGS = new WorldShellSettings.Builder()
 			.setConflictSolver(ConflictSolver.HARDNESS)
 			.setPassThroughInteract(false)
 			.setPassThroughAttack(false)

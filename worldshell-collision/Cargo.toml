@@ -1,0 +1,11 @@
+[package]
+name = "worldshell_collision"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+parry3d-f64 = "0.13.7"
+robusta_jni = "0.2.2"

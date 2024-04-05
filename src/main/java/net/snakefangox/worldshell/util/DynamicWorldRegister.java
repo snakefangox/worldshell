@@ -46,7 +46,7 @@ public class DynamicWorldRegister {
 	/**
 	 * Registers a dimension while the server is running with a custom world class<p>
 	 * This is weird and intended for creating <i>very</i> custom dimensions<p>
-	 * Use only if you know what you're doing
+	 * Use only if you are also weird and very custom
 	 *
 	 * @param worldRegistryKey the key the world will be registered to
 	 * @param dimensionOptions the options used for this dimension

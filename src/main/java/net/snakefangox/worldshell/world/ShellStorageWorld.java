@@ -40,6 +40,10 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.function.Predicate;
 
+/**
+ * This class is used for the world that stores worldshells.
+ * It overrides world functions to enable passthrough to the relevent worldshell.
+ */
 public class ShellStorageWorld extends ServerWorld implements Worldshell {
 
 	private ShellStorageData cachedBayData;
