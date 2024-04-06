@@ -28,7 +28,8 @@ public abstract class ShellTransferOperator implements Comparable<ShellTransferO
 	protected static final int UPDATE_DEPTH = 3;
 	protected static final BlockState CLEAR_STATE = Blocks.AIR.getDefaultState();
 	private static final float ROTATE_BACK = 0.7071067f;
-	private final ServerWorld world;
+
+	protected final ServerWorld world;
 	private final NoOpPosWrapper posWrapper = new NoOpPosWrapper();
 	private final Stack<Long> cleanUpPositions = new Stack<>();
 	private int timeSpent = 0;

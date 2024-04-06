@@ -80,6 +80,8 @@ public final class WorldShellDeconstructor extends ShellTransferOperator {
 			case REMOVE:
 				remove();
 				break;
+			default:
+				break;
 		}
 	}
 

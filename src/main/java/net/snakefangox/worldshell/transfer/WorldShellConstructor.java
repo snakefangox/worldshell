@@ -12,33 +12,46 @@ import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.LocalSpace;
 import net.snakefangox.worldshell.storage.ShellStorageData;
+import net.snakefangox.worldshell.world.Worldshell;
+
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.function.Consumer;
 
 /**
- * Handles the entire creation process for your {@link net.snakefangox.worldshell.entity.WorldShellEntity}
- * including moving blocks to storage, registering a bay if needed and spawning the entity.
- * Simply create a new one with the needed data (including a pre-spawn callback if you want) and then call
- * {@link WorldShellConstructor#construct()} on it. This process can take several ticks to finish for large entities.
- * Should you need to do something after the entity is spawned you can provide a callback or hold onto the {@link Result}
+ * Handles the entire creation process for your
+ * {@link net.snakefangox.worldshell.entity.WorldShellEntity}
+ * including moving blocks to storage, registering a bay if needed and spawning
+ * the entity.
+ * Simply create a new one with the needed data (including a pre-spawn callback
+ * if you want) and then call
+ * {@link WorldShellConstructor#construct()} on it. This process can take
+ * several ticks to finish for large entities.
+ * Should you need to do something after the entity is spawned you can provide a
+ * callback or hold onto the {@link Result}
  * and check to see if it is finished.
  * <p>
- * You can use any BlockPos iterator but you should consider making your own if you have complex rules for your WorldShellEntities.
- * Scanning the world, constructing a List and then passing it's iterator can require more memory and allocations than
- * scanning with the iterator and Mutable BlockPos directly especially with large WorldShellEntities.
+ * You can use any BlockPos iterator but you should consider making your own if
+ * you have complex rules for your WorldShellEntities.
+ * Scanning the world, constructing a List and then passing it's iterator can
+ * require more memory and allocations than
+ * scanning with the iterator and Mutable BlockPos directly especially with
+ * large WorldShellEntities.
  * A few iterators are provided, for example {@link BlockBoxIterator}.
  * <p>
  * <i>Wait did you say Mutable BlockPos?</i> Yes, question asking void.
- * The BlockPos returned from your iterator will <i>always</i> be copied before next is called again
- * so it is most efficient (and completely safe) to return a Mutable BlockPos from it.
+ * The BlockPos returned from your iterator will <i>always</i> be copied before
+ * next is called again
+ * so it is most efficient (and completely safe) to return a Mutable BlockPos
+ * from it.
  * <p>
  * Also because the Java gods command me so:
  * <p>
  * Note: this class has a natural ordering that is inconsistent with equals.
  */
-public final class WorldShellConstructor<T extends WorldShellEntity> extends ShellTransferOperator implements LocalSpace {
+public final class WorldShellConstructor<T extends WorldShellEntity> extends ShellTransferOperator
+		implements LocalSpace {
 
 	private final EntityType<T> entityType;
 	private final BlockPos center;
@@ -53,7 +66,8 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 	private ShellStorageData shellStorage;
 	private Bay bay;
 
-	private WorldShellConstructor(ServerWorld world, EntityType<T> entityType, BlockPos center, Iterator<BlockPos> iterator, Consumer<T> preSpawnCallback) {
+	private WorldShellConstructor(ServerWorld world, EntityType<T> entityType, BlockPos center,
+			Iterator<BlockPos> iterator, Consumer<T> preSpawnCallback) {
 		super(world);
 		this.entityType = entityType;
 		this.center = center;
@@ -61,12 +75,14 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 		this.preSpawnCallback = preSpawnCallback;
 	}
 
-	public static <U extends WorldShellEntity> WorldShellConstructor<U> create(ServerWorld world, EntityType<U> entityType, BlockPos center, Iterator<BlockPos> iterator) {
+	public static <U extends WorldShellEntity> WorldShellConstructor<U> create(ServerWorld world,
+			EntityType<U> entityType, BlockPos center, Iterator<BlockPos> iterator) {
 		return new WorldShellConstructor<>(world, entityType, center, iterator, null);
 	}
 
-	public static <U extends WorldShellEntity> WorldShellConstructor<U> create(ServerWorld world, EntityType<U> entityType, BlockPos center,
-																			   Iterator<BlockPos> iterator, Consumer<U> preSpawnCallback) {
+	public static <U extends WorldShellEntity> WorldShellConstructor<U> create(ServerWorld world,
+			EntityType<U> entityType, BlockPos center,
+			Iterator<BlockPos> iterator, Consumer<U> preSpawnCallback) {
 		return new WorldShellConstructor<>(world, entityType, center, iterator, preSpawnCallback);
 	}
 
@@ -82,10 +98,16 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 	/**
 	 * Begins constructing the entity
 	 *
-	 * @param postSpawnCallback is called after the entity is spawned and will always get a finished result
+	 * @param postSpawnCallback is called after the entity is spawned and will
+	 *                          always get a finished result
 	 * @return a result object that will contain the entity after it is spawned
 	 */
 	public Result<T> construct(Consumer<Result<T>> postSpawnCallback) {
+		if (world instanceof Worldshell) {
+			throw new IllegalStateException(
+					"Bravely refusing to construct worldshell inside worldshell, blame " + entityType);
+		}
+
 		result = new Result<>(postSpawnCallback);
 		ShellTransferHandler.queueOperator(this);
 		return result;
@@ -103,6 +125,7 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 			case TRANSFER -> transfer();
 			case SPAWN -> spawn();
 			case CLEANUP -> cleanup();
+			default -> throw new IllegalArgumentException("Unexpected stage: " + stage);
 		}
 	}
 
@@ -129,25 +152,28 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 			transferBlock(getWorld(), shellWorld, iterator.next());
 			++i;
 		}
-		if (!iterator.hasNext()) stage = Stage.SPAWN;
+		if (!iterator.hasNext())
+			stage = Stage.SPAWN;
 	}
 
 	private void spawn() {
 		T entity = entityType.create(getWorld());
 		if (entity == null)
 			throw new IllegalStateException(entityType + " constructor returned null, how did we get here?");
-		//Set entity dimensions
+		// Set entity dimensions
 		BlockBox bayBounds = bay.getBounds();
-		EntityBounds bound = new EntityBounds(bayBounds.getBlockCountX(), bayBounds.getBlockCountY(), bayBounds.getBlockCountZ(), false);
+		EntityBounds bound = new EntityBounds(bayBounds.getBlockCountX(), bayBounds.getBlockCountY(),
+				bayBounds.getBlockCountZ(), false);
 		entity.setDimensions(bound);
-		//Set position
+		// Set position
 		Vec3d boundsCenter = bay.globalToGlobal(this, bay.getBoundsCenter());
 		double localBoundsY = bay.globalToGlobalY(this, boundsCenter.x, bayBounds.getMinY(), boundsCenter.z);
 		entity.setPosition(boundsCenter.x + 0.5, localBoundsY, boundsCenter.z + 0.5);
-		//Set offset
-		Vec3d blockOffset = new Vec3d((center.getX() - boundsCenter.x) - 0.5, center.getY() - localBoundsY, (center.getZ() - boundsCenter.z) - 0.5);
+		// Set offset
+		Vec3d blockOffset = new Vec3d((center.getX() - boundsCenter.x) - 0.5, center.getY() - localBoundsY,
+				(center.getZ() - boundsCenter.z) - 0.5);
 		entity.setBlockOffset(blockOffset);
-		//Register bay
+		// Register bay
 		int id = shellStorage.addBay(bay);
 		entity.setShellId(id);
 		preSpawnCallback(entity);
@@ -162,7 +188,8 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 			cleanUpStepUpdate(getWorld());
 			++i;
 		}
-		if (!cleanUpRemaining()) stage = Stage.FINISHED;
+		if (!cleanUpRemaining())
+			stage = Stage.FINISHED;
 	}
 
 	private void preSpawnCallback(T entity) {
@@ -189,7 +216,10 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 		SETUP, TRANSFER, SPAWN, CLEANUP, FINISHED
 	}
 
-	/** Returned from the construct method, will contain the entity after it is spawned */
+	/**
+	 * Returned from the construct method, will contain the entity after it is
+	 * spawned
+	 */
 	public static class Result<T extends WorldShellEntity> {
 		private final Consumer<Result<T>> postSpawnCallback;
 		private T result;

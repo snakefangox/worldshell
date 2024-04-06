@@ -19,11 +19,11 @@ import net.minecraft.world.BlockRenderView;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.CollisionView;
 import net.minecraft.world.LightType;
+import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.level.ColorResolver;
 import net.snakefangox.worldshell.client.WorldShellRenderCache;
-import net.snakefangox.worldshell.entity.WorldShellEntity;
 import net.snakefangox.worldshell.world.DelegateWorld;
 import net.snakefangox.worldshell.world.Worldshell;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +34,8 @@ import java.util.*;
 public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 
 	private static final WorldBorder SHELL_BORDER = new WorldBorder();
-	private final WorldShellEntity parent;
+	private final World parentWorld;
+	private final LocalSpace localSpace;
 	private final DelegateWorld delegateWorld;
 	private final Map<BlockPos, BlockState> blockStateMap = new LinkedHashMap<>();
 	private final Map<BlockPos, BlockEntity> blockEntityMap = new LinkedHashMap<>();
@@ -45,19 +46,21 @@ public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 	private int cacheResetTimer = 0;
 
 	/** Creates a server sided microcosm, without the render cache */
-	public Microcosm(WorldShellEntity parent /*TODO Replace with world and LocalSpace*/) {
-		this.parent = parent;
+	public Microcosm(World world, LocalSpace localSpace) {
+		this.parentWorld = world;
+		this.localSpace = localSpace;
 		cache = null;
 		cacheValidTime = 0;
-		delegateWorld = new DelegateWorld(parent.getEntityWorld(), this, parent.getEntityWorld().getRegistryManager());
+		delegateWorld = new DelegateWorld(parentWorld, this, parentWorld.getRegistryManager());
 	}
 
 	/** Creates a client sided microcosm, with the render cache */
-	public Microcosm(WorldShellEntity parent, int cacheValidTime) {
-		this.parent = parent;
+	public Microcosm(World world, LocalSpace localSpace, int cacheValidTime) {
+		this.parentWorld = world;
+		this.localSpace = localSpace;
 		cache = new WorldShellRenderCache();
 		this.cacheValidTime = cacheValidTime;
-		delegateWorld = new DelegateWorld(parent.getEntityWorld(), this, parent.getEntityWorld().getRegistryManager());
+		delegateWorld = new DelegateWorld(parentWorld, this, parentWorld.getRegistryManager());
 	}
 
 	@Override
@@ -129,36 +132,36 @@ public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 
 	@Override
 	public float getBrightness(Direction direction, boolean shaded) {
-		return parent.getEntityWorld().getBrightness(direction, shaded);
+		return parentWorld.getBrightness(direction, shaded);
 	}
 
 	@Override
 	public LightingProvider getLightingProvider() {
-		return parent.getEntityWorld().getLightingProvider();
+		return parentWorld.getLightingProvider();
 	}
 
 	@Override
 	public int getColor(BlockPos pos, ColorResolver colorResolver) {
-		return parent.getEntityWorld().getColor(toWorldPos(pos), colorResolver);
+		return parentWorld.getColor(toWorldPos(pos), colorResolver);
 	}
 
 	@Override
 	public int getLightLevel(LightType type, BlockPos pos) {
-		return parent.getEntityWorld().getLightLevel(type, toWorldPos(pos));
+		return parentWorld.getLightLevel(type, toWorldPos(pos));
 	}
 
 	@Override
 	public int getBaseLightLevel(BlockPos pos, int ambientDarkness) {
-		return parent.getEntityWorld().getBaseLightLevel(toWorldPos(pos), ambientDarkness);
+		return parentWorld.getBaseLightLevel(toWorldPos(pos), ambientDarkness);
 	}
 
 	@Override
 	public boolean isSkyVisible(BlockPos pos) {
-		return parent.getEntityWorld().isSkyVisible(toWorldPos(pos));
+		return parentWorld.isSkyVisible(toWorldPos(pos));
 	}
 
 	private BlockPos toWorldPos(BlockPos pos) {
-		return parent.toGlobal(pos);
+		return localSpace.toGlobal(pos);
 	}
 
 	public void tick() {
@@ -167,12 +170,12 @@ public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 
 	@Override
 	public int getHeight() {
-		return parent.getEntityWorld().getHeight();
+		return parentWorld.getHeight();
 	}
 
 	@Override
 	public int getBottomY() {
-		return parent.getEntityWorld().getBottomY();
+		return parentWorld.getBottomY();
 	}
 
 	@Override
@@ -188,7 +191,7 @@ public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 
 	@Override
 	public List<VoxelShape> getEntityCollisions(@Nullable Entity entity, Box box) {
-		return Collections.EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 	public void tickCache() {

@@ -26,22 +26,26 @@ import org.jetbrains.annotations.Nullable;
 
 public class ShipsHelm extends Block implements ShellAwareBlock {
 
-    private static final BooleanProperty CONSTRUCTING = BooleanProperty.of("constructing");
+	private static final BooleanProperty CONSTRUCTING = BooleanProperty.of("constructing");
 
 	public ShipsHelm() {
 		super(FabricBlockSettings.of(Material.WOOD));
 	}
 
 	@Override
-	public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-		if (world instanceof Worldshell) return ActionResult.PASS;
-		if (state.get(CONSTRUCTING)) return ActionResult.FAIL;
-		if (!(world instanceof ServerWorld)) return ActionResult.SUCCESS;
+	public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand,
+			BlockHitResult hit) {
+		if (world instanceof Worldshell)
+			return ActionResult.PASS;
+		if (state.get(CONSTRUCTING))
+			return ActionResult.FAIL;
+		if (!(world instanceof ServerWorld))
+			return ActionResult.SUCCESS;
 
-		WorldShellConstructor<AirShip> airshipConstructor = WorldShellConstructor.create((ServerWorld) world, SRegister.AIRSHIP_TYPE, pos, new BlockScan(pos, world));
+		WorldShellConstructor<AirShip> airshipConstructor = WorldShellConstructor.create((ServerWorld) world,
+				SRegister.AIRSHIP_TYPE, pos, new BlockScan(pos, world));
 		world.setBlockState(pos, state.with(CONSTRUCTING, true));
 		airshipConstructor.construct(result -> {
-			result.get().setRotation(new Quaternion().fromAngles(Math.PI / 4.0, 0, 0));
 		});
 		return ActionResult.SUCCESS;
 	}
@@ -58,7 +62,7 @@ public class ShipsHelm extends Block implements ShellAwareBlock {
 	}
 
 	@Override
-    public void onUseInShell(World world, WorldShellEntity entity, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        entity.setRotation(entity.getRotation().addLocal(new Quaternion().fromAngles(Math.PI / 2.0, 0, 0)));
-    }
+	public void onUseInShell(World world, WorldShellEntity entity, PlayerEntity player, Hand hand, BlockHitResult hit) {
+		entity.setRotation(entity.getRotation().addLocal(new Quaternion().fromAngles(Math.PI / 8.0, 0, 0)));
+	}
 }

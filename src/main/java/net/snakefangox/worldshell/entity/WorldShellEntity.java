@@ -48,8 +48,7 @@ import java.util.function.Consumer;
 
 /**
  * The basic entity that links to a shell, renders it's contents and handles interaction.
- * This will need to be extended by you and provided with a default constructor (i.e. {@link Entity#Entity(EntityType, World)}).
- * The settings object should always be the same for any two entities of the same class and EntityType.
+ * This will need to be extended by you and provided with a valid entity constructor (i.e. {@link Entity#Entity(EntityType, World)}).
  */
 public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
@@ -67,7 +66,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	public WorldShellEntity(EntityType<?> type, World world, WorldShellSettings shellSettings) {
 		super(type, world);
 		this.settings = shellSettings;
-		microcosm = world.isClient() ? new Microcosm(this, settings.updateFrames()) : new Microcosm(this);
+		microcosm = world.isClient() ? new Microcosm(world, this, settings.updateFrames()) : new Microcosm(world, this);
 		hull = new ShellCollisionHull(this);
 	}
 

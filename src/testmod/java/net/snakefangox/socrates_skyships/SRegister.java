@@ -17,14 +17,14 @@ public class SRegister {
 	public static final ShipsHelm SHIPS_HELM = register("ships_helm", new ShipsHelm());
 	public static final WorldShellSettings AIRSHIP_SETTINGS = new WorldShellSettings.Builder()
 			.setConflictSolver(ConflictSolver.HARDNESS)
-			.setPassThroughInteract(false)
-			.setPassThroughAttack(false)
 			.build();
-	public static final EntityType<AirShip> AIRSHIP_TYPE = register("airship_type", new WorldShellEntityType<>(AirShip::new));
+	public static final EntityType<AirShip> AIRSHIP_TYPE = register("airship_type",
+			new WorldShellEntityType<>(AirShip::new));
 
 	private static <T extends Block> T register(String path, T block) {
 		Registry.register(Registry.BLOCK, new Identifier(SocratesSkyships.MODID, path), block);
-		Registry.register(Registry.ITEM, new Identifier(SocratesSkyships.MODID, path), new BlockItem(block, new FabricItemSettings().group(ItemGroup.TRANSPORTATION)));
+		Registry.register(Registry.ITEM, new Identifier(SocratesSkyships.MODID, path),
+				new BlockItem(block, new FabricItemSettings().group(ItemGroup.TRANSPORTATION)));
 		return block;
 	}
 
