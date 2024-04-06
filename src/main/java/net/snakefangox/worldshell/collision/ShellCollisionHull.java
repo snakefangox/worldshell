@@ -73,11 +73,31 @@ public class ShellCollisionHull implements LocalSpace {
 				});
 	}
 
+	/**
+	 * This is complicated and the vanilla method is hell, so here goes my attempt
+	 * to explain it.
+	 * <p>
+	 * This method returns the smallest distance separating the hull and a bounding
+	 * box in a given direction (negative or positive depending on the sign of
+	 * maxDist), along the given axis. This system was designed for vanilla, where
+	 * everything is axis-aligned. Out here we need to do some fuckery.
+	 * <p>
+	 * We get the center of the colliding box and make it local to the shell.
+	 * Then we rotate the box by the inverse of our rotation around it's center.
+	 * This is the same as rotating the shell, but much easier to handle (if not
+	 * reason about).
+	 * 
+	 * @param axis    The axis along which to check distance.
+	 * @param box     The colliding box.
+	 * @param maxDist The longest distance we should check for collision.
+	 * @return The smallest seperation.
+	 */
 	public double calculateMaxDistance(Direction.Axis axis, Box box, double maxDist) {
-		if (Math.abs(maxDist) < 1.0E-7) {
+		if (Math.abs(maxDist) < SMOL) {
 			return 0.0;
 		}
 
+		// Get blocks we could collide with
 		Box lBox = boxToLocal(
 				box.stretch(axis.choose(maxDist, 0, 0), axis.choose(0, maxDist, 0), axis.choose(0, 0, maxDist)));
 		Spliterator<VoxelShape> shapeStream = entity.getMicrocosm().getBlockCollisions(null, lBox).spliterator();
@@ -86,6 +106,8 @@ public class ShellCollisionHull implements LocalSpace {
 		Vec3d boxCenter = box.getCenter();
 		Vector3d pos = toLocal(new Vector3d(boxCenter.x, boxCenter.y, boxCenter.z));
 		Vector3d halfExtents = new Vector3d(box.getXLength() / 2.0, box.getYLength() / 2.0, box.getZLength() / 2.0)
+				// Pad the bounding box slightly in the direction we're testing, without this we
+				// collide with the edges of the ground when we walk
 				.addLocal(axis.choose(SMOL, 0, 0), axis.choose(0, SMOL, 0), axis.choose(0, SMOL, 0));
 
 		Vector3d boxPos = new Vector3d();
