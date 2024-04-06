@@ -14,9 +14,6 @@ import net.minecraft.world.biome.source.FixedBiomeSource;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
-import net.snakefangox.worldshell.collision.WorldshellCollisionHandler;
-import net.snakefangox.worldshell.math.Quaternion;
-import net.snakefangox.worldshell.math.Vector3d;
 import net.snakefangox.worldshell.storage.EmptyChunkGenerator;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.transfer.ShellTransferHandler;
@@ -30,17 +27,15 @@ public class WorldShellMain implements ModInitializer {
 
 	public static final String MODID = "worldshell";
 	public static final Logger LOGGER = LogManager.getLogger();
-	private static final String COLLISION_LIB_NAME = "worldshell_collision";
+    static {
+        WSNative.loadLibrary("worldshell_collision");
+    }
 
 	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.WORLD_KEY,
 			new Identifier(MODID, "shell_storage"));
 
 	public static final RegistryKey<DimensionType> STORAGE_DIM_TYPE = RegistryKey.of(Registry.DIMENSION_TYPE_KEY,
 			new Identifier(MODID, "shell_storage_type"));
-
-	static {
-		System.loadLibrary(COLLISION_LIB_NAME);
-	}
 
 	public static ServerWorld getStorageDim(MinecraftServer server) {
 		return server.getWorld(WorldShellMain.STORAGE_DIM);
