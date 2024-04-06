@@ -98,8 +98,4 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		worlds.put(worldRegistryKey, serverWorld);
 		return serverWorld;
 	}
-
-
-
-
 }

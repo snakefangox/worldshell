@@ -9,12 +9,10 @@ import java.util.function.Consumer;
 
 /**
  * Contains the settings for a WorldShell entity, this includes things like
- * whether explosions can affect it,
- * if players can interact with it and most importantly whether it is a simple
- * or complex worldshell entity.
+ * whether explosions can affect it, if players can interact with it, things
+ * like that.
  * <p>
- * Calling the default constructor will give you a standard complex or simple
- * worldshell entity.
+ * Calling the default constructor will give you a standard worldshell entity.
  * For custom settings use the builder for sensible defaults and to avoid
  * incompatible settings.
  * <p>

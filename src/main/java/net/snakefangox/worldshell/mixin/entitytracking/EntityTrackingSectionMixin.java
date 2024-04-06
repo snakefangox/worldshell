@@ -16,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 @Mixin(EntityTrackingSection.class)
 public abstract class EntityTrackingSectionMixin implements WorldShellEntityTracker {

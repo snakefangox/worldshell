@@ -56,14 +56,6 @@ public class WorldShellMain implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(ShellTransferHandler::serverEndTick);
 		ServerLifecycleEvents.SERVER_STOPPING.register(ShellTransferHandler::serverStopping);
 
-		WorldshellCollisionHandler collisionHandler = new WorldshellCollisionHandler();
-		System.out.println(
-				"Should hit: " + collisionHandler.intersects(new Vector3d(), new Quaternion(),
-						new Vector3d(0.5, 0.5, 0.5), new Vector3d(0.5, 0.5, 0.5), new Vector3d(0.5, 0.5, 0.5)));
-		System.out.println(
-				"Shouldn't hit: " + collisionHandler.intersects(new Vector3d(0, 2.0, 0), new Quaternion(),
-						new Vector3d(0.5, 0.5, 0.5), new Vector3d(0.5, 0.5, 0.5), new Vector3d(0.5, 0.5, 0.5)));
-
 		LOGGER.info("Moving worlds and fudging collision!");
 		LOGGER.info("(Worldshell has loaded successfully)");
 	}

@@ -39,7 +39,6 @@ public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 	private final Map<BlockPos, BlockState> blockStateMap = new LinkedHashMap<>();
 	private final Map<BlockPos, BlockEntity> blockEntityMap = new LinkedHashMap<>();
 	private final List<ShellTickInvoker> tickInvokers = new ArrayList<>();
-	private final BlockPos.Mutable reusablePos = new BlockPos.Mutable();
 	@Environment(EnvType.CLIENT)
 	private final WorldShellRenderCache cache;
 	private final int cacheValidTime;
