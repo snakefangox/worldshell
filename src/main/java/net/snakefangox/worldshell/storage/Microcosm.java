@@ -20,9 +20,9 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.CollisionView;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.ColorResolver;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.light.LightingProvider;
-import net.minecraft.world.level.ColorResolver;
 import net.snakefangox.worldshell.client.WorldShellRenderCache;
 import net.snakefangox.worldshell.world.DelegateWorld;
 import net.snakefangox.worldshell.world.Worldshell;
@@ -109,6 +109,7 @@ public class Microcosm implements BlockRenderView, CollisionView, Worldshell {
 		return blockStateMap.containsKey(pos);
 	}
 
+	@SuppressWarnings("deprecation")
 	public void setBlock(BlockPos pos, BlockState state, NbtCompound tag) {
 		blockStateMap.put(pos, state);
 		if (state.hasBlockEntity()) {

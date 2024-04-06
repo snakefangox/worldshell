@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "net.snakefangox.worldshell.mixin",
-  "compatibilityLevel": "JAVA_16",
+  "compatibilityLevel": "JAVA_17",
   "mixins": [
     "collision.BoxMixin",
     "collision.VoxelShapesMixin",
@@ -13,6 +13,7 @@
     "passthrough.ExplosionMixin",
     "passthrough.PlayerEntityMixin",
     "passthrough.ServerPlayerEntityMixin",
+    "passthrough.EntityWorldAccess",
     "server.MinecraftServerMixin",
     "transfer.AbstractBlockStateMixin"
   ],

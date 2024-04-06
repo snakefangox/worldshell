@@ -18,7 +18,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Stack;
 
 /**
- * Shell operations can take a while. This is a basic class that the {@link ShellTransferHandler}
+ * Shell operations can take a while. This is a basic class that the
+ * {@link ShellTransferHandler}
  * can use to perform them over time.
  */
 public abstract class ShellTransferOperator implements Comparable<ShellTransferOperator> {
@@ -76,35 +77,42 @@ public abstract class ShellTransferOperator implements Comparable<ShellTransferO
 	}
 
 	protected void transferBlock(World from, World to, BlockPos pos) {
-		transferBlock(from, to, pos, true, RotationSolver.ORIGINAL, Quaternion.IDENTITY, BlockRotation.NONE, ConflictSolver.OVERWRITE);
+		transferBlock(from, to, pos, true, RotationSolver.ORIGINAL, Quaternion.IDENTITY, BlockRotation.NONE,
+				ConflictSolver.OVERWRITE);
 	}
 
 	protected void transferBlock(World from, World to, BlockPos pos, boolean cleanUpRequired,
-								 RotationSolver rotationSolver, Quaternion rotation, BlockRotation blockRotation, ConflictSolver conflictSolver) {
+			RotationSolver rotationSolver, Quaternion rotation, BlockRotation blockRotation,
+			ConflictSolver conflictSolver) {
 		BlockState state = from.getBlockState(pos);
-		if (state.isAir()) return;
+		if (state.isAir())
+			return;
 		posWrapper.set(pos);
 		getLocalSpace().globalToGlobal(getRemoteSpace(), posWrapper);
 		state = rotationSolver.solveRotation(rotation, blockRotation, posWrapper, state);
 		BlockState currentState = to.getBlockState(posWrapper);
-		if (!currentState.getMaterial().isReplaceable())
+		if (!currentState.isReplaceable())
 			state = conflictSolver.solveConflict(to, posWrapper, state, currentState);
 		to.setBlockState(posWrapper, state, FLAGS, 0);
-		if (getRemoteSpace() instanceof Bay) ((Bay) getRemoteSpace()).updateBoxBounds(posWrapper);
+		if (getRemoteSpace() instanceof Bay)
+			((Bay) getRemoteSpace()).updateBoxBounds(posWrapper);
 		if (state.hasBlockEntity()) {
 			BlockEntity blockEntity = from.getBlockEntity(pos);
-			if (blockEntity != null) transferBlockEntity(from, to, pos, posWrapper.toImmutable(), blockEntity, state);
+			if (blockEntity != null)
+				transferBlockEntity(from, to, pos, posWrapper.toImmutable(), blockEntity, state);
 		}
 		posWrapper.set(pos);
 		from.setBlockState(posWrapper, CLEAR_STATE, FLAGS, 0);
-		if (cleanUpRequired) cleanUpPositions.push(posWrapper.asLong());
+		if (cleanUpRequired)
+			cleanUpPositions.push(posWrapper.asLong());
 	}
 
 	protected abstract LocalSpace getLocalSpace();
 
 	protected abstract LocalSpace getRemoteSpace();
 
-	protected void transferBlockEntity(World from, World to, BlockPos oldPos, BlockPos newPos, BlockEntity blockEntity, BlockState state) {
+	protected void transferBlockEntity(World from, World to, BlockPos oldPos, BlockPos newPos, BlockEntity blockEntity,
+			BlockState state) {
 		NbtCompound nbt = new NbtCompound();
 		blockEntity.writeNbt(nbt);
 		from.removeBlockEntity(oldPos);
@@ -128,7 +136,8 @@ public abstract class ShellTransferOperator implements Comparable<ShellTransferO
 	}
 
 	protected void cleanUpStepUpdate(World toClean) {
-		toClean.getBlockState(posWrapper.set(cleanUpPositions.pop())).updateNeighbors(world, posWrapper, FLAGS, UPDATE_DEPTH);
+		toClean.getBlockState(posWrapper.set(cleanUpPositions.pop())).updateNeighbors(world, posWrapper, FLAGS,
+				UPDATE_DEPTH);
 	}
 
 }

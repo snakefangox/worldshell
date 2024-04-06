@@ -9,15 +9,18 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.TargetPredicate;
-import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.map.MapState;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.Packet;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.recipe.RecipeManager;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.sound.SoundCategory;
@@ -29,13 +32,10 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.*;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.util.profiler.Profiler;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryEntry;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.*;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.ColorResolver;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.*;
@@ -43,10 +43,8 @@ import net.minecraft.world.chunk.light.LightingProvider;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.entity.EntityLookup;
 import net.minecraft.world.event.GameEvent;
-import net.minecraft.world.explosion.Explosion;
-import net.minecraft.world.explosion.ExplosionBehavior;
-import net.minecraft.world.level.ColorResolver;
 import net.minecraft.world.tick.QueryableTickScheduler;
+import net.minecraft.world.tick.TickManager;
 import net.snakefangox.worldshell.storage.Microcosm;
 import org.jetbrains.annotations.Nullable;
 
@@ -66,14 +64,7 @@ public class DelegateWorld extends World implements Worldshell {
 	private final Microcosm proxiedShell;
 
 	public DelegateWorld(World proxiedWorld, Microcosm proxiedShell, DynamicRegistryManager registryManager) {
-		super(
-				null, null,
-				registryManager.get(Registry.DIMENSION_TYPE_KEY).getEntry(
-						registryManager.get(Registry.DIMENSION_TYPE_KEY).getKey(proxiedWorld.getDimension()).get()
-				).get(),
-				null, proxiedWorld.isClient, false, 0,
-				1000000
-		);
+		super(null, null, registryManager, proxiedWorld.getDimensionEntry(), null, proxiedWorld.isClient, false, 0, 1000000);
 		this.proxiedWorld = proxiedWorld;
 		this.proxiedShell = proxiedShell;
 	}
@@ -315,12 +306,6 @@ public class DelegateWorld extends World implements Worldshell {
 	}
 	
 	@Override
-	public void playSoundFromEntity(
-			@Nullable PlayerEntity except, Entity entity, SoundEvent sound, SoundCategory category, float volume, float pitch, long seed) {
-		proxiedWorld.playSoundFromEntity(except, entity, sound, category, volume, pitch, seed);
-	}
-	
-	@Override
 	public void playSound(@Nullable PlayerEntity player, BlockPos pos, SoundEvent sound, SoundCategory category, float volume, float pitch) {
 		proxiedWorld.playSound(player, pos, sound, category, volume, pitch);
 	}
@@ -388,21 +373,6 @@ public class DelegateWorld extends World implements Worldshell {
 	@Override
 	public <T extends Entity> void tickEntity(Consumer<T> tickConsumer, T entity) {
 		proxiedWorld.tickEntity(tickConsumer, entity);
-	}
-
-	@Override
-	public Explosion createExplosion(@Nullable Entity entity, double x, double y, double z, float power, Explosion.DestructionType destructionType) {
-		return proxiedWorld.createExplosion(entity, x, y, z, power, destructionType);
-	}
-
-	@Override
-	public Explosion createExplosion(@Nullable Entity entity, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType destructionType) {
-		return proxiedWorld.createExplosion(entity, x, y, z, power, createFire, destructionType);
-	}
-
-	@Override
-	public Explosion createExplosion(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionBehavior behavior, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType destructionType) {
-		return proxiedWorld.createExplosion(entity, damageSource, behavior, x, y, z, power, createFire, destructionType);
 	}
 
 	@Override
@@ -588,11 +558,6 @@ public class DelegateWorld extends World implements Worldshell {
 	@Override
 	public boolean hasRain(BlockPos pos) {
 		return proxiedWorld.hasRain(pos);
-	}
-
-	@Override
-	public boolean hasHighHumidity(BlockPos pos) {
-		return proxiedWorld.hasHighHumidity(pos);
 	}
 
 	@Override
@@ -1076,5 +1041,27 @@ public class DelegateWorld extends World implements Worldshell {
 	@Environment(EnvType.CLIENT)
 	public int getMoonPhase() {
 		return proxiedWorld.getMoonPhase();
+	}
+
+	@Override
+	public FeatureSet getEnabledFeatures() {
+		return proxiedWorld.getEnabledFeatures();
+	}
+
+	@Override
+	public void playSound(PlayerEntity source, double x, double y, double z, RegistryEntry<SoundEvent> sound,
+			SoundCategory category, float volume, float pitch, long seed) {
+		proxiedWorld.playSound(source, x, y, z, sound, category, volume, pitch, seed);
+	}
+
+	@Override
+	public void playSoundFromEntity(PlayerEntity source, Entity entity, RegistryEntry<SoundEvent> sound,
+			SoundCategory category, float volume, float pitch, long seed) {
+		proxiedWorld.playSoundFromEntity(source, entity, sound, category, volume, pitch, seed);
+	}
+
+	@Override
+	public TickManager getTickManager() {
+		return proxiedWorld.getTickManager();
 	}
 }

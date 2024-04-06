@@ -4,9 +4,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Matrix4f;
 
 import java.util.*;
+
+import org.joml.Matrix4f;
 
 public class WorldShellRenderCache {
 
@@ -25,7 +26,7 @@ public class WorldShellRenderCache {
 			BufferBuilder bufferBuilder = new BufferBuilder(renderLayer.getExpectedBufferSize());
 			bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL);
 			buffers.put(renderLayer, bufferBuilder);
-			bufferStorage.put(renderLayer, new VertexBuffer());
+			bufferStorage.put(renderLayer, new VertexBuffer(VertexBuffer.Usage.STATIC));
 		});
 	}
 

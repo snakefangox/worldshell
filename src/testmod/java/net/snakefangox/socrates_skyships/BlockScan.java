@@ -1,7 +1,7 @@
 package net.snakefangox.socrates_skyships;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Material;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
@@ -31,10 +31,14 @@ public class BlockScan implements Iterator<BlockPos> {
 		BlockPos blockPos = toCheck.remove();
 		for (Direction dir : Direction.values()) {
 			BlockPos offPos = blockPos.offset(dir);
-			if (added.contains(offPos)) continue;
+			if (added.contains(offPos))
+				continue;
+
 			BlockState state = world.getBlockState(offPos);
-			if (state.getMaterial() == Material.AIR || state.getMaterial() == Material.SOIL || state.getMaterial() == Material.PLANT ||
-				state.getHardness(world, offPos) < 0) continue;
+			if (state.isAir() || state.isIn(BlockTags.DIRT) || state.isIn(BlockTags.CROPS) ||
+					state.getHardness(world, offPos) < 0)
+				continue;
+
 			toCheck.add(offPos);
 			added.add(offPos);
 		}

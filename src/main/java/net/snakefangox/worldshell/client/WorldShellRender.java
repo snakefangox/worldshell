@@ -14,12 +14,14 @@ import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.random.Random;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
+import net.snakefangox.worldshell.math.Quaternion;
 import net.snakefangox.worldshell.storage.Microcosm;
 
 import java.util.Map;
+
+import org.joml.Quaternionf;
 
 /**
  * Static helper methods to render a {@link Microcosm} in different contexts.
@@ -27,13 +29,17 @@ import java.util.Map;
 @Environment(EnvType.CLIENT)
 public class WorldShellRender {
 
-	public static void renderMicrocosm(WorldShellEntity wsEntity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-		net.snakefangox.worldshell.math.Quaternion entRot = wsEntity.getRotation();
-		renderMicrocosm(wsEntity.getMicrocosm(), matrices, new Quaternion((float) entRot.getX(), (float) entRot.getY(), (float) entRot.getZ(), (float) entRot.getW()),
-				wsEntity.world.random, vertexConsumers, light);
+	public static void renderMicrocosm(WorldShellEntity wsEntity, MatrixStack matrices,
+			VertexConsumerProvider vertexConsumers, int light) {
+		Quaternion entRot = wsEntity.getRotation();
+		renderMicrocosm(wsEntity.getMicrocosm(), matrices,
+				new Quaternionf((float) entRot.getX(), (float) entRot.getY(), (float) entRot.getZ(),
+						(float) entRot.getW()),
+				wsEntity.getWorld().random, vertexConsumers, light);
 	}
 
-	public static void renderMicrocosm(Microcosm microcosm, MatrixStack matrices, Quaternion quaternion, Random random, VertexConsumerProvider vertexConsumers, int light) {
+	public static void renderMicrocosm(Microcosm microcosm, MatrixStack matrices, Quaternionf quaternion, Random random,
+			VertexConsumerProvider vertexConsumers, int light) {
 		BlockRenderManager renderManager = MinecraftClient.getInstance().getBlockRenderManager();
 		BlockEntityRenderDispatcher beRenderDispatcher = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
 		matrices.push();
@@ -71,7 +77,8 @@ public class WorldShellRender {
 				matrices.pop();
 			}
 			if (bs.getRenderType() != BlockRenderType.INVISIBLE) {
-				renderManager.renderBlock(bs, bp, microcosm, matrices, renderCache.get(RenderLayers.getBlockLayer(bs)), true, random);
+				renderManager.renderBlock(bs, bp, microcosm, matrices, renderCache.get(RenderLayers.getBlockLayer(bs)),
+						true, random);
 			}
 			matrices.pop();
 		}

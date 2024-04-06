@@ -16,7 +16,9 @@ import java.util.Map;
 
 public class ShellStorageData extends PersistentState {
 
-	private static final String ID = WorldShellMain.MODID + ":shell_storage";
+	private static Type<ShellStorageData> TYPE = new Type<>(ShellStorageData::new, ShellStorageData::fromNbt, null);
+
+	private static final String ID = WorldShellMain.MODID + "_shell_storage";
 	private static final int WORLD_RADIUS = 30000000;
 	private final Map<Integer, Bay> bays = new HashMap<>();
 	private final List<Integer> emptyBays = new ArrayList<>();
@@ -25,7 +27,7 @@ public class ShellStorageData extends PersistentState {
 
 	public static ShellStorageData getOrCreate(MinecraftServer server) {
 		PersistentStateManager stateManager = WorldShellMain.getStorageDim(server).getPersistentStateManager();
-		return stateManager.getOrCreate(ShellStorageData::fromNbt, ShellStorageData::new, ID);
+		return stateManager.getOrCreate(TYPE, ID);
 	}
 
 	public static ShellStorageData fromNbt(NbtCompound tag) {
@@ -38,7 +40,8 @@ public class ShellStorageData extends PersistentState {
 		}
 		int[] eb = tag.getIntArray("emptyBays");
 		storageData.emptyBays.clear();
-		for (int i : eb) storageData.emptyBays.add(i);
+		for (int i : eb)
+			storageData.emptyBays.add(i);
 		return storageData;
 	}
 
@@ -77,9 +80,13 @@ public class ShellStorageData extends PersistentState {
 		return id;
 	}
 
-	/** You should not be calling this directly, WorldShellDeconstructor will handle it for you */
+	/**
+	 * You should not be calling this directly, WorldShellDeconstructor will handle
+	 * it for you
+	 */
 	public void freeBay(int id, WorldShellDeconstructor deconstructor) {
-		if (!bays.containsKey(id) || !deconstructor.isRemoving()) return;
+		if (!bays.containsKey(id) || !deconstructor.isRemoving())
+			return;
 		Bay bay = bays.remove(id);
 		bay.markDirtyFunc = () -> {
 		};

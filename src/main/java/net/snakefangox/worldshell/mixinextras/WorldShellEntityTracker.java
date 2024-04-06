@@ -3,7 +3,7 @@ package net.snakefangox.worldshell.mixinextras;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
 
 public interface WorldShellEntityTracker {
-	void addWorldShellEntity(WorldShellEntity entity);
+	void worldshell$addWorldShellEntity(WorldShellEntity entity);
 
-	boolean removeWorldShellEntity(WorldShellEntity entity);
+	boolean worldshell$removeWorldShellEntity(WorldShellEntity entity);
 }

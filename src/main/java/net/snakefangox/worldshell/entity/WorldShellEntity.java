@@ -13,10 +13,10 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -47,14 +47,19 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * The basic entity that links to a shell, renders it's contents and handles interaction.
- * This will need to be extended by you and provided with a valid entity constructor (i.e. {@link Entity#Entity(EntityType, World)}).
+ * The basic entity that links to a shell, renders it's contents and handles
+ * interaction.
+ * This will need to be extended by you and provided with a valid entity
+ * constructor (i.e. {@link Entity#Entity(EntityType, World)}).
  */
 public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
-	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldShellEntity.class, WSNetworking.BOUNDS);
-	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldShellEntity.class, WSNetworking.VEC3D);
-	private static final TrackedData<Quaternion> ROTATION = DataTracker.registerData(WorldShellEntity.class, WSNetworking.QUATERNION);
+	private static final TrackedData<EntityBounds> ENTITY_BOUNDS = DataTracker.registerData(WorldShellEntity.class,
+			WSNetworking.BOUNDS);
+	private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldShellEntity.class,
+			WSNetworking.VEC3D);
+	private static final TrackedData<Quaternion> ROTATION = DataTracker.registerData(WorldShellEntity.class,
+			WSNetworking.QUATERNION);
 
 	private final WorldShellSettings settings;
 	private final Microcosm microcosm;
@@ -70,7 +75,8 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		hull = new ShellCollisionHull(this);
 	}
 
-	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap, List<Microcosm.ShellTickInvoker> tickers) {
+	public void initializeWorldShell(Map<BlockPos, BlockState> stateMap, Map<BlockPos, BlockEntity> entityMap,
+			List<Microcosm.ShellTickInvoker> tickers) {
 		microcosm.setWorld(stateMap, entityMap, tickers);
 		hull.onWorldshellUpdate();
 	}
@@ -90,14 +96,16 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	@Override
 	public void remove(RemovalReason reason) {
 		super.remove(reason);
-		if (world.isClient()) return;
-		getBay().ifPresent(b -> b.setLoadForChunks(world.getServer(), false));
+		if (getWorld().isClient())
+			return;
+		getBay().ifPresent(b -> b.setLoadForChunks(getServer(), false));
 		if (reason.shouldDestroy()) {
 			Consumer<WorldShellEntity> onDestroy = settings.onDestroy(this);
 			if (onDestroy != null) {
 				onDestroy.accept(this);
 			} else {
-				WorldShellDeconstructor.create(this, settings.getRotationSolver(this), settings.getConflictSolver(this)).deconstruct();
+				WorldShellDeconstructor.create(this, settings.getRotationSolver(this), settings.getConflictSolver(this))
+						.deconstruct();
 			}
 		}
 	}
@@ -105,14 +113,9 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	@Override
 	public void tick() {
 		super.tick();
-		if (world.isClient) {
+		if (getWorld().isClient) {
 			microcosm.tick();
 		}
-	}
-
-	@Override
-	public boolean collides() {
-		return settings.doCollision(this);
 	}
 
 	@Override
@@ -157,7 +160,8 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	public void setRotation(Quaternion quaternion) {
 		getDataTracker().set(ROTATION, quaternion);
 		inverseRotation = quaternion.inverse();
-		if (hull != null) hull.onWorldshellRotate();
+		if (hull != null)
+			hull.onWorldshellRotate();
 	}
 
 	public void setDimensions(EntityBounds entityBounds) {
@@ -170,7 +174,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
 	@Override
 	public ActionResult interact(PlayerEntity player, Hand hand) {
-		if (world.isClient()) {
+		if (getWorld().isClient()) {
 			return handleInteraction(player, hand, true);
 		}
 		return super.interact(player, hand);
@@ -183,7 +187,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
 	@Override
 	public boolean handleAttack(Entity attacker) {
-		if (world.isClient() && attacker instanceof PlayerEntity) {
+		if (getWorld().isClient() && attacker instanceof PlayerEntity) {
 			PlayerEntity player = (PlayerEntity) attacker;
 			handleInteraction(player, Hand.MAIN_HAND, false);
 		}
@@ -197,7 +201,8 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 			hull.onWorldshellUpdate();
 		} else if (ROTATION.equals(data)) {
 			inverseRotation = getDataTracker().get(ROTATION).inverse();
-			if (hull != null) hull.onWorldshellRotate();
+			if (hull != null)
+				hull.onWorldshellRotate();
 		}
 	}
 
@@ -212,14 +217,9 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 		if (bay.isPresent()) {
 			PacketByteBuf buf = PacketByteBufs.create();
 			buf.writeInt(getId());
-			bay.get().createClientPacket(world.getServer(), buf);
+			bay.get().createClientPacket(getWorld().getServer(), buf);
 			ServerPlayNetworking.send(player, WSNetworking.SHELL_DATA, buf);
 		}
-	}
-
-	@Override
-	public Packet<?> createSpawnPacket() {
-		return new EntitySpawnS2CPacket(this);
 	}
 
 	@Override
@@ -230,7 +230,8 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	@Override
 	public final void setPos(double x, double y, double z) {
 		super.setPos(x, y, z);
-		if (hull != null) hull.onWorldshellUpdate();
+		if (hull != null)
+			hull.onWorldshellUpdate();
 	}
 
 	@Override
@@ -239,15 +240,20 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	}
 
 	protected ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean interact) {
-		if (!settings.passthroughInteraction(this, interact)) return ActionResult.PASS;
+		if (!settings.passthroughInteraction(this, interact))
+			return ActionResult.PASS;
 		BlockHitResult rayCastResult = raycastToWorldShell(player);
 		if (rayCastResult.getType() == HitResult.Type.BLOCK) {
 			if (interact) {
-				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT, WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, true));
-				return microcosm.getBlockState(rayCastResult.getBlockPos()).onUse(world, player, hand, rayCastResult);
+				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT,
+						WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, true));
+				return microcosm.getBlockState(rayCastResult.getBlockPos()).onUse(getWorld(), player, hand,
+						rayCastResult);
 			} else {
-				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT, WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, false));
-				microcosm.getBlockState(rayCastResult.getBlockPos()).onBlockBreakStart(world, rayCastResult.getBlockPos(), player);
+				ClientPlayNetworking.send(WSNetworking.SHELL_INTERACT,
+						WorldShellPacketHelper.writeInteract(this, rayCastResult, hand, false));
+				microcosm.getBlockState(rayCastResult.getBlockPos()).onBlockBreakStart(getWorld(),
+						rayCastResult.getBlockPos(), player);
 				return ActionResult.SUCCESS;
 			}
 		}
@@ -257,21 +263,29 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	public BlockHitResult raycastToWorldShell(PlayerEntity player) {
 		Vec3d cameraPosVec = player.getCameraPosVec(1.0F);
 		Vec3d rotationVec = player.getRotationVec(1.0F);
-		Vec3d extendedVec = toLocal(cameraPosVec.x + rotationVec.x * 4.5F, cameraPosVec.y + rotationVec.y * 4.5F, cameraPosVec.z + rotationVec.z * 4.5F);
+		Vec3d extendedVec = toLocal(cameraPosVec.x + rotationVec.x * 4.5F, cameraPosVec.y + rotationVec.y * 4.5F,
+				cameraPosVec.z + rotationVec.z * 4.5F);
 		RaycastContext rayCtx = new RaycastContext(toLocal(cameraPosVec),
 				extendedVec, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player);
 		return microcosm.raycast(rayCtx);
 	}
 
 	public Optional<Bay> getBay() {
-		return Optional.ofNullable(ShellStorageData.getOrCreate(world.getServer()).getBay(shellId));
+		return Optional.ofNullable(ShellStorageData.getOrCreate(getServer()).getBay(shellId));
 	}
 
-	public void passThroughExplosion(double x, double y, double z, float power, boolean fire, Explosion.DestructionType type) {
-		if (world.getServer() != null || !settings.passthroughExplosion(this, power, fire, type)) return;
+	public void passThroughExplosion(double x, double y, double z, float power, boolean fire,
+			Explosion.DestructionType type) {
+		if (getServer() != null || !settings.passthroughExplosion(this, power, fire, type))
+			return;
 		getBay().ifPresent(bay -> {
+			var storageWorld = WorldShellMain.getStorageDim(getServer());
 			Vec3d newExp = globalToGlobal(bay, x, y, z);
-			WorldShellMain.getStorageDim(world.getServer()).createExplosion(null, newExp.x, newExp.y, newExp.z, power, fire, type);
+			Explosion explosion = new Explosion(storageWorld, null, Explosion.createDamageSource(storageWorld, null),
+					null, newExp.x, newExp.y, newExp.z, power, fire, type, ParticleTypes.EXPLOSION,
+					ParticleTypes.EXPLOSION_EMITTER, SoundEvents.ENTITY_GENERIC_EXPLODE);
+			explosion.collectBlocksAndDamageEntities();
+			explosion.affectWorld(false);
 		});
 	}
 

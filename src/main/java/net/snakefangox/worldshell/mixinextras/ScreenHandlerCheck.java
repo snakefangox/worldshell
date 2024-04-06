@@ -22,8 +22,8 @@ public class ScreenHandlerCheck {
 
 	public static boolean checkScreenHandler(ScreenHandler screenHandler, PlayerEntity player) {
 		boolean canUse = screenHandler.canUse(player);
-		if (!player.world.isClient() && !canUse) {
-			MinecraftServer server = player.world.getServer();
+		if (!player.getWorld().isClient() && !canUse) {
+			MinecraftServer server = player.getWorld().getServer();
 			World world = WorldShellMain.getStorageDim(server);
 			return screenHandler.canUse(getOrCreateFakePlayer(world, player.getPos()));
 		}
@@ -41,7 +41,7 @@ public class ScreenHandlerCheck {
 	private static class FakePlayerEntity extends PlayerEntity {
 
 		public FakePlayerEntity(World world, BlockPos pos, float yaw, GameProfile profile) {
-			super(world, pos, yaw, profile, null);
+			super(world, pos, yaw, profile);
 		}
 
 		@Override
@@ -55,8 +55,8 @@ public class ScreenHandlerCheck {
 		}
 
 		public double getTransformedDistance(double x, double y, double z) {
-			ShellStorageData data = ((ShellStorageWorld) world).getCachedBayData();
-			Bay bay = data.getBay(data.getBayIdFromPos(new BlockPos(x, y, z)));
+			ShellStorageData data = ((ShellStorageWorld) getWorld()).getCachedBayData();
+			Bay bay = data.getBay(data.getBayIdFromPos(new BlockPos((int) x, (int) y, (int) z)));
 			if (bay != null && bay.getLinkedEntity().isPresent()) {
 				WorldShellEntity entity = bay.getLinkedEntity().get();
 				Vec3d pos = getPos();

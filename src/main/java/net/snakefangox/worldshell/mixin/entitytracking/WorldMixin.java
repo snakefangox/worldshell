@@ -13,12 +13,12 @@ import java.util.function.Predicate;
 @Mixin(World.class)
 public abstract class WorldMixin implements WorldAccess, AutoCloseable {
 
-	@ModifyVariable(method = "getOtherEntities", at = @At("HEAD"))
+	@ModifyVariable(method = "getOtherEntities", at = @At("HEAD"), argsOnly = true)
 	public Predicate<? super Entity> getOtherEntities(Predicate<? super Entity> predicate) {
 		return new SingleMatchPredicateProxy<>(predicate);
 	}
 
-	@ModifyVariable(method = "getEntitiesByType", at = @At("HEAD"))
+	@ModifyVariable(method = "getEntitiesByType", at = @At("HEAD"), argsOnly = true)
 	public <T extends Entity> Predicate<? super T> getEntitiesByType(Predicate<? super T> predicate) {
 		return new SingleMatchPredicateProxy<>(predicate);
 	}

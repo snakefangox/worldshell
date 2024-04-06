@@ -1,15 +1,15 @@
 package net.snakefangox.worldshell.mixin.server;
 
 import com.google.common.collect.ImmutableList;
+
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTask;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.WorldGenerationProgressListenerFactory;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.thread.ReentrantThreadExecutor;
 import net.minecraft.world.SaveProperties;
 import net.minecraft.world.World;
@@ -39,7 +39,8 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 @Mixin(MinecraftServer.class)
-public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<ServerTask> implements CommandOutput, AutoCloseable, DynamicWorldGen, GetShellTransferHandler {
+public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<ServerTask>
+		implements CommandOutput, DynamicWorldGen, GetShellTransferHandler {
 
 	@Unique
 	private final ShellTransferHandler shellTransferHandler = new ShellTransferHandler();
@@ -47,9 +48,6 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	@Final
 	@Shadow
 	protected SaveProperties saveProperties;
-	@Final
-	@Shadow
-	private DynamicRegistryManager.Immutable registryManager;
 	@Final
 	@Shadow
 	protected LevelStorage.Session session;
@@ -70,31 +68,43 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	@Inject(method = "createWorlds(Lnet/minecraft/server/WorldGenerationProgressListener;)V", at = @At("TAIL"))
 	protected void createWorlds(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
 		CreateWorldsEvent.EVENT.invoker().event((MinecraftServer) (Object) this);
-	}	@Shadow
-	public @Nullable
-	abstract ServerWorld getWorld(RegistryKey<World> key);
+	}
+
+	@Shadow
+	public @Nullable abstract ServerWorld getWorld(RegistryKey<World> key);
 
 	@Override
 	public ShellTransferHandler worldshell$getShellTransferHandler() {
 		return shellTransferHandler;
-	}	@Override
-	public ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions) {
+	}
+
+	@Override
+	public ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey,
+			DimensionOptions dimensionOptions) {
 		return worldshell$createDynamicWorld(worldRegistryKey, dimensionOptions, ServerWorld::new);
 	}
 
 	@Override
-	public ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey, RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator) {
-		return worldshell$createDynamicWorld(worldRegistryKey, new DimensionOptions(registryManager.get(Registry.DIMENSION_TYPE_KEY).getOrCreateEntry(dimensionTypeKey), chunkGenerator));
+	public ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey,
+			RegistryKey<DimensionType> dimensionTypeKey, ChunkGenerator chunkGenerator) {
+		return worldshell$createDynamicWorld(worldRegistryKey,
+				new DimensionOptions(((MinecraftServer) (Object) this).getRegistryManager()
+						.get(RegistryKeys.DIMENSION_TYPE).getEntry(dimensionTypeKey).get(), chunkGenerator));
 	}
 
 	@Override
-	public ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey, DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier) {
-		boolean isDebug = saveProperties.getGeneratorOptions().isDebugWorld();
+	public ServerWorld worldshell$createDynamicWorld(RegistryKey<World> worldRegistryKey,
+			DimensionOptions dimensionOptions, ServerWorldSupplier worldSupplier) {
+		boolean isDebug = saveProperties.isDebugWorld();
 		long seed = BiomeAccess.hashSeed(saveProperties.getGeneratorOptions().getSeed());
 		ServerWorldProperties serverWorldProperties = saveProperties.getMainWorldProperties();
-		UnmodifiableLevelProperties unmodifiableLevelProperties = new UnmodifiableLevelProperties(saveProperties, serverWorldProperties);
-		ServerWorld serverWorld = worldSupplier.create((MinecraftServer) (Object) this, workerExecutor, session, unmodifiableLevelProperties, worldRegistryKey, dimensionOptions, worldGenerationProgressListenerFactory.create(0), isDebug, seed, ImmutableList.of(), false);
-		getWorld(World.OVERWORLD).getWorldBorder().addListener(new WorldBorderListener.WorldBorderSyncer(serverWorld.getWorldBorder()));
+		UnmodifiableLevelProperties unmodifiableLevelProperties = new UnmodifiableLevelProperties(saveProperties,
+				serverWorldProperties);
+		ServerWorld serverWorld = worldSupplier.create((MinecraftServer) (Object) this, workerExecutor, session,
+				unmodifiableLevelProperties, worldRegistryKey, dimensionOptions,
+				worldGenerationProgressListenerFactory.create(0), isDebug, seed, ImmutableList.of(), false, null);
+		getWorld(World.OVERWORLD).getWorldBorder()
+				.addListener(new WorldBorderListener.WorldBorderSyncer(serverWorld.getWorldBorder()));
 		worlds.put(worldRegistryKey, serverWorld);
 		return serverWorld;
 	}

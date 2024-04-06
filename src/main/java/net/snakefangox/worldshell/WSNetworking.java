@@ -168,6 +168,7 @@ public class WSNetworking {
 		ServerPlayNetworking.registerGlobalReceiver(SHELL_INTERACT, WSNetworking::handleShellInteract);
 	}
 
+	@SuppressWarnings("deprecation")
 	private static void handleShellInteract(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
 		int entityID = buf.readInt();
 		BlockHitResult hit = buf.readBlockHitResult();
@@ -175,7 +176,7 @@ public class WSNetworking {
 		boolean interact = buf.readBoolean();
 
 		server.execute(() -> {
-			Entity entity = player.world.getEntityById(entityID);
+			Entity entity = player.getWorld().getEntityById(entityID);
 			if (entity instanceof WorldShellEntity) {
 				EntityBounds dimensions = ((WorldShellEntity) entity).getDimensions();
 				if (player.distanceTo(entity) < dimensions.getRoughMaxDist() + 4.5) {

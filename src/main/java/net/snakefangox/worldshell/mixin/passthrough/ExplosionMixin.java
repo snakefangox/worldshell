@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -44,7 +45,7 @@ public abstract class ExplosionMixin {
 
 	@Inject(method = "collectBlocksAndDamageEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;squaredDistanceTo(Lnet/minecraft/util/math/Vec3d;)D", ordinal = 0),
 			locals = LocalCapture.CAPTURE_FAILSOFT)
-	public void collectBlocksAndDamageEntities(CallbackInfo ci, Set set, float q, int r, int s, int t, int u, int v, int w, List list, Vec3d vec3d, int k, Entity entity) {
+	public void collectBlocksAndDamageEntities(CallbackInfo ci, Set set, float q, int k, int l, int r, int s, int t, int u, List list, Vec3d vec3d, Iterator var12, Entity entity) {
 		if (entity instanceof WorldShellEntity) {
 			((WorldShellEntity) entity).passThroughExplosion(x, y, z, power, createFire, destructionType);
 		}

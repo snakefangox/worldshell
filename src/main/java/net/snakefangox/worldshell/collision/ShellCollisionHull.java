@@ -105,7 +105,7 @@ public class ShellCollisionHull implements LocalSpace {
 		byte vecAxis = (byte) axis.ordinal();
 		Vec3d boxCenter = box.getCenter();
 		Vector3d pos = toLocal(new Vector3d(boxCenter.x, boxCenter.y, boxCenter.z));
-		Vector3d halfExtents = new Vector3d(box.getXLength() / 2.0, box.getYLength() / 2.0, box.getZLength() / 2.0)
+		Vector3d halfExtents = new Vector3d(box.getLengthX() / 2.0, box.getLengthY() / 2.0, box.getLengthZ() / 2.0)
 				// Pad the bounding box slightly in the direction we're testing, without this we
 				// collide with the edges of the ground when we walk
 				.addLocal(axis.choose(SMOL, 0, 0), axis.choose(0, SMOL, 0), axis.choose(0, SMOL, 0));

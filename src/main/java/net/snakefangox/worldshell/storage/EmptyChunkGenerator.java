@@ -1,7 +1,6 @@
 package net.snakefangox.worldshell.storage;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -9,9 +8,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.structure.StructureSet;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.Heightmap;
@@ -28,22 +25,21 @@ import net.minecraft.world.gen.noise.NoiseConfig;
 public class EmptyChunkGenerator extends ChunkGenerator {
 	public static final VerticalBlockSample EMPTY = new VerticalBlockSample(-1, new BlockState[0]);
 
-    public static final Codec<EmptyChunkGenerator> CODEC = RecordCodecBuilder.create(instance ->
-            ChunkGenerator.createStructureSetRegistryGetter(instance).and(
-                    BiomeSource.CODEC.fieldOf("biome_source")
-                            .forGetter((generator) -> generator.biomeSource)
-            ).apply(instance, instance.stable(EmptyChunkGenerator::new))
-	);
+	public static final Codec<EmptyChunkGenerator> CODEC = RecordCodecBuilder.create((instance) -> {
+		return instance
+				.group(BiomeSource.CODEC.fieldOf("biome_source").forGetter((generator) -> generator.biomeSource))
+				.apply(instance, instance.stable(EmptyChunkGenerator::new));
+	});
 
-	public EmptyChunkGenerator(Registry<StructureSet> structureSets, BiomeSource biomeSource) {
-		super(structureSets, Optional.empty(), biomeSource);
+	public EmptyChunkGenerator(BiomeSource biomeSource) {
+		super(biomeSource);
 	}
 
 	@Override
 	protected Codec<? extends ChunkGenerator> getCodec() {
 		return CODEC;
 	}
-	
+
 	@Override
 	public void carve(
 			ChunkRegion chunkRegion,
@@ -53,15 +49,14 @@ public class EmptyChunkGenerator extends ChunkGenerator {
 			StructureAccessor structureAccessor,
 			Chunk chunk,
 			GenerationStep.Carver carverStep) {
-		
+
 	}
-	
+
 	@Override
 	public void buildSurface(ChunkRegion region, StructureAccessor structures, NoiseConfig noiseConfig, Chunk chunk) {
-	
+
 	}
-	
-	
+
 	@Override
 	public void populateEntities(ChunkRegion region) {
 
@@ -71,13 +66,14 @@ public class EmptyChunkGenerator extends ChunkGenerator {
 	public int getWorldHeight() {
 		return 0;
 	}
-	
+
 	@Override
 	public CompletableFuture<Chunk> populateNoise(
-			Executor executor, Blender blender, NoiseConfig noiseConfig, StructureAccessor structureAccessor, Chunk chunk) {
+			Executor executor, Blender blender, NoiseConfig noiseConfig, StructureAccessor structureAccessor,
+			Chunk chunk) {
 		return CompletableFuture.completedFuture(chunk);
 	}
-	
+
 	@Override
 	public int getSeaLevel() {
 		return 0;
@@ -87,19 +83,19 @@ public class EmptyChunkGenerator extends ChunkGenerator {
 	public int getMinimumY() {
 		return 0;
 	}
-	
+
 	@Override
 	public int getHeight(int x, int z, Heightmap.Type heightmap, HeightLimitView world, NoiseConfig noiseConfig) {
 		return 0;
 	}
-	
+
 	@Override
 	public VerticalBlockSample getColumnSample(int x, int z, HeightLimitView world, NoiseConfig noiseConfig) {
 		return EMPTY;
 	}
-	
+
 	@Override
 	public void getDebugHudText(List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
-	
+
 	}
 }

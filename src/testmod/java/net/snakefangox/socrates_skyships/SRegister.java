@@ -4,9 +4,9 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemGroup;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 import net.snakefangox.socrates_skyships.blocks.ShipsHelm;
 import net.snakefangox.socrates_skyships.entities.AirShip;
 import net.snakefangox.worldshell.entity.WorldShellEntityType;
@@ -22,14 +22,14 @@ public class SRegister {
 			new WorldShellEntityType<>(AirShip::new));
 
 	private static <T extends Block> T register(String path, T block) {
-		Registry.register(Registry.BLOCK, new Identifier(SocratesSkyships.MODID, path), block);
-		Registry.register(Registry.ITEM, new Identifier(SocratesSkyships.MODID, path),
-				new BlockItem(block, new FabricItemSettings().group(ItemGroup.TRANSPORTATION)));
+		Registry.register(Registries.BLOCK, new Identifier(SocratesSkyships.MODID, path), block);
+		Registry.register(Registries.ITEM, new Identifier(SocratesSkyships.MODID, path),
+				new BlockItem(block, new FabricItemSettings()));
 		return block;
 	}
 
 	private static <T extends EntityType<?>> T register(String path, T type) {
-		return Registry.register(Registry.ENTITY_TYPE, new Identifier(SocratesSkyships.MODID, path), type);
+		return Registry.register(Registries.ENTITY_TYPE, new Identifier(SocratesSkyships.MODID, path), type);
 	}
 
 	public static void register() {

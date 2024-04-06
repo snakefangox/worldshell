@@ -47,7 +47,7 @@ public interface ConflictSolver {
 	}
 
 	static BlockState solveConflictExplosion(World world, BlockPos pos, BlockState shellState, BlockState existingState) {
-		world.createExplosion(null, pos.getX(), pos.getY(), pos.getZ(), 3, Explosion.DestructionType.BREAK);
+		world.createExplosion(null, pos.getX(), pos.getY(), pos.getZ(), 3, World.ExplosionSourceType.BLOCK);
 		return Blocks.AIR.getDefaultState();
 	}
 

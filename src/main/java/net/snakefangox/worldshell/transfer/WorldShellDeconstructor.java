@@ -42,9 +42,9 @@ public final class WorldShellDeconstructor extends ShellTransferOperator {
 	}
 
 	public static WorldShellDeconstructor create(WorldShellEntity entity, RotationSolver rotationSolver, ConflictSolver conflictSolver) {
-		if (!(entity.world instanceof ServerWorld))
+		if (!(entity.getWorld() instanceof ServerWorld))
 			throw new RuntimeException("Trying to create WorldShellDeconstructor on client");
-		return new WorldShellDeconstructor((ServerWorld) entity.world, entity.getShellId(), rotationSolver, conflictSolver,
+		return new WorldShellDeconstructor((ServerWorld) entity.getWorld(), entity.getShellId(), rotationSolver, conflictSolver,
 				LocalSpace.of(entity.getLocalX(), entity.getLocalY(), entity.getLocalZ()));
 	}
 

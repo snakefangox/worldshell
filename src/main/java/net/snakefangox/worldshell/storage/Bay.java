@@ -97,7 +97,7 @@ public class Bay implements LocalSpace {
 
 	public void linkEntity(@NotNull WorldShellEntity worldShellEntity) {
 		linkedEntity = worldShellEntity;
-		setLoadForChunks(worldShellEntity.world.getServer(), true);
+		setLoadForChunks(worldShellEntity.getServer(), true);
 		if (worldShellEntity.getMicrocosm().isEmpty()) {
 			fillServerWorldShell(worldShellEntity);
 		}
@@ -111,7 +111,7 @@ public class Bay implements LocalSpace {
 	}
 
 	private void fillServerWorldShell(WorldShellEntity entity) {
-		World world = WorldShellMain.getStorageDim(entity.world.getServer());
+		World world = WorldShellMain.getStorageDim(entity.getWorld().getServer());
 		Map<BlockPos, BlockState> stateMap = new HashMap<>();
 		BlockBoxIterator.of(bounds).forEachRemaining(bp -> {
 			BlockState state = world.getBlockState(bp);

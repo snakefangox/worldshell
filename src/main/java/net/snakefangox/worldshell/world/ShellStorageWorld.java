@@ -9,6 +9,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.particle.ParticleEffect;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -19,17 +20,15 @@ import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.RegistryEntry;
-import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.util.math.random.RandomSequencesState;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionOptions;
-import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.level.ServerWorldProperties;
 import net.minecraft.world.level.storage.LevelStorage;
-import net.minecraft.world.spawner.Spawner;
+import net.minecraft.world.spawner.SpecialSpawner;
 import net.snakefangox.worldshell.WSNetworking;
 import net.snakefangox.worldshell.entity.WorldShellEntity;
+import net.snakefangox.worldshell.mixin.passthrough.EntityWorldAccess;
 import net.snakefangox.worldshell.storage.Bay;
 import net.snakefangox.worldshell.storage.ShellStorageData;
 import net.snakefangox.worldshell.util.WorldShellPacketHelper;
@@ -42,14 +41,20 @@ import java.util.function.Predicate;
 
 /**
  * This class is used for the world that stores worldshells.
- * It overrides world functions to enable passthrough to the relevent worldshell.
+ * It overrides world functions to enable passthrough to the relevent
+ * worldshell.
  */
 public class ShellStorageWorld extends ServerWorld implements Worldshell {
 
 	private ShellStorageData cachedBayData;
 
-	public ShellStorageWorld(MinecraftServer server, Executor workerExecutor, LevelStorage.Session session, ServerWorldProperties properties, RegistryKey<World> registryKey, DimensionOptions dimensionType, WorldGenerationProgressListener worldGenerationProgressListener, boolean debugWorld, long l, List<Spawner> spawners, boolean shouldTickTime) {
-		super(server, workerExecutor, session, properties, registryKey, dimensionType, worldGenerationProgressListener, debugWorld, l, spawners, shouldTickTime);
+	public ShellStorageWorld(MinecraftServer server, Executor workerExecutor, LevelStorage.Session session,
+			ServerWorldProperties properties, RegistryKey<World> worldKey, DimensionOptions dimensionOptions,
+			WorldGenerationProgressListener worldGenerationProgressListener, boolean debugWorld, long seed,
+			List<SpecialSpawner> spawners, boolean shouldTickTime,
+			@Nullable RandomSequencesState randomSequencesState) {
+		super(server, workerExecutor, session, properties, worldKey, dimensionOptions, worldGenerationProgressListener,
+				debugWorld, seed, spawners, shouldTickTime, randomSequencesState);
 	}
 
 	@Override
@@ -60,15 +65,18 @@ public class ShellStorageWorld extends ServerWorld implements Worldshell {
 				PacketByteBuf buf = PacketByteBufs.create();
 				WorldShellPacketHelper.writeBlock(buf, this, pos, entity, bay);
 				boolean boundChanged = bay.updateBoxBounds(pos);
-				if (boundChanged) bay.setLoadForChunks(getServer(), true);
-				PlayerLookup.tracking(entity).forEach(player -> ServerPlayNetworking.send(player, WSNetworking.SHELL_UPDATE, buf));
+				if (boundChanged)
+					bay.setLoadForChunks(getServer(), true);
+				PlayerLookup.tracking(entity)
+						.forEach(player -> ServerPlayNetworking.send(player, WSNetworking.SHELL_UPDATE, buf));
 			});
 		}
 		return changed;
 	}
 
 	@Override
-	public void playSound(@Nullable PlayerEntity player, BlockPos pos, SoundEvent sound, SoundCategory category, float volume, float pitch) {
+	public void playSound(@Nullable PlayerEntity player, BlockPos pos, SoundEvent sound, SoundCategory category,
+			float volume, float pitch) {
 		passCallToEntity(pos, (entity, bay) -> {
 			BlockPos newPos = bay.toEntityGlobalSpace(pos);
 			entity.getEntityWorld().playSound(null, newPos, sound, category, volume, pitch);
@@ -76,8 +84,9 @@ public class ShellStorageWorld extends ServerWorld implements Worldshell {
 	}
 
 	@Override
-	public void playSound(double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch, boolean bl) {
-		passCallToEntity(new BlockPos(x, y, z), (entity, bay) -> {
+	public void playSound(double x, double y, double z, SoundEvent sound, SoundCategory category, float volume,
+			float pitch, boolean bl) {
+		passCallToEntity(new BlockPos((int) x, (int) y, (int) z), (entity, bay) -> {
 			Vec3d newPos = bay.toEntityGlobalSpace(x, y, z);
 			entity.getEntityWorld().playSound(newPos.x, newPos.y, newPos.z, sound, category, volume, pitch, bl);
 		});
@@ -85,7 +94,7 @@ public class ShellStorageWorld extends ServerWorld implements Worldshell {
 
 	@Override
 	public List<Entity> getOtherEntities(@Nullable Entity except, Box box, Predicate<? super Entity> predicate) {
-		return passCallToEntity(new BlockPos(box.minX, box.minY, box.minZ), new ArrayList<>(), ((entity, bay) -> {
+		return passCallToEntity(new BlockPos((int) box.minX, (int) box.minY, (int) box.minZ), new ArrayList<>(), ((entity, bay) -> {
 			Vec3d newMin = bay.toEntityGlobalSpace(box.minX, box.minY, box.minZ);
 			Vec3d newMax = bay.toEntityGlobalSpace(box.maxX, box.maxY, box.maxZ);
 			return entity.getEntityWorld().getOtherEntities(except, new Box(newMin, newMax), predicate);
@@ -93,8 +102,9 @@ public class ShellStorageWorld extends ServerWorld implements Worldshell {
 	}
 
 	@Override
-	public <T extends Entity> List<T> getEntitiesByType(TypeFilter<Entity, T> arg, Box box, Predicate<? super T> predicate) {
-		return passCallToEntity(new BlockPos(box.minX, box.minY, box.minZ), new ArrayList<>(), ((entity, bay) -> {
+	public <T extends Entity> List<T> getEntitiesByType(TypeFilter<Entity, T> arg, Box box,
+			Predicate<? super T> predicate) {
+		return passCallToEntity(new BlockPos((int) box.minX, (int) box.minY, (int) box.minZ), new ArrayList<>(), ((entity, bay) -> {
 			Vec3d newMin = bay.toEntityGlobalSpace(box.minX, box.minY, box.minZ);
 			Vec3d newMax = bay.toEntityGlobalSpace(box.maxX, box.maxY, box.maxZ);
 			return entity.getEntityWorld().getEntitiesByType(arg, new Box(newMin, newMax), predicate);
@@ -121,14 +131,15 @@ public class ShellStorageWorld extends ServerWorld implements Worldshell {
 		return passCallToEntity(entity.getBlockPos(), false, (worldLinkEntity, bay) -> {
 			Vec3d newPos = bay.toEntityGlobalSpace(entity.getPos());
 			entity.setPosition(newPos.x, newPos.y, newPos.z);
-			entity.world = worldLinkEntity.getEntityWorld();
+			((EntityWorldAccess) entity).setWorld(worldLinkEntity.getEntityWorld());
 			return worldLinkEntity.getEntityWorld().spawnEntity(entity);
 		});
 	}
 
 	@Override
-	public void playSound(@Nullable PlayerEntity player, double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch) {
-		passCallToEntity(new BlockPos(x, y, z), (entity, bay) -> {
+	public void playSound(@Nullable PlayerEntity player, double x, double y, double z, SoundEvent sound,
+			SoundCategory category, float volume, float pitch) {
+		passCallToEntity(new BlockPos((int) x, (int) y, (int) z), (entity, bay) -> {
 			Vec3d newPos = bay.toEntityGlobalSpace(x, y, z);
 			entity.getEntityWorld().playSound(null, newPos.x, newPos.y, newPos.z, sound, category, volume, pitch);
 		});
@@ -162,23 +173,28 @@ public class ShellStorageWorld extends ServerWorld implements Worldshell {
 			buf.writeBlockPos(newPos);
 			buf.writeInt(type);
 			buf.writeInt(data);
-			PlayerLookup.tracking(entity).forEach(player -> ServerPlayNetworking.send(player, WSNetworking.SHELL_BLOCK_EVENT, buf));
+			PlayerLookup.tracking(entity)
+					.forEach(player -> ServerPlayNetworking.send(player, WSNetworking.SHELL_BLOCK_EVENT, buf));
 		}));
 	}
 
 	@Override
-	public <T extends ParticleEffect> int spawnParticles(T particle, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
-		return passCallToEntity(new BlockPos(x, y, z), 0, (entity, bay) -> {
+	public <T extends ParticleEffect> int spawnParticles(T particle, double x, double y, double z, int count,
+			double deltaX, double deltaY, double deltaZ, double speed) {
+		return passCallToEntity(new BlockPos((int) x, (int) y, (int) z), 0, (entity, bay) -> {
 			Vec3d newPos = bay.toEntityGlobalSpace(x, y, z);
-			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(particle, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
+			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(particle, newPos.x, newPos.y, newPos.z, count,
+					deltaX, deltaY, deltaZ, speed);
 		});
 	}
 
 	@Override
-	public <T extends ParticleEffect> boolean spawnParticles(ServerPlayerEntity viewer, T particle, boolean force, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
-		return passCallToEntity(new BlockPos(x, y, z), false, (entity, bay) -> {
+	public <T extends ParticleEffect> boolean spawnParticles(ServerPlayerEntity viewer, T particle, boolean force,
+			double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
+		return passCallToEntity(new BlockPos((int) x, (int) y, (int) z), false, (entity, bay) -> {
 			Vec3d newPos = bay.toEntityGlobalSpace(x, y, z);
-			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(viewer, particle, force, newPos.x, newPos.y, newPos.z, count, deltaX, deltaY, deltaZ, speed);
+			return ((ServerWorld) entity.getEntityWorld()).spawnParticles(viewer, particle, force, newPos.x, newPos.y,
+					newPos.z, count, deltaX, deltaY, deltaZ, speed);
 		});
 	}
 

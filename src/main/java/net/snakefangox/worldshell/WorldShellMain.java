@@ -3,11 +3,13 @@ package net.snakefangox.worldshell;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.FixedBiomeSource;
@@ -27,14 +29,14 @@ public class WorldShellMain implements ModInitializer {
 
 	public static final String MODID = "worldshell";
 	public static final Logger LOGGER = LogManager.getLogger();
-    static {
-        WSNative.loadLibrary("worldshell_collision");
-    }
+	static {
+		WSNative.loadLibrary("worldshell_collision");
+	}
 
-	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(Registry.WORLD_KEY,
+	public static final RegistryKey<World> STORAGE_DIM = RegistryKey.of(RegistryKeys.WORLD,
 			new Identifier(MODID, "shell_storage"));
 
-	public static final RegistryKey<DimensionType> STORAGE_DIM_TYPE = RegistryKey.of(Registry.DIMENSION_TYPE_KEY,
+	public static final RegistryKey<DimensionType> STORAGE_DIM_TYPE = RegistryKey.of(RegistryKeys.DIMENSION_TYPE,
 			new Identifier(MODID, "shell_storage_type"));
 
 	public static ServerWorld getStorageDim(MinecraftServer server) {
@@ -56,16 +58,15 @@ public class WorldShellMain implements ModInitializer {
 	}
 
 	public void registerStorageDim() {
-		Registry.register(Registry.CHUNK_GENERATOR, new Identifier(MODID, "empty"), EmptyChunkGenerator.CODEC);
+		Registry.register(Registries.CHUNK_GENERATOR, new Identifier(MODID, "empty"), EmptyChunkGenerator.CODEC);
 	}
 
 	public void registerShellStorageDimension(MinecraftServer server) {
 		ChunkGenerator chunkGenerator = new EmptyChunkGenerator(
-				server.getRegistryManager().get(Registry.STRUCTURE_SET_KEY),
 				new FixedBiomeSource(server.getRegistryManager()
-						.get(Registry.BIOME_KEY).getOrCreateEntry(BiomeKeys.THE_VOID)));
+						.get(RegistryKeys.BIOME).getEntry(BiomeKeys.THE_VOID).get()));
 		DimensionOptions options = new DimensionOptions(
-				server.getRegistryManager().get(Registry.DIMENSION_TYPE_KEY).getOrCreateEntry(STORAGE_DIM_TYPE),
+				server.getRegistryManager().get(RegistryKeys.DIMENSION_TYPE).getEntry(STORAGE_DIM_TYPE).get(),
 				chunkGenerator);
 		ShellStorageWorld world = (ShellStorageWorld) DynamicWorldRegister.createDynamicWorld(server, STORAGE_DIM,
 				options, ShellStorageWorld::new);

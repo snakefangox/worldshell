@@ -3,7 +3,6 @@ package net.snakefangox.socrates_skyships.blocks;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Material;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.server.world.ServerWorld;
@@ -29,7 +28,7 @@ public class ShipsHelm extends Block implements ShellAwareBlock {
 	private static final BooleanProperty CONSTRUCTING = BooleanProperty.of("constructing");
 
 	public ShipsHelm() {
-		super(FabricBlockSettings.of(Material.WOOD));
+		super(FabricBlockSettings.create());
 	}
 
 	@Override

@@ -28,11 +28,11 @@ public class EntityTrackingDelegate implements EntityChangeListener {
 		Set<Long> newlyTracked = getOccupiedChunkSections();
 		Set<Long> old = currentlyTracked.stream().filter(l -> !newlyTracked.contains(l) || l == noopPos).collect(Collectors.toSet());
 		old.forEach(l -> {
-			if (l != noopPos) SidedEntityManagerHandler.removeWorldShellEntity(entity.world, entity, l);
+			if (l != noopPos) SidedEntityManagerHandler.removeWorldShellEntity(entity.getWorld(), entity, l);
 		});
 		newlyTracked.forEach(l -> {
 			if (l != noopPos && !currentlyTracked.contains(l))
-				SidedEntityManagerHandler.addWorldShellEntity(entity.world, entity, l);
+				SidedEntityManagerHandler.addWorldShellEntity(entity.getWorld(), entity, l);
 		});
 		currentlyTracked.removeAll(old);
 		currentlyTracked.addAll(newlyTracked);
@@ -68,7 +68,7 @@ public class EntityTrackingDelegate implements EntityChangeListener {
 	@Override
 	public void remove(Entity.RemovalReason reason) {
 		currentlyTracked.forEach(l -> {
-			if (l != noopPos) SidedEntityManagerHandler.removeWorldShellEntity(entity.world, entity, l);
+			if (l != noopPos) SidedEntityManagerHandler.removeWorldShellEntity(entity.getWorld(), entity, l);
 		});
 		proxiedListener.remove(reason);
 	}

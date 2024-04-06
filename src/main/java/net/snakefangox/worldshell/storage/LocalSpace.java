@@ -93,13 +93,13 @@ public interface LocalSpace {
 		double newZ = (pos.getZ() - getLocalZ());
 		Vector3d vec = new Vector3d(newX, newY, newZ);
 		getInverseRotation().multLocal(vec);
-		return new BlockPos(vec.x, vec.y, vec.z);
+		return new BlockPos((int) vec.x, (int) vec.y, (int) vec.z);
 	}
 
 	default BlockPos toGlobal(BlockPos pos) {
 		Vector3d vec = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
 		getRotation().multLocal(vec);
-		return new BlockPos(vec.x + getLocalX(), vec.y + getLocalY(), vec.z + getLocalZ());
+		return new BlockPos((int) (vec.x + getLocalX()), (int) (vec.y + getLocalY()), (int) (vec.z + getLocalZ()));
 	}
 
 	default Vec3d toLocal(Vec3d pos) {
@@ -138,13 +138,13 @@ public interface LocalSpace {
 		double newZ = (z - getLocalZ());
 		Vector3d vec = new Vector3d(newX, newY, newZ);
 		getInverseRotation().multLocal(vec);
-		return new BlockPos(vec.x, vec.y, vec.z);
+		return new BlockPos((int) vec.x, (int) vec.y, (int) vec.z);
 	}
 
 	default BlockPos toGlobal(int x, int y, int z) {
 		Vector3d vec = new Vector3d(x, y, z);
 		getRotation().multLocal(vec);
-		return new BlockPos(vec.x + getLocalX(), vec.y + getLocalY(), vec.z + getLocalZ());
+		return new BlockPos((int) (vec.x + getLocalX()), (int) (vec.y + getLocalY()), (int) (vec.z + getLocalZ()));
 	}
 
 	default BlockPos.Mutable toLocal(BlockPos.Mutable pos) {
@@ -159,7 +159,7 @@ public interface LocalSpace {
 	default BlockPos.Mutable toGlobal(BlockPos.Mutable pos) {
 		Vector3d vec = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
 		getRotation().multLocal(vec);
-		return pos.set(vec.x + getLocalX(), vec.y + getLocalY(), vec.z + getLocalZ());
+		return pos.set((int) (vec.x + getLocalX()), (int) (vec.y + getLocalY()), (int) (vec.z + getLocalZ()));
 	}
 
 	default Vector3d toLocal(Vector3d pos) {
