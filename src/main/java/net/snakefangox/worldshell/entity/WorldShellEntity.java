@@ -47,7 +47,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * The basic entity that links to a shell, renders it's contents and handles
+ * The basic entity that links to a shell, renders its contents and handles
  * interaction.
  * This will need to be extended by you and provided with a valid entity
  * constructor (i.e. {@link Entity#Entity(EntityType, World)}).
@@ -237,6 +237,11 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 	@Override
 	public void setChangeListener(EntityChangeListener listener) {
 		super.setChangeListener(new EntityTrackingDelegate(this, listener));
+	}
+
+	@Override
+	public boolean canHit() {
+		return true;
 	}
 
 	protected ActionResult handleInteraction(PlayerEntity player, Hand hand, boolean interact) {

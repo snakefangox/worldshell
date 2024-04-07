@@ -25,43 +25,43 @@ import org.jetbrains.annotations.Nullable;
 
 public class ShipsHelm extends Block implements ShellAwareBlock {
 
-	private static final BooleanProperty CONSTRUCTING = BooleanProperty.of("constructing");
+    private static final BooleanProperty CONSTRUCTING = BooleanProperty.of("constructing");
 
-	public ShipsHelm() {
-		super(FabricBlockSettings.create());
-	}
+    public ShipsHelm() {
+        super(FabricBlockSettings.create());
+    }
 
-	@Override
-	public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand,
-			BlockHitResult hit) {
-		if (world instanceof Worldshell)
-			return ActionResult.PASS;
-		if (state.get(CONSTRUCTING))
-			return ActionResult.FAIL;
-		if (!(world instanceof ServerWorld))
-			return ActionResult.SUCCESS;
+    @Override
+    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand,
+                              BlockHitResult hit) {
+        if (world instanceof Worldshell)
+            return ActionResult.PASS;
+        if (state.get(CONSTRUCTING))
+            return ActionResult.FAIL;
+        if (!(world instanceof ServerWorld))
+            return ActionResult.SUCCESS;
 
-		WorldShellConstructor<AirShip> airshipConstructor = WorldShellConstructor.create((ServerWorld) world,
-				SRegister.AIRSHIP_TYPE, pos, new BlockScan(pos, world));
-		world.setBlockState(pos, state.with(CONSTRUCTING, true));
-		airshipConstructor.construct(result -> {
-		});
-		return ActionResult.SUCCESS;
-	}
+        WorldShellConstructor<AirShip> airshipConstructor = WorldShellConstructor.create((ServerWorld) world,
+                SRegister.AIRSHIP_TYPE, pos, new BlockScan(pos, world));
+        world.setBlockState(pos, state.with(CONSTRUCTING, true));
+        airshipConstructor.construct(result -> {
+        });
+        return ActionResult.SUCCESS;
+    }
 
-	@Nullable
-	@Override
-	public BlockState getPlacementState(ItemPlacementContext ctx) {
-		return getDefaultState().with(CONSTRUCTING, false);
-	}
+    @Nullable
+    @Override
+    public BlockState getPlacementState(ItemPlacementContext ctx) {
+        return getDefaultState().with(CONSTRUCTING, false);
+    }
 
-	@Override
-	protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-		builder.add(CONSTRUCTING);
-	}
+    @Override
+    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+        builder.add(CONSTRUCTING);
+    }
 
-	@Override
-	public void onUseInShell(World world, WorldShellEntity entity, PlayerEntity player, Hand hand, BlockHitResult hit) {
-		entity.setRotation(entity.getRotation().addLocal(new Quaternion().fromAngles(Math.PI / 8.0, 0, 0)));
-	}
+    @Override
+    public void onUseInShell(World world, WorldShellEntity entity, PlayerEntity player, Hand hand, BlockHitResult hit) {
+        entity.setRotation(entity.getRotation().addLocal(new Quaternion().fromAngles(Math.PI / 8.0, 0, 0)));
+    }
 }

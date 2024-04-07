@@ -34,171 +34,171 @@ import java.util.*;
 
 public class WSNetworking {
 
-	public static final Identifier SHELL_DATA = new Identifier(WorldShellMain.MODID, "data");
-	public static final Identifier SHELL_UPDATE = new Identifier(WorldShellMain.MODID, "update");
-	public static final Identifier SHELL_INTERACT = new Identifier(WorldShellMain.MODID, "interact");
-	public static final Identifier SHELL_BLOCK_EVENT = new Identifier(WorldShellMain.MODID, "block_event");
-	public static final TrackedDataHandler<EntityBounds> BOUNDS = new TrackedDataHandler<EntityBounds>() {
+    public static final Identifier SHELL_DATA = new Identifier(WorldShellMain.MODID, "data");
+    public static final Identifier SHELL_UPDATE = new Identifier(WorldShellMain.MODID, "update");
+    public static final Identifier SHELL_INTERACT = new Identifier(WorldShellMain.MODID, "interact");
+    public static final Identifier SHELL_BLOCK_EVENT = new Identifier(WorldShellMain.MODID, "block_event");
+    public static final TrackedDataHandler<EntityBounds> BOUNDS = new TrackedDataHandler<EntityBounds>() {
 
-		@Override
-		public void write(PacketByteBuf data, EntityBounds object) {
-			data.writeFloat(object.length);
-			data.writeFloat(object.width);
-			data.writeFloat(object.height);
-			data.writeBoolean(object.fixed);
-		}
+        @Override
+        public void write(PacketByteBuf data, EntityBounds object) {
+            data.writeFloat(object.length);
+            data.writeFloat(object.width);
+            data.writeFloat(object.height);
+            data.writeBoolean(object.fixed);
+        }
 
-		@Override
-		public EntityBounds read(PacketByteBuf buf) {
-			float l = buf.readFloat();
-			float w = buf.readFloat();
-			float h = buf.readFloat();
-			boolean f = buf.readBoolean();
-			return new EntityBounds(l, w, h, f);
-		}
+        @Override
+        public EntityBounds read(PacketByteBuf buf) {
+            float l = buf.readFloat();
+            float w = buf.readFloat();
+            float h = buf.readFloat();
+            boolean f = buf.readBoolean();
+            return new EntityBounds(l, w, h, f);
+        }
 
-		@Override
-		public EntityBounds copy(EntityBounds object) {
-			return object;
-		}
-	};
-	public static final TrackedDataHandler<Vec3d> VEC3D = new TrackedDataHandler<Vec3d>() {
+        @Override
+        public EntityBounds copy(EntityBounds object) {
+            return object;
+        }
+    };
+    public static final TrackedDataHandler<Vec3d> VEC3D = new TrackedDataHandler<Vec3d>() {
 
-		@Override
-		public void write(PacketByteBuf data, Vec3d object) {
-			data.writeDouble(object.x);
-			data.writeDouble(object.y);
-			data.writeDouble(object.z);
-		}
+        @Override
+        public void write(PacketByteBuf data, Vec3d object) {
+            data.writeDouble(object.x);
+            data.writeDouble(object.y);
+            data.writeDouble(object.z);
+        }
 
-		@Override
-		public Vec3d read(PacketByteBuf buf) {
-			double x = buf.readDouble();
-			double y = buf.readDouble();
-			double z = buf.readDouble();
-			return new Vec3d(x, y, z);
-		}
+        @Override
+        public Vec3d read(PacketByteBuf buf) {
+            double x = buf.readDouble();
+            double y = buf.readDouble();
+            double z = buf.readDouble();
+            return new Vec3d(x, y, z);
+        }
 
-		@Override
-		public Vec3d copy(Vec3d object) {
-			return object;
-		}
-	};
+        @Override
+        public Vec3d copy(Vec3d object) {
+            return object;
+        }
+    };
 
-	public static final TrackedDataHandler<Quaternion> QUATERNION = new TrackedDataHandler<>() {
+    public static final TrackedDataHandler<Quaternion> QUATERNION = new TrackedDataHandler<>() {
 
-		@Override
-		public void write(PacketByteBuf data, Quaternion object) {
-			data.writeDouble(object.getX());
-			data.writeDouble(object.getY());
-			data.writeDouble(object.getZ());
-			data.writeDouble(object.getW());
-		}
+        @Override
+        public void write(PacketByteBuf data, Quaternion object) {
+            data.writeDouble(object.getX());
+            data.writeDouble(object.getY());
+            data.writeDouble(object.getZ());
+            data.writeDouble(object.getW());
+        }
 
-		@Override
-		public Quaternion read(PacketByteBuf buf) {
-			double x = buf.readDouble();
-			double y = buf.readDouble();
-			double z = buf.readDouble();
-			double w = buf.readDouble();
-			return new Quaternion(x, y, z, w);
-		}
+        @Override
+        public Quaternion read(PacketByteBuf buf) {
+            double x = buf.readDouble();
+            double y = buf.readDouble();
+            double z = buf.readDouble();
+            double w = buf.readDouble();
+            return new Quaternion(x, y, z, w);
+        }
 
-		@Override
-		public Quaternion copy(Quaternion object) {
-			return object.clone();
-		}
-	};
+        @Override
+        public Quaternion copy(Quaternion object) {
+            return object.clone();
+        }
+    };
 
-	static {
-		TrackedDataHandlerRegistry.register(BOUNDS);
-		TrackedDataHandlerRegistry.register(VEC3D);
-		TrackedDataHandlerRegistry.register(QUATERNION);
-	}
+    static {
+        TrackedDataHandlerRegistry.register(BOUNDS);
+        TrackedDataHandlerRegistry.register(VEC3D);
+        TrackedDataHandlerRegistry.register(QUATERNION);
+    }
 
-	public static void registerClientPackets() {
-		ClientPlayNetworking.registerGlobalReceiver(SHELL_DATA, WSNetworking::handleShellData);
-		ClientPlayNetworking.registerGlobalReceiver(SHELL_UPDATE, WSNetworking::handleShellUpdate);
-		ClientPlayNetworking.registerGlobalReceiver(SHELL_BLOCK_EVENT, WSNetworking::handleShellBlockEvent);
-	}
+    public static void registerClientPackets() {
+        ClientPlayNetworking.registerGlobalReceiver(SHELL_DATA, WSNetworking::handleShellData);
+        ClientPlayNetworking.registerGlobalReceiver(SHELL_UPDATE, WSNetworking::handleShellUpdate);
+        ClientPlayNetworking.registerGlobalReceiver(SHELL_BLOCK_EVENT, WSNetworking::handleShellBlockEvent);
+    }
 
-	private static void handleShellData(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
-		int entityID = buf.readInt();
-		Map<BlockPos, BlockState> stateMap = new HashMap<>();
-		Map<BlockPos, BlockEntity> entityMap = new HashMap<>();
-		List<Microcosm.ShellTickInvoker> tickers = new ArrayList<>();
-		WorldShellPacketHelper.readBlocks(buf, stateMap, entityMap, tickers);
+    private static void handleShellData(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
+        int entityID = buf.readInt();
+        Map<BlockPos, BlockState> stateMap = new HashMap<>();
+        Map<BlockPos, BlockEntity> entityMap = new HashMap<>();
+        List<Microcosm.ShellTickInvoker> tickers = new ArrayList<>();
+        WorldShellPacketHelper.readBlocks(buf, stateMap, entityMap, tickers);
 
-		client.execute(() -> {
-			Entity entity = client.world.getEntityById(entityID);
-			if (entity instanceof WorldShellEntity) {
-				((WorldShellEntity) entity).initializeWorldShell(stateMap, entityMap, tickers);
-			}
-		});
-	}
+        client.execute(() -> {
+            Entity entity = client.world.getEntityById(entityID);
+            if (entity instanceof WorldShellEntity) {
+                ((WorldShellEntity) entity).initializeWorldShell(stateMap, entityMap, tickers);
+            }
+        });
+    }
 
-	private static void handleShellUpdate(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
-		int entityID = buf.readInt();
-		BlockPos pos = BlockPos.fromLong(buf.readLong());
-		BlockState state = Block.getStateFromRawId(buf.readInt());
-		NbtCompound tag = buf.readNbt();
+    private static void handleShellUpdate(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
+        int entityID = buf.readInt();
+        BlockPos pos = BlockPos.fromLong(buf.readLong());
+        BlockState state = Block.getStateFromRawId(buf.readInt());
+        NbtCompound tag = buf.readNbt();
 
-		client.execute(() -> {
-			Entity entity = client.world.getEntityById(entityID);
-			if (entity instanceof WorldShellEntity) {
-				((WorldShellEntity) entity).updateWorldShell(pos, state, tag);
-			}
-		});
-	}
+        client.execute(() -> {
+            Entity entity = client.world.getEntityById(entityID);
+            if (entity instanceof WorldShellEntity) {
+                ((WorldShellEntity) entity).updateWorldShell(pos, state, tag);
+            }
+        });
+    }
 
-	private static void handleShellBlockEvent(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
-		int entityID = buf.readInt();
-		BlockPos pos = buf.readBlockPos();
-		int type = buf.readInt();
-		int data = buf.readInt();
-		client.execute(() -> {
-			Entity entity = client.world.getEntityById(entityID);
-			if (entity instanceof WorldShellEntity) {
-				((WorldShellEntity) entity).getMicrocosm().addBlockEvent(pos, type, data);
-			}
-		});
-	}
+    private static void handleShellBlockEvent(MinecraftClient client, ClientPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
+        int entityID = buf.readInt();
+        BlockPos pos = buf.readBlockPos();
+        int type = buf.readInt();
+        int data = buf.readInt();
+        client.execute(() -> {
+            Entity entity = client.world.getEntityById(entityID);
+            if (entity instanceof WorldShellEntity) {
+                ((WorldShellEntity) entity).getMicrocosm().addBlockEvent(pos, type, data);
+            }
+        });
+    }
 
-	public static void registerServerPackets() {
-		ServerPlayNetworking.registerGlobalReceiver(SHELL_INTERACT, WSNetworking::handleShellInteract);
-	}
+    public static void registerServerPackets() {
+        ServerPlayNetworking.registerGlobalReceiver(SHELL_INTERACT, WSNetworking::handleShellInteract);
+    }
 
-	@SuppressWarnings("deprecation")
-	private static void handleShellInteract(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
-		int entityID = buf.readInt();
-		BlockHitResult hit = buf.readBlockHitResult();
-		Hand hand = buf.readEnumConstant(Hand.class);
-		boolean interact = buf.readBoolean();
+    @SuppressWarnings("deprecation")
+    private static void handleShellInteract(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler networkHandler, PacketByteBuf buf, PacketSender sender) {
+        int entityID = buf.readInt();
+        BlockHitResult hit = buf.readBlockHitResult();
+        Hand hand = buf.readEnumConstant(Hand.class);
+        boolean interact = buf.readBoolean();
 
-		server.execute(() -> {
-			Entity entity = player.getWorld().getEntityById(entityID);
-			if (entity instanceof WorldShellEntity) {
-				EntityBounds dimensions = ((WorldShellEntity) entity).getDimensions();
-				if (player.distanceTo(entity) < dimensions.getRoughMaxDist() + 4.5) {
-					Optional<Bay> bay = ((WorldShellEntity) entity).getBay();
-					if (bay.isPresent()) {
-						World world = WorldShellMain.getStorageDim(server);
-						BlockPos bp = bay.get().toGlobal(hit.getBlockPos());
-						if (!world.isChunkLoaded(bp)) return;
-						BlockHitResult gHit = new BlockHitResult(bay.get().toGlobal(hit.getPos()),
-								hit.getSide(), bp, hit.isInsideBlock());
-						if (interact) {
-							BlockState state = world.getBlockState(gHit.getBlockPos());
-							if (state.getBlock() instanceof ShellAwareBlock)
-								((ShellAwareBlock) state.getBlock()).onUseInShell(world, (WorldShellEntity) entity, player, hand, gHit);
-								state.onUse(world, player, hand, gHit);
-						} else {
-							world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
-						}
-					}
-				}
-			}
-		});
-	}
+        server.execute(() -> {
+            Entity entity = player.getWorld().getEntityById(entityID);
+            if (entity instanceof WorldShellEntity) {
+                EntityBounds dimensions = ((WorldShellEntity) entity).getDimensions();
+                if (player.distanceTo(entity) < dimensions.getRoughMaxDist() + 4.5) {
+                    Optional<Bay> bay = ((WorldShellEntity) entity).getBay();
+                    if (bay.isPresent()) {
+                        World world = WorldShellMain.getStorageDim(server);
+                        BlockPos bp = bay.get().toGlobal(hit.getBlockPos());
+                        if (!world.isChunkLoaded(bp)) return;
+                        BlockHitResult gHit = new BlockHitResult(bay.get().toGlobal(hit.getPos()),
+                                hit.getSide(), bp, hit.isInsideBlock());
+                        if (interact) {
+                            BlockState state = world.getBlockState(gHit.getBlockPos());
+                            if (state.getBlock() instanceof ShellAwareBlock)
+                                ((ShellAwareBlock) state.getBlock()).onUseInShell(world, (WorldShellEntity) entity, player, hand, gHit);
+                            state.onUse(world, player, hand, gHit);
+                        } else {
+                            world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
+                        }
+                    }
+                }
+            }
+        });
+    }
 
 }

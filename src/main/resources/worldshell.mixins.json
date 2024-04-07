@@ -10,16 +10,17 @@
     "entitytracking.ServerEntityManagerAccess",
     "entitytracking.ServerWorldAccess",
     "entitytracking.WorldMixin",
+    "passthrough.EntityWorldAccess",
     "passthrough.ExplosionMixin",
     "passthrough.PlayerEntityMixin",
     "passthrough.ServerPlayerEntityMixin",
-    "passthrough.EntityWorldAccess",
     "server.MinecraftServerMixin",
     "transfer.AbstractBlockStateMixin"
   ],
   "client": [
     "entitytracking.ClientEntityManagerAccess",
-    "entitytracking.ClientWorldAccess"
+    "entitytracking.ClientWorldAccess",
+    "render.WorldRendererMixin"
   ],
   "server": [
   ],
