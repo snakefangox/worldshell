@@ -191,6 +191,8 @@ public class WSNetworking {
                         BlockHitResult gHit = new BlockHitResult(bay.get().toGlobal(hit.getPos()),
                                 hit.getSide(), bp, hit.isInsideBlock());
                         if (interact) {
+
+                            // TODO: Use ServerPlayerInteractionManager#interactBlock ?
                             BlockState state = world.getBlockState(gHit.getBlockPos());
                             ActionResult actionResult = ActionResult.PASS;
 
