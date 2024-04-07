@@ -11,6 +11,7 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
@@ -57,6 +58,8 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
             WSNetworking.BOUNDS);
     private static final TrackedData<Vec3d> BLOCK_OFFSET = DataTracker.registerData(WorldShellEntity.class,
             WSNetworking.VEC3D);
+    private static final TrackedData<BlockPos> BLOCK_CENTER = DataTracker.registerData(WorldShellEntity.class,
+            TrackedDataHandlerRegistry.BLOCK_POS);
     private static final TrackedData<Quaternion> ROTATION = DataTracker.registerData(WorldShellEntity.class,
             WSNetworking.QUATERNION);
 
@@ -89,6 +92,7 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
     protected void initDataTracker() {
         getDataTracker().startTracking(ENTITY_BOUNDS, new EntityBounds(1, 1, 1, false));
         getDataTracker().startTracking(BLOCK_OFFSET, new Vec3d(0, 0, 0));
+        getDataTracker().startTracking(BLOCK_CENTER, new BlockPos(0, 0, 0));
         getDataTracker().startTracking(ROTATION, new Quaternion());
     }
 
@@ -156,6 +160,10 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
         return inverseRotation;
     }
 
+    public BlockPos getBlockCenter() {
+        return getDataTracker().get(BLOCK_CENTER);
+    }
+
     public void setRotation(Quaternion quaternion) {
         getDataTracker().set(ROTATION, quaternion);
         inverseRotation = quaternion.inverse();
@@ -169,6 +177,10 @@ public abstract class WorldShellEntity extends Entity implements LocalSpace {
 
     public void setBlockOffset(Vec3d offset) {
         getDataTracker().set(BLOCK_OFFSET, offset);
+    }
+
+    public void setBlockCenter(BlockPos center) {
+        getDataTracker().set(BLOCK_CENTER, center);
     }
 
     @Override

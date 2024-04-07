@@ -137,12 +137,13 @@ public class Bay implements LocalSpace {
 	}
 
 	// They don't want you to know this, but `encompass` isn't deprecated
-	@SuppressWarnings("deprecation")
-	public boolean updateBoxBounds(BlockPos pos) {
-		if (bounds.contains(pos)) return false;
+	public Vec3i updateBoxBounds(BlockPos pos) {
+		Vec3i oldDimensions = bounds.getDimensions();
+		if (bounds.contains(pos)) return Vec3i.ZERO;
 		bounds.encompass(pos);
 		markDirty();
-		return true;
+
+		return bounds.getDimensions().subtract(oldDimensions);
 	}
 
 	public void markDirty() {

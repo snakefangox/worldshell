@@ -160,6 +160,7 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 		T entity = entityType.create(getWorld());
 		if (entity == null)
 			throw new IllegalStateException(entityType + " constructor returned null, how did we get here?");
+
 		// Set entity dimensions
 		BlockBox bayBounds = bay.getBounds();
 		EntityBounds bound = new EntityBounds(bayBounds.getBlockCountX(), bayBounds.getBlockCountY(),
@@ -173,6 +174,7 @@ public final class WorldShellConstructor<T extends WorldShellEntity> extends She
 		Vec3d blockOffset = new Vec3d((center.getX() - boundsCenter.x) - 0.5, center.getY() - localBoundsY,
 				(center.getZ() - boundsCenter.z) - 0.5);
 		entity.setBlockOffset(blockOffset);
+		entity.setBlockCenter(center);
 		// Register bay
 		int id = shellStorage.addBay(bay);
 		entity.setShellId(id);
