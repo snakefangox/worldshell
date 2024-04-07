@@ -11,11 +11,14 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.TrackedDataHandler;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUsageContext;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
@@ -189,9 +192,20 @@ public class WSNetworking {
                                 hit.getSide(), bp, hit.isInsideBlock());
                         if (interact) {
                             BlockState state = world.getBlockState(gHit.getBlockPos());
+                            ActionResult actionResult = ActionResult.PASS;
+
                             if (state.getBlock() instanceof ShellAwareBlock)
-                                ((ShellAwareBlock) state.getBlock()).onUseInShell(world, (WorldShellEntity) entity, player, hand, gHit);
-                            state.onUse(world, player, hand, gHit);
+                                actionResult = ((ShellAwareBlock) state.getBlock()).onUseInShell(world, (WorldShellEntity) entity, player, hand, gHit);
+
+                            if (actionResult == ActionResult.PASS)
+                                actionResult = state.onUse(world, player, hand, gHit);
+
+                            if (actionResult == ActionResult.PASS) {
+                                ItemStack stack = player.getStackInHand(hand);
+                                actionResult = stack.useOnBlock(new ItemUsageContext(world, player, hand, stack, gHit));
+                            }
+
+                            if (actionResult.shouldSwingHand()) player.swingHand(hand, true);
                         } else {
                             world.getBlockState(gHit.getBlockPos()).onBlockBreakStart(world, gHit.getBlockPos(), player);
                         }

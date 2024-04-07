@@ -1,6 +1,7 @@
 package net.snakefangox.worldshell.storage;
 
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.world.World;
@@ -12,5 +13,7 @@ import net.snakefangox.worldshell.entity.WorldShellEntity;
  * Worldshell or it's constructor.
  */
 public interface ShellAwareBlock {
-	default void onUseInShell(World world, WorldShellEntity entity, PlayerEntity player, Hand hand, BlockHitResult hit){}
+	default ActionResult onUseInShell(World world, WorldShellEntity entity, PlayerEntity player, Hand hand, BlockHitResult hit){
+        return ActionResult.PASS;
+    }
 }
