@@ -39,22 +39,25 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
                         GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f projectionMatrix, CallbackInfo ci) {
         HitResult target = client.crosshairTarget;
 
-        if (renderBlockOutline && target instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof WorldShellEntity worldShellEntity) {
-            BlockHitResult hitResult = worldShellEntity.raycastToWorldShell(client.player);
+        if (renderBlockOutline && target instanceof EntityHitResult entityHitResult && entityHitResult.getEntity() instanceof WorldShellEntity shellEntity) {
+            BlockHitResult hitResult = shellEntity.raycastToWorldShell(client.player);
 
             if (hitResult.getType() == HitResult.Type.BLOCK) {
-                BlockState blockState = worldShellEntity.getMicrocosm().getBlockState(hitResult.getBlockPos());
+                BlockState blockState = shellEntity.getMicrocosm().getBlockState(hitResult.getBlockPos());
 
                 if (!blockState.isAir()) {
                     Vec3d cam = camera.getPos();
                     VertexConsumer vertexConsumer = bufferBuilders.getEntityVertexConsumers().getBuffer(RenderLayer.getLines());
 
                     matrices.push();
-                    Quaternion rot = worldShellEntity.getRotation();
+                    Quaternion rot = shellEntity.getRotation();
                     Quaternionf quat = new Quaternionf((float) rot.getX(), (float) rot.getY(), (float) rot.getZ(), (float) rot.getW());
-                    matrices.multiply(quat, (float) worldShellEntity.getLocalX(), (float) worldShellEntity.getLocalY(), (float) worldShellEntity.getLocalZ());
 
-                    drawBlockOutline(matrices, vertexConsumer, camera.getFocusedEntity(), cam.x, cam.y, cam.z, worldShellEntity.toGlobal(hitResult.getBlockPos()), blockState);
+                    BlockPos lPos = hitResult.getBlockPos();
+                    Vec3d pos = shellEntity.toGlobal((double) lPos.getX(), lPos.getY(), lPos.getZ());
+                    matrices.translate(pos.getX() - cam.x, pos.getY() - cam.y, pos.getZ() - cam.z);
+                    matrices.multiply(quat);
+                    drawBlockOutline(matrices, vertexConsumer, camera.getFocusedEntity(), 0, 0, 0, BlockPos.ORIGIN, blockState);
                     matrices.pop();
                 }
             }

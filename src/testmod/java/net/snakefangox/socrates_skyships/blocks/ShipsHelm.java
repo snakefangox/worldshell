@@ -62,6 +62,6 @@ public class ShipsHelm extends Block implements ShellAwareBlock {
 
     @Override
     public void onUseInShell(World world, WorldShellEntity entity, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        entity.setRotation(entity.getRotation().addLocal(new Quaternion().fromAngles(Math.PI / 8.0, 0, 0)));
+        entity.setRotation(entity.getRotation().addLocal(new Quaternion().fromAngles(Math.PI / 8.0, 0, 0)).normalizeLocal());
     }
 }
